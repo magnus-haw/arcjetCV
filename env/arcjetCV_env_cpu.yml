@@ -11,6 +11,7 @@ dependencies:
   - opencv
   - matplotlib
   - pandas
+  - pyarrow
   - scikit-learn
   - segmentation-models-pytorch
   - pytorch

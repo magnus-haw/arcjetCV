@@ -1,13 +1,20 @@
 import cv2 as cv
 import numpy as np
-import threading
-from arcjetCV.segmentation.contour.contour import (contoursHSV, contoursGRAY, contoursCNN,
-                                                   getEdgeFromContour, contoursAutoHSV, getPoints)
+import sys
+from arcjetCV.segmentation.contour.contour import (
+    contoursHSV, 
+    contoursGRAY, 
+    contoursCNN,
+    getEdgeFromContour, 
+    contoursAutoHSV, 
+    getPoints
+)
 from arcjetCV.segmentation.contour.cnn import CNN
+from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number
 
 
 class ArcjetProcessor:
-    ''' class for image processing
+    ''' class for video frame processing
 
     Attributes:
         WIDTH (int): openCV image width
@@ -23,11 +30,9 @@ class ArcjetProcessor:
     '''
     
     def __init__(self, frame, home, crop_range=None, flow_direction=None):
-        
-        self._lock = threading.Lock()
         self.SHAPE = frame.shape
         self.FRAME = frame
-        self.initial_dir ="ok"
+        self.FLOW_DIRECTION = flow_direction
 
         self.HEIGHT = self.SHAPE[0]
         self.WIDTH = self.SHAPE[1]
@@ -42,8 +47,7 @@ class ArcjetProcessor:
         else:
             self.CROP = crop_range
 
-        # Crop frame to ROI
-        try:
+        try: # Crop frame to ROI
             if self.CHANNELS == 1:
                 self.FRAME_CROP = frame[self.CROP[0][0]:self.CROP[0][1], self.CROP[1][0]:self.CROP[1][1]]
             else:
@@ -53,24 +57,8 @@ class ArcjetProcessor:
             raise IndexError("ERROR: processor crop window %s incompatible with given frame shape %s"%(str(self.CROP),str(frame.shape)))
         
         self.homedir = home
-        self._lock = threading.Lock()
-        
         self.cnn = CNN()
-
-    def autoCrop(self,frame):
-        W,H, C = frame.shape
-        contours, flags = contoursAutoHSV(frame)
-        print('OK contours')
-        if contours['SHOCK'] is not None:
-            global_contours = np.array(contours['SHOCK'],contours['MODEL'], axis=0)
-        else:
-            contours['MODEL']
-        x,y,w,h = cv.boundingRect(global_contours)
-        XMIN = max(int(x - 0.1*W),0)
-        XMAX = min(int(x + w + 0.1*W),W)
-        YMIN  = max(int(y - 0.1*H),0)
-        YMAX = min(int(y + h + 0.1*H),H)
-        return XMIN, XMAX, YMIN, YMAX
+        self.clahe = cv.createCLAHE(clipLimit=2.0,tileGridSize=(9,9))
 
     def set_crop(self,crop_range):
         ''' sets crop window range [[ymin,ymax], [xmin,xmax]] '''
@@ -123,10 +111,9 @@ class ArcjetProcessor:
         :returns: dictionary of flags
         """
         try:
-            verbose = argdict['VERBOSE']
             modelpercent = argdict['MODEL_FRACTION']
         except KeyError:
-            verbose = False; modelpercent=0.005
+            modelpercent = 0.005
 
         ### HSV brightness value histogram
         gray_ = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
@@ -145,7 +132,6 @@ class ArcjetProcessor:
 
         argdict['OVEREXPOSED'] =  histr[243:].sum()/imgsize > modelpercent
         argdict['UNDEREXPOSED'] =  histr[150:].sum()/imgsize < modelpercent
-
         return argdict
 
     def preprocess(self, frame, argdict):
@@ -161,8 +147,6 @@ class ArcjetProcessor:
             raise IndexError("ERROR: processor crop window %s incompatible with given frame shape %s"%(str(self.CROP),str(frame.shape)))
 
         # Get flow direction
-        self.initial_dir = "lateral"
-
         if self.FLOW_DIRECTION is None:
             self.FLOW_DIRECTION = self.get_flow_direction(frame)
 
@@ -173,15 +157,11 @@ class ArcjetProcessor:
 
     def segment(self, img_crop, argdict):
         ''' segment image using one of several methods'''
-        #print(argdict["SEGMENT_METHOD"])
 
         if argdict["SEGMENT_METHOD"] == 'AutoHSV':
-            #use contoursAutoHSV
             contour_dict, flags = contoursAutoHSV(img_crop, flags=argdict)
-            argdict.update(flags)
 
         elif argdict["SEGMENT_METHOD"] == 'HSV':
-            #use contoursHSV
             try:
                 HSVModelRange = argdict["HSV_MODEL_RANGE"]
                 HSVShockRange = argdict["HSV_SHOCK_RANGE"]
@@ -189,25 +169,23 @@ class ArcjetProcessor:
                 HSVModelRange = [(0,0,150), (121,125,255)]
                 HSVShockRange = [(125,40,85), (170,80,230)]
 
-            contour_dict, flags = contoursHSV(img_crop,log=None,
-                                        minHSVModel=HSVModelRange[0],maxHSVModel=HSVModelRange[1],
-                                        minHSVShock=HSVShockRange[0],maxHSVShock=HSVShockRange[1])
-            argdict.update(flags)
+            contour_dict, flags = contoursHSV(
+                img_crop,log=None,
+                minHSVModel=HSVModelRange[0],maxHSVModel=HSVModelRange[1],
+                minHSVShock=HSVShockRange[0],maxHSVShock=HSVShockRange[1])
 
         elif argdict["SEGMENT_METHOD"] == 'GRAY':
-            #use contoursGRAY
             try:
                 thresh = argdict["THRESHOLD"]
             except:
                 thresh = 240
             contour_dict, flags = contoursGRAY(img_crop,thresh=thresh,log=None)
-            argdict.update(flags)
 
         elif argdict["SEGMENT_METHOD"] == 'CNN':
-            #use machine learning CNN
             contour_dict, flags = contoursCNN(img_crop, self.cnn)
-            argdict.update(flags)
-
+        
+        else: return
+        argdict.update(flags)
         return contour_dict, argdict
 
     def reduce(self, contour_dict, argdict):
@@ -243,12 +221,57 @@ class ArcjetProcessor:
         return edges, argdict
 
     def process(self, frame, argdict):
-        ''' fully process image '''
-        with self._lock:
-            try:
-                frame_crop, argdict = self.preprocess(frame, argdict)
-                contour_dict, argdict = self.segment(frame_crop, argdict)
-                edges, argdict = self.reduce(contour_dict, argdict)
-            except:
-                edges = {"MODEL":None,"SHOCK":None}
-            return edges, argdict.copy()
+        
+        if self.CHANNELS == 1:
+            crop_ = frame[self.CROP[0][0]:self.CROP[0][1], self.CROP[1][0]:self.CROP[1][1]]
+            frame[self.CROP[0][0]:self.CROP[0][1], self.CROP[1][0]:self.CROP[1][1]] = clahe_normalize(crop_, self.clahe)
+        else:
+            crop_ = frame[self.CROP[0][0]:self.CROP[0][1], self.CROP[1][0]:self.CROP[1][1]]
+            frame[self.CROP[0][0]:self.CROP[0][1], self.CROP[1][0]:self.CROP[1][1]] = clahe_normalize(crop_, self.clahe)
+        
+        frame_crop, argdict = self.preprocess(frame, argdict)
+        contour_dict, argdict = self.segment(frame_crop, argdict)
+        edges, argdict = self.reduce(contour_dict, argdict)
+        return edges, argdict.copy()
+        
+    def process_all(self, video, ilow, ihigh, skips, inputdict, opl, WRITEVIDEO):
+        
+        if WRITEVIDEO:
+            video.get_writer()
+
+        # Process frames
+        for frame_index in range(ilow, ihigh+1, skips):
+            frame = video.get_frame(frame_index)
+
+            if frame is None:
+                print(f"Failed at frame {frame_index}")
+                return
+
+            inputdict["INDEX"] = frame_index
+            contour_dict,argdict = self.process(frame, inputdict)
+
+            # Draw contours
+            for key in contour_dict.keys():
+                if key == 'MODEL':
+                    cv.drawContours(frame, contour_dict[key], -1, (0,255,0), 2)
+                elif key == 'SHOCK':
+                    cv.drawContours(frame, contour_dict[key], -1, (0,0,255), 2)
+            cv.drawContours(frame, contour_dict[key], -1, (0,0,255), 2)
+            annotate_image_with_frame_number(frame, frame_index)
+            argdict.update(contour_dict)
+            opl.append(argdict.copy())
+
+            # Add processed frame to video output
+            if WRITEVIDEO:
+                frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                video.writer.write(frame)
+                
+            sys.stdout.write(f"\rProcessing video using {inputdict['SEGMENT_METHOD']} ... " + 
+                             f"{min(((((frame_index - ilow) / skips) + 1) / np.ceil((ihigh - ilow + 1) / skips)) * 100, 100):.1f}%")
+
+        # Write output data
+        opl.write()
+
+        # close output video
+        if WRITEVIDEO:
+            video.close_writer()

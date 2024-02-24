@@ -2,7 +2,6 @@ import numpy as np
 import cv2 as cv
 import os
 from sklearn.neighbors import LocalOutlierFactor
-from PySide6.QtCore import Signal, QThread, Slot, QTimer
 
 
 def splitfn(fn: str):
@@ -71,7 +70,7 @@ def smooth(x,window_len=11,window='hanning'):
     return y[int(window_len/2)-1:-int(window_len/2)-1]
 
 
-def CLAHE_normalize(bgr,clahe):
+def clahe_normalize(bgr, clahe):
     lab = cv.cvtColor(bgr, cv.COLOR_BGR2LAB)
     lab[:,:,0] = clahe.apply(lab[:,:,0])
     bgr = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
@@ -79,7 +78,6 @@ def CLAHE_normalize(bgr,clahe):
 
 
 def annotateImage(orig,flags,top=True,left=True):
-
     try:
         y,x,c = np.shape(orig)
 
@@ -122,7 +120,7 @@ def annotate_image_with_frame_number(image, frame_number):
     frame_text = f"Frame: {frame_number}"
 
     # Get the dimensions of the image
-    height, width, _ = image.shape
+    _, width, _ = image.shape
 
     # Set the font properties
     font = cv.FONT_HERSHEY_SIMPLEX
@@ -137,76 +135,3 @@ def annotate_image_with_frame_number(image, frame_number):
 
     # Draw the frame text on the image
     cv.putText(image, frame_text, text_position, font, font_scale, (0, 255, 0), font_thickness)
-
-
-class WorkerThread(QThread):
-    image_ready = Signal(np.ndarray)
-
-    def __init__(self, processor, video, parent=None):
-        super().__init__(parent)
-        self.processor = processor
-        self.video = video
-        self.clahe = cv.createCLAHE(clipLimit=2.0,tileGridSize=(9,9))
-        self.frame = None
-
-        # Setup a timer to trigger sending processed image 
-        self.timer = QTimer()
-        self.timer.setInterval(100)
-        #self.timer.timeout.connect(self.send_frame)
-        
-
-    def run(self, ilow, ihigh, skips, inputdict, opl, WRITEVIDEO):
-        if WRITEVIDEO:
-            self.video.get_writer()
-
-        # Process frames
-        cr = self.processor.CROP
-        for frame_index in range(ilow,ihigh+1, skips):
-            frame = self.video.get_frame(frame_index)
-
-            if frame is not None:
-                #Normalize input frame crop window
-                try:
-                    if self.processor.CHANNELS == 1:
-                        crop_ = frame[cr[0][0]:cr[0][1], cr[1][0]:cr[1][1]]
-                        frame[cr[0][0]:cr[0][1], cr[1][0]:cr[1][1]] = CLAHE_normalize(crop_, self.clahe)
-                    else:
-                        crop_ = frame[cr[0][0]:cr[0][1], cr[1][0]:cr[1][1], :]
-                        frame[cr[0][0]:cr[0][1], cr[1][0]:cr[1][1], :] = CLAHE_normalize(crop_, self.clahe)
-                except IndexError:
-                    pass
-                # Process frame
-                inputdict["INDEX"] = frame_index
-                contour_dict,argdict = self.processor.process(frame, inputdict)
-
-                # Draw contours
-                for key in contour_dict.keys():
-                    if key == 'MODEL':
-                        cv.drawContours(frame, contour_dict[key], -1, (0,255,0), 2)
-                    elif key == 'SHOCK':
-                        cv.drawContours(frame, contour_dict[key], -1, (0,0,255), 2)
-                cv.drawContours(frame, contour_dict[key], -1, (0,0,255), 2)
-                annotate_image_with_frame_number(frame, frame_index)
-                argdict.update(contour_dict)
-                opl.append(argdict.copy())
-
-                # Add processed frame to video output
-                if WRITEVIDEO:
-                    self.video.writer.write(frame)
-
-                self.frame = frame
-
-        # Write output data
-        opl.write()
-
-        # close output video
-        if WRITEVIDEO:
-            self.video.close_writer()
-
-        self.finished.emit()
-
-    @Slot()
-    def send_frame(self):
-        rgb = cv.cvtColor(self.frame, cv.COLOR_BGR2RGB)
-        self.image_ready.emit(rgb)
-        print("emitted image")

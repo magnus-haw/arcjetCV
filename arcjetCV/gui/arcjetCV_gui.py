@@ -743,7 +743,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "ArcjetCV"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "arcjetCV"))
         self.pushButton_loadVideo.setText(_translate("MainWindow", "Load Video"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Input parameters"))
         self.label_7.setText(_translate("MainWindow", "Frame Index:"))

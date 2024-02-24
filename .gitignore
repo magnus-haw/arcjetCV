@@ -157,3 +157,5 @@ settings.json
 !time-checkpoint.pt
 *.pkl
 *.pth
+
+test.py

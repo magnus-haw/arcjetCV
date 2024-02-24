@@ -19,8 +19,6 @@ class CNN:
     def predict(self, img):
         
         self.model.eval()
-        
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         image = self.t(img)
         
         self.model.to(self.device)

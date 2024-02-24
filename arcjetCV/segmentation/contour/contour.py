@@ -385,7 +385,6 @@ def contoursCNN(orig, model, log=None):
 
     ### Apply CNN
     cnnmask = model.predict(orig)
-    print("cnn apply")
 
     ### Model contours
     modelmask = (((cnnmask == 1) | (cnnmask == 3)) * 255).astype(np.uint8)
