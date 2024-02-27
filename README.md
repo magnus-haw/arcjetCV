@@ -1,3 +1,7 @@
+[![Documentation Status](https://readthedocs.org/projects/arcjetcv/badge/?version=latest)](https://arcjetcv.readthedocs.io/en/latest/?badge=latest)
+
+-----
+
 # arcjetCV
 
 App to process arcjet videos and segment the edge of the shock and of the sample.
