@@ -1,12 +1,11 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import re
 import ast
-
+import os
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-# automatically update version according to __init__.py
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 with open('arcjetCV/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
@@ -20,7 +19,11 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/magnus-haw/arcjetCV",
-    packages=['arcjetCV'],
+    packages=find_packages(),
+    package_data={
+        '': ['*.txt', '*.md', '*.png', '*.pt'],
+        'arcjetCV': ['gui/logo/*.png'],
+    },
     install_requires=[
     ],
     entry_points={
