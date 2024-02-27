@@ -12,10 +12,9 @@ AGREEMENT.
 
 Government Agency: NASA Ames Research Center
 Government Agency Original Software Designation: NASA Ames Research Center
-Government Agency Original Software Title: Ocean Worlds Autonomy Testbed for
-Exploration Research and Simulation (OceanWATERS)
+Government Agency Original Software Title: arcjetCV: computer vision application for time-resolved recession measurements from arc jet video files, ARC-18837-1
 User Registration Requested. Please e-mail Government Agency Point of Contact
-Government Agency Point of Contact for Original Software: Laurence Edwards
+Government Agency Point of Contact for Original Software: Magnus Haw
 
 
 1. DEFINITIONS
@@ -46,9 +45,7 @@ and of itself constitute a Modification.
 
 G. “Original Software” means the computer software first released under
 this Agreement by Government Agency with Government Agency
-designation NASA Ames Research Center and entitled Ocean
-Worlds Autonomy Testbed for Exploration Research and Simulation
-(OceanWATERS), including source code, object code and
+designation NASA Ames Research Center and entitled arcjetCV: computer vision application for time-resolved recession measurements from arc jet video files, ARC-18837-1, including source code, object code and
 accompanying documentation, if any.
 
 H. “Recipient” means anyone who acquires the Subject Software under
@@ -258,5 +255,5 @@ Recipient hereby agrees to all terms and conditions herein.
 F. Point of Contact: Any Recipient contact with Government Agency is
 to be directed to the designated representative as follows:
 
-Laurence Edwards
-laurence.j.edwards@nasa.gov
+Magnus Haw
+magnus.haw@nasa.gov
