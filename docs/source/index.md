@@ -3,7 +3,7 @@
 ```{toctree} 
 :caption: Quick Start
 :maxdepth: 2
-readme_ph.md
+placeholders/readme.md
 ```
 
 ```{toctree} 
@@ -15,5 +15,5 @@ user_manual/user_manual.md
 ```{toctree} 
 :caption: Python API
 :maxdepth: 2
-api_ph.md
+placeholders/api.md
 ```

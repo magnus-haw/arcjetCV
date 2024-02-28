@@ -2,6 +2,7 @@ import numpy as np
 import cv2 as cv
 import os
 from sklearn.neighbors import LocalOutlierFactor
+import json
 
 
 def splitfn(fn: str):
@@ -10,6 +11,17 @@ def splitfn(fn: str):
     name, ext = os.path.splitext(fn)
     return path, name, ext
 
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.uint8) or isinstance(obj, np.int32):
+            return int(obj)
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        return json.JSONEncoder.default(self, obj)
+    
 
 def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.

@@ -11,13 +11,11 @@ arcjetCV
    :maxdepth: 4
 
    arcjetCV.gui
+   arcjetCV.segmentation
    arcjetCV.utils
 
 
-arcjetCV.main
--------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: arcjetCV.main
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   arcjetCV.main
