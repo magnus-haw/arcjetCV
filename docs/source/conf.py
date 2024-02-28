@@ -12,11 +12,9 @@
 
 import os
 import sys
+sys.path.insert(0, os.path.abspath('user_manual'))
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../arcjetCV'))
-
-# compile .so for cython files
-os.system("cd ../.. && python setup.py build_ext --inplace")
 
 # run api-doc in terminal
 os.system("sphinx-apidoc -fMT ../../arcjetCV -o python_api --templatedir=template")
