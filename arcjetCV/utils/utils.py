@@ -9,7 +9,7 @@ def splitfn(fn: str):
     path, fn = os.path.split(fn)
     name, ext = os.path.splitext(fn)
     return path, name, ext
-
+    
 
 def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
@@ -69,16 +69,16 @@ def smooth(x,window_len=11,window='hanning'):
     return y[int(window_len/2)-1:-int(window_len/2)-1]
 
 
-def clahe_normalize(bgr, clahe):
+def clahe_normalize(bgr):
     lab = cv.cvtColor(bgr, cv.COLOR_BGR2LAB)
-    lab[:,:,0] = clahe.apply(lab[:,:,0])
+    lab[:,:,0] = cv.createCLAHE(clipLimit=2.0, tileGridSize=(9, 9)).apply(lab[:,:,0])
     bgr = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
     return bgr
 
 
 def annotateImage(orig,flags,top=True,left=True):
     try:
-        y,x,c = np.shape(orig)
+        y,x,_ = np.shape(orig)
 
         if top:
             yp = int(y*.035)

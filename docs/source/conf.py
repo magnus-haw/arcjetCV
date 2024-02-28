@@ -3,7 +3,7 @@ from unittest import mock
 sys.path.insert(0, os.path.abspath('../..'))
 
 # run api-doc in terminal
-os.system("sphinx-apidoc -fMT ../../arcjetCV -o python_api --templatedir=template")
+os.system("sphinx-apidoc -fMT ../../arcjetCV -o api --templatedir=template -e")
 
 project = 'arcjetCV'
 copyright = '2024, arcjetCV Team'
@@ -27,6 +27,11 @@ myst_enable_extensions = [
     "deflist",
     "html_admonition",
     "html_image",
+    "colon_fence",
+    "smartquotes",
+    "replacements",
+    "substitution",
+    "tasklist",
 ]
 
 templates_path = ['_templates']

@@ -78,9 +78,7 @@ def getEdgeFromContour(c, flow_direction, offset=None):
     return frontedge
 
 
-def getPoints(
-    c, flow_direction="right", r=[-0.75, -0.25, 0, 0.25, 0.75], prefix="MODEL"
-):
+def getPoints(c, flow_direction="right", r=[-0.75, -0.25, 0, 0.25, 0.75], prefix="MODEL"):
     """
     Given an OpenCV contour, this function returns interpolated points at specified
     relative vertical positions to the center of the contour.
@@ -102,7 +100,7 @@ def getPoints(
         - [prefix]+'_R': List of relative interpolation points.
         - [prefix]+'_YCENTER': Y-coordinate of the center of the contour.
         - [prefix]+'_YLOW': Minimum Y-coordinate of the contour.
-        - [prefix]+'_YMAX': Maximum Y-coordinate of the contour.
+        - [prefix]+'_CROP_YMAX': Maximum Y-coordinate of the contour.
         - [prefix]+'_RADIUS': Radius (half of the height) of the contour.
         - [prefix]+'_INTERP_XPOS': Interpolated X-coordinates corresponding to each point in 'r'.
     """
@@ -121,7 +119,7 @@ def getPoints(
             prefix + "_R": r,
             prefix + "_YCENTER": center,
             prefix + "_YLOW": ymin,
-            prefix + "_YMAX": ymax,
+            prefix + "_CROP_YMAX": ymax,
             prefix + "_RADIUS": radius,
         }
 
@@ -151,7 +149,7 @@ def getPoints(
             prefix + "_R": r,
             prefix + "_YCENTER": center,
             prefix + "_YLOW": xmin,
-            prefix + "_YMAX": xmax,
+            prefix + "_CROP_YMAX": xmax,
             prefix + "_RADIUS": radius,
         }
 
@@ -185,28 +183,14 @@ def contoursAutoHSV(orig, log=None, flags={"UNDEREXPOSED": False}):
     img = cv.cvtColor(orig, cv.COLOR_BGR2HSV)
 
     ### HSV pixel ranges for models taken from sample frames
-    model_ranges = np.array(
-        [
-            [(0, 0, 208), (155, 0, 155), (13, 20, 101), (0, 190, 100), (12, 150, 130)],
-            [
-                (180, 70, 255),
-                (165, 125, 255),
-                (33, 165, 255),
-                (13, 245, 160),
-                (25, 200, 250),
-            ],
-        ]
-    )
+    model_ranges = np.array([[(0, 0, 208), (155, 0, 155), (13, 20, 101), (0, 190, 100), (12, 150, 130)],
+                             [(180, 70, 255), (165, 125, 255), (33, 165, 255), (13, 245, 160), (25, 200, 250)]])
     dim_model = np.array([[(7, 0, 8)], [(20, 185, 101)]])
 
     ### HSV pixel ranges for shocks taken from sample frames
     shock_ranges = np.array([[(125, 78, 115)], [(145, 190, 230)]])
-    dim_shocks = np.array(
-        [
-            [(125, 100, 35), (140, 30, 20), (118, 135, 30)],
-            [(165, 165, 150), (156, 90, 220), (128, 194, 125)],
-        ]
-    )
+    dim_shocks = np.array([[(125, 100, 35), (140, 30, 20), (118, 135, 30)], 
+                           [(165, 165, 150), (156, 90, 220), (128, 194, 125)]])
 
     # Append additional ranges for underexposed images
     if flags["UNDEREXPOSED"]:
@@ -218,9 +202,7 @@ def contoursAutoHSV(orig, log=None, flags={"UNDEREXPOSED": False}):
         flags["DIM_SHOCK"] = True
         shock_ranges = np.hstack((shock_ranges, dim_shocks))
         shockfilter = filter_hsv_ranges(img, shock_ranges)
-    shockcontours, hierarchy = cv.findContours(
-        shockfilter, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE
-    )
+    shockcontours, _ = cv.findContours(shockfilter, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # find the biggest shock contour (shockC) by area
     if len(shockcontours) == 0:
@@ -236,9 +218,7 @@ def contoursAutoHSV(orig, log=None, flags={"UNDEREXPOSED": False}):
     if flags["UNDEREXPOSED"]:
         kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (5, 5))
         modelfilter = cv.morphologyEx(modelfilter, cv.MORPH_OPEN, kernel)
-    modelcontours, hierarchy = cv.findContours(
-        modelfilter, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE
-    )
+    modelcontours, _ = cv.findContours(modelfilter, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # find the biggest model contour (modelC) by area
     if len(modelcontours) == 0:
@@ -254,14 +234,7 @@ def contoursAutoHSV(orig, log=None, flags={"UNDEREXPOSED": False}):
     return contour_dict, flags
 
 
-def contoursHSV(
-    orig,
-    log=None,
-    minHSVModel=(0, 0, 150),
-    maxHSVModel=(181, 125, 256),
-    minHSVShock=(125, 78, 115),
-    maxHSVShock=(145, 190, 230),
-):
+def contoursHSV(orig, log=None, minHSVModel=(0, 0, 150), maxHSVModel=(181, 125, 256), minHSVShock=(125, 78, 115), maxHSVShock=(145, 190, 230)):
     """
     Find contours using HSV ranges image.
     Uses the BGR-HSV transformation to increase contrast.
@@ -281,9 +254,7 @@ def contoursHSV(
 
     ### Model contours
     modelmask = cv.inRange(hsv, minHSVModel, maxHSVModel)
-    modelcontours, hierarchy = cv.findContours(
-        modelmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE
-    )
+    modelcontours, _ = cv.findContours(modelmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # find the biggest model contour (modelC) by area
     if len(modelcontours) == 0:
@@ -296,9 +267,7 @@ def contoursHSV(
 
     ### Shock contours
     shockmask = cv.inRange(hsv, minHSVShock, maxHSVShock)
-    shockcontours, hierarchy = cv.findContours(
-        shockmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE
-    )
+    shockcontours, _ = cv.findContours(shockmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # find the biggest shock contour (shockC) by area
     if len(shockcontours) == 0:
@@ -354,8 +323,8 @@ def contoursGRAY(orig, thresh=150, log=None):
 
     ### Global grayscale threshold
     gray = cv.GaussianBlur(gray_, (5, 5), 0)
-    ret1, th1 = cv.threshold(gray, thresh, 255, cv.THRESH_BINARY)
-    contours, hierarchy = cv.findContours(th1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    _, th1 = cv.threshold(gray, thresh, 255, cv.THRESH_BINARY)
+    contours, _ = cv.findContours(th1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
     if len(contours) != 0:
         # find the biggest contour (c) by the area
         modelC = max(contours, key=cv.contourArea)
@@ -388,9 +357,7 @@ def contoursCNN(orig, model, log=None):
 
     ### Model contours
     modelmask = (((cnnmask == 1) | (cnnmask == 3)) * 255).astype(np.uint8)
-    modelcontours, hierarchy = cv.findContours(
-        modelmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE
-    )
+    modelcontours, _ = cv.findContours(modelmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # find the biggest model contour (modelC) by area
     if len(modelcontours) == 0:
@@ -403,9 +370,7 @@ def contoursCNN(orig, model, log=None):
 
     ### Shock contours
     shockmask = ((cnnmask == 2) * 255).astype(np.uint8)
-    shockcontours, hierarchy = cv.findContours(
-        shockmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE
-    )
+    shockcontours, _ = cv.findContours(shockmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     # find the biggest shock contour (shockC) by area
     if len(shockcontours) == 0:

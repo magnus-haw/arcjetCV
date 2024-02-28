@@ -18,7 +18,7 @@ and activate it:
 
 then run the installation:
 
-    pip install -e .
+    pip install .
 
 ## Citing
 

@@ -160,4 +160,5 @@ settings.json
 *.pkl
 *.pth
 
+api/
 test.py
