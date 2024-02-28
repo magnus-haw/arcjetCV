@@ -22,8 +22,7 @@ def smooth(x,window_len=11,window='hanning'):
     input:
         x: the input signal
         window_len: the dimension of the smoothing window; should be an odd integer
-        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-            flat window will produce a moving average smoothing.
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman' flat window will produce a moving average smoothing.
 
     output:
         the smoothed signal

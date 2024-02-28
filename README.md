@@ -1,3 +1,7 @@
+[![Documentation Status](https://readthedocs.org/projects/arcjetcv/badge/?version=latest)](https://arcjetcv.readthedocs.io/en/latest/?badge=latest)
+
+-----
+
 # arcjetCV
 
 App to process arcjet videos and segment the edge of the shock and of the sample.
@@ -42,8 +46,7 @@ You can now launch the GUI by running:
 Creator:  Magnus Haw
 
 Contributors:
-Alexandre Quintart
-Federico Semeraro
+Alexandre Quintart, Federico Semeraro
 
 ## Legal / License
 Copyright © 2024 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.

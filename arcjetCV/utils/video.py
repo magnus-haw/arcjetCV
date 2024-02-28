@@ -73,7 +73,8 @@ class Video(object):
 
 
 class VideoMetaJSON(dict):
-    ''' Subclass of dictionary designed to save/load video metadata in JSON format creates *.meta files with useful information'''
+    ''' Subclass of dictionary designed to save/load video metadata in JSON format
+    '''
     def __init__(self, video, path):
         super(VideoMetaJSON, self).__init__()
         folder, name, ext = splitfn(path)
