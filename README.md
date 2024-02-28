@@ -46,8 +46,7 @@ You can now launch the GUI by running:
 Creator:  Magnus Haw
 
 Contributors:
-Alexandre Quintart
-Federico Semeraro
+Alexandre Quintart, Federico Semeraro
 
 ## Legal / License
 Copyright © 2024 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.

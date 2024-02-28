@@ -7,5 +7,4 @@ dependencies:
   - pip
   - sphinx
   - sphinx_rtd_theme
-  - recommonmark
-  - m2r
+  - myst-parser
