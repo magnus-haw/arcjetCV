@@ -9,13 +9,6 @@ from arcjetCV.segmentation.time.time_segmentation import time_segmentation, extr
 
 class Video(object):
     ''' Convenience wrapper for opencv video capture
-
-    Methods:
-        get_frame: gets arbitrary frame
-        get_next_frame: gets next frame
-        get_writer: get a video writer object
-        close: closes video and writer object
-        close_writer: closes writer object
     '''
     def __init__(self, path):
         ### path variables
@@ -32,8 +25,11 @@ class Video(object):
         self.fps = self.cap.get(cv.CAP_PROP_FPS)
         ret, frame = self.cap.read()
         self.shape = np.shape(frame)
-        self.h,self.w,self.chan = self.shape
+        self.h, self.w, self.chan = self.shape
         self.last_frame = frame
+        
+        if self.chan not in [1, 3]:
+            raise IndexError("ERROR: number of channels of input video (%i) is not 1 or 3!" % self.chan)
 
         ### video output
         self.writer = None
@@ -72,11 +68,11 @@ class Video(object):
         self.writer.release()
 
 
-class VideoMetaJSON(dict):
+class VideoMeta(dict):
     ''' Subclass of dictionary designed to save/load video metadata in JSON format
     '''
     def __init__(self, video, path):
-        super(VideoMetaJSON, self).__init__()
+        super(VideoMeta, self).__init__()
         folder, name, ext = splitfn(path)
         self.folder = folder
         self.name = name
@@ -94,10 +90,10 @@ class VideoMetaJSON(dict):
         self['FLOW_DIRECTION'] = None
         self['PREAMBLE_RANGE'] = None
         self['STING_VISIBLE_RANGES'] = None
-        self['YMIN'] = None
-        self['YMAX'] = None
-        self['XMIN'] = None
-        self['XMAX'] = None
+        self['CROP_YMIN'] = None
+        self['CROP_YMAX'] = None
+        self['CROP_XMIN'] = None
+        self['CROP_XMAX'] = None
         self['NOTES'] = None
         self['BRIGHTNESS'] = None
         
@@ -106,7 +102,7 @@ class VideoMetaJSON(dict):
         else:
             self["WIDTH"] = video.w
             self["HEIGHT"] = video.h
-            self["CHANNELS"] = 3
+            self["CHANNELS"] = video.chan
             self["NFRAMES"] = video.nframes
             
             try:  # Infer meta parameters
@@ -122,10 +118,7 @@ class VideoMetaJSON(dict):
                 self["LAST_GOOD_FRAME"] = video.nframes
 
             # initial crop
-            self["YMIN"] = 20
-            self["YMAX"] = video.h
-            self["XMIN"] = int(video.w * 0.10)
-            self["XMAX"] = int(video.w * 0.90)
+            self.reset_frame_crop()
             
             print("Calculating brightness ... ", end='')
             self['BRIGHTNESS'] = []
@@ -160,6 +153,18 @@ class VideoMetaJSON(dict):
         self.name = name
         self.ext = ext
         self.path = path
+    
+    def reset_frame_crop(self):
+        self["CROP_YMIN"] = int(self["HEIGHT"] * 0.10)
+        self["CROP_YMAX"] = int(self["HEIGHT"] * 0.90)
+        self["CROP_XMIN"] = int(self["WIDTH"] * 0.10)
+        self["CROP_XMAX"] = int(self["WIDTH"] * 0.90)
+    
+    def set_frame_crop(self, ymin, ymax, xmin, xmax):
+        self["CROP_YMIN"] = ymin
+        self["CROP_YMAX"] = ymax
+        self["CROP_XMIN"] = xmin
+        self["CROP_XMAX"] = xmax
 
     def crop_range(self):
-        return [[self['YMIN'],self['YMAX']],[self['XMIN'], self['XMAX']]]
+        return [[self['CROP_YMIN'],self['CROP_YMAX']],[self['CROP_XMIN'], self['CROP_XMAX']]]

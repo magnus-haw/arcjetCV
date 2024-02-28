@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from pathlib import Path
-from arcjetCV.utils.video import VideoMetaJSON
+from arcjetCV.utils.video import VideoMeta
 from arcjetCV.utils.output import OutputListJSON
 
 
@@ -18,39 +18,39 @@ class TestVideoMetaJSON(unittest.TestCase):
 
     def test_write_and_load(self):
         # Create an instance of VideoMetaJSON and set some data
-        video_meta = VideoMetaJSON(self.test_file)
+        video_meta = VideoMeta(self.test_file)
         video_meta['WIDTH'] = 1286
         video_meta['HEIGHT'] = 720
         video_meta['CHANNELS'] = 3
         video_meta['NFRAMES'] = 719
-        video_meta['YMIN'] = 150
-        video_meta['YMAX'] = 600
-        video_meta['XMIN'] = 100
-        video_meta['XMAX'] = 270
+        video_meta['CROP_YMIN'] = 150
+        video_meta['CROP_YMAX'] = 600
+        video_meta['CROP_XMIN'] = 100
+        video_meta['CROP_XMAX'] = 270
 
         # Write the data to the file
         video_meta.write()
 
         # Create another instance and load the data from the file
-        loaded_meta = VideoMetaJSON(self.test_file)
+        loaded_meta = VideoMeta(self.test_file)
 
         # Check if the loaded data matches the original data
         self.assertEqual(loaded_meta['WIDTH'], 1286)
         self.assertEqual(loaded_meta['HEIGHT'], 720)
         self.assertEqual(loaded_meta['CHANNELS'], 3)
         self.assertEqual(loaded_meta['NFRAMES'], 719)
-        self.assertEqual(loaded_meta['YMIN'], 150)
-        self.assertEqual(loaded_meta['YMAX'], 600)
-        self.assertEqual(loaded_meta['XMIN'], 100)
-        self.assertEqual(loaded_meta['XMAX'], 270)
+        self.assertEqual(loaded_meta['CROP_YMIN'], 150)
+        self.assertEqual(loaded_meta['CROP_YMAX'], 600)
+        self.assertEqual(loaded_meta['CROP_XMIN'], 100)
+        self.assertEqual(loaded_meta['CROP_XMAX'], 270)
 
     def test_crop_range(self):
         # Create an instance of VideoMetaJSON and set some data
-        video_meta = VideoMetaJSON(self.test_file)
-        video_meta['YMIN'] = 10
-        video_meta['YMAX'] = 100
-        video_meta['XMIN'] = 20
-        video_meta['XMAX'] = 200
+        video_meta = VideoMeta(self.test_file)
+        video_meta['CROP_YMIN'] = 10
+        video_meta['CROP_YMAX'] = 100
+        video_meta['CROP_XMIN'] = 20
+        video_meta['CROP_XMAX'] = 200
 
         # Test the crop_range method
         expected_range = [[10, 100], [20, 200]]

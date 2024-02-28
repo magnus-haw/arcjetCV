@@ -1,6 +1,18 @@
 import json
 import threading
-from arcjetCV.utils.utils import splitfn, NumpyEncoder
+import numpy as np
+from arcjetCV.utils.utils import splitfn
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.uint8) or isinstance(obj, np.int32):
+            return int(obj)
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 class OutputListJSON(list):
@@ -20,7 +32,7 @@ class OutputListJSON(list):
     def __init__(self,path):
         super(OutputListJSON,self).__init__()
         self.path=path
-        folder, name, ext = splitfn(path)
+        folder, name, _ = splitfn(path)
         self.folder = folder
         self._lock = threading.Lock()
 
@@ -29,12 +41,13 @@ class OutputListJSON(list):
         self.low_index = int(namesplit[-2])
         self.high_index = int(namesplit[-1])
 
-    def write(self):
+    def write(self, indent=None):
         with self._lock:
-            json_object = json.dumps(self, indent=4, cls=NumpyEncoder)
+            json_object = json.dumps(self, indent=indent, cls=NumpyEncoder)
             # Writing to sample.json
             with open(self.path, "w") as outfile:
                 outfile.write(json_object)
+            print("Edges output written to", self.path)
 
     def load(self,path,extend=True):
         with self._lock:

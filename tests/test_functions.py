@@ -73,7 +73,7 @@ class TestGetPoints(unittest.TestCase):
         # Asserting on some expected results. You should adapt these based on your expectations.
         self.assertEqual(result["MODEL_YCENTER"], 20)
         self.assertEqual(result["MODEL_YLOW"], 10)
-        self.assertEqual(result["MODEL_YMAX"], 30)
+        self.assertEqual(result["MODEL_CROP_YMAX"], 30)
         self.assertEqual(result["MODEL_RADIUS"], 10)
         self.assertEqual(len(result["MODEL_INTERP_XPOS"]), 5)
     
@@ -85,7 +85,7 @@ class TestGetPoints(unittest.TestCase):
         # Asserting on some expected results
         self.assertEqual(result["MODEL_YCENTER"], 20)
         self.assertEqual(result["MODEL_YLOW"], 10)
-        self.assertEqual(result["MODEL_YMAX"], 30)
+        self.assertEqual(result["MODEL_CROP_YMAX"], 30)
         self.assertEqual(result["MODEL_RADIUS"], 10)
         self.assertEqual(len(result["MODEL_INTERP_XPOS"]), 5)
     
@@ -97,7 +97,7 @@ class TestGetPoints(unittest.TestCase):
         # Asserting on some expected results
         self.assertEqual(result["MODEL_YCENTER"], 20)
         self.assertEqual(result["MODEL_YLOW"], 10)
-        self.assertEqual(result["MODEL_YMAX"], 30)
+        self.assertEqual(result["MODEL_CROP_YMAX"], 30)
         self.assertEqual(result["MODEL_RADIUS"], 10)
         self.assertEqual(len(result["MODEL_INTERP_XPOS"]), 5)
     
@@ -109,7 +109,7 @@ class TestGetPoints(unittest.TestCase):
         # Asserting on some expected results
         self.assertEqual(result["MODEL_YCENTER"], 20)
         self.assertEqual(result["MODEL_YLOW"], 10)
-        self.assertEqual(result["MODEL_YMAX"], 30)
+        self.assertEqual(result["MODEL_CROP_YMAX"], 30)
         self.assertEqual(result["MODEL_RADIUS"], 10)
         self.assertEqual(len(result["MODEL_INTERP_XPOS"]), 5)
 

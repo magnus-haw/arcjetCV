@@ -6,8 +6,15 @@ Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE 
 Root directory for the arcjetCV package.
 """
 
+# Note: only this version has to be bumped for the whole project
+# to publish new version: (pre-requisite: conda install conda-forge::gh)
+# - bump version below
+# - git add -A
+# - git commit -m 'Version bumped'
+# - git push origin main
+# - git tag -a v$(python setup.py --version) -m 'INPUT DESCRIPTION'
+# - gh release create v$(python setup.py --version) --target main
 __version__ = "0.0.1"
 
-from arcjetCV.utils.video import Video, VideoMetaJSON
+from arcjetCV.utils.video import Video, VideoMeta
 from arcjetCV.utils.processor import ArcjetProcessor
-from arcjetCV.utils.output import OutputListJSON
