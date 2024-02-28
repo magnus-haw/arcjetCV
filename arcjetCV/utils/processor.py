@@ -47,60 +47,7 @@ class ArcjetProcessor:
         else:
             self.CROP = crop_range
 
-        try:
-            # Crop frame to ROI
-            if self.CHANNELS == 1:
-                cropped_frame = frame[
-                    self.CROP[0][0] : self.CROP[0][1], self.CROP[1][0] : self.CROP[1][1]
-                ]
-            else:
-                cropped_frame = frame[
-                    self.CROP[0][0] : self.CROP[0][1],
-                    self.CROP[1][0] : self.CROP[1][1],
-                    :,
-                ]
-
-            # Determine the dimensions of cropped_frame
-            cropped_height, cropped_width = cropped_frame.shape[:2]
-
-            # Find the size of the new square frame (maximum of cropped frame's dimensions)
-            square_side = max(cropped_height, cropped_width)
-
-            # Create a new square frame filled with black pixels
-            # Adjust for the number of channels
-            if self.CHANNELS == 1:
-                square_frame = np.zeros(
-                    (square_side, square_side), dtype=cropped_frame.dtype
-                )
-            else:
-                square_frame = np.zeros(
-                    (square_side, square_side, self.CHANNELS), dtype=cropped_frame.dtype
-                )
-
-            # Calculate starting coordinates to center `cropped_frame` within `square_frame`
-            start_y = (square_side - cropped_height) // 2
-            start_x = (square_side - cropped_width) // 2
-
-            # Place `cropped_frame` into `square_frame`
-            if self.CHANNELS == 1:
-                square_frame[
-                    start_y : start_y + cropped_height,
-                    start_x : start_x + cropped_width,
-                ] = cropped_frame
-            else:
-                square_frame[
-                    start_y : start_y + cropped_height,
-                    start_x : start_x + cropped_width,
-                    :,
-                ] = cropped_frame
-            # Update self.FRAME_CROP to the new square frame
-            self.FRAME_CROP = square_frame
-
-        except IndexError:
-            self.FRAME_CROP = [[30, self.HEIGHT - 30], [50, self.WIDTH - 50]]
-            raise IndexError(
-                f"ERROR: processor crop window {self.CROP} incompatible with given frame shape {frame.shape}"
-            )
+        self.set_crop(self.CROP)
 
         self.homedir = home
         self.cnn = CNN()
@@ -110,6 +57,7 @@ class ArcjetProcessor:
         """sets crop window range [[ymin,ymax], [xmin,xmax]]"""
         self.CROP = crop_range
         try:
+            # Crop frame to ROI
             if self.CHANNELS == 1:
                 self.FRAME_CROP = self.FRAME[
                     self.CROP[0][0] : self.CROP[0][1], self.CROP[1][0] : self.CROP[1][1]
@@ -120,11 +68,48 @@ class ArcjetProcessor:
                     self.CROP[1][0] : self.CROP[1][1],
                     :,
                 ]
+
+            # Determine the dimensions of self.FRAME_CROP
+            cropped_height, cropped_width = self.FRAME_CROP.shape[:2]
+
+            # Find the size of the new square frame (maximum of cropped frame's dimensions)
+            square_side = max(cropped_height, cropped_width)
+
+            # Create a new square frame filled with black pixels
+            # Adjust for the number of channels
+            if self.CHANNELS == 1:
+                square_frame = np.zeros(
+                    (square_side, square_side), dtype=self.FRAME_CROP.dtype
+                )
+            else:
+                square_frame = np.zeros(
+                    (square_side, square_side, self.CHANNELS),
+                    dtype=self.FRAME_CROP.dtype,
+                )
+
+            # Calculate starting coordinates to center `self.FRAME_CROP` within `square_frame`
+            start_y = (square_side - cropped_height) // 2
+            start_x = (square_side - cropped_width) // 2
+
+            # Place `self.FRAME_CROP` into `square_frame`
+            if self.CHANNELS == 1:
+                square_frame[
+                    start_y : start_y + cropped_height,
+                    start_x : start_x + cropped_width,
+                ] = self.FRAME_CROP
+            else:
+                square_frame[
+                    start_y : start_y + cropped_height,
+                    start_x : start_x + cropped_width,
+                    :,
+                ] = self.FRAME_CROP
+            # Update self.FRAME_CROP to the new square frame
+            self.FRAME_CROP = square_frame
+
         except IndexError:
-            self.FRAME_CROP = None
+            self.FRAME_CROP = [[30, self.HEIGHT - 30], [50, self.WIDTH - 50]]
             raise IndexError(
-                "ERROR: processor crop window %s incompatible with given frame shape %s"
-                % (str(self.CROP), str(self.FRAME.shape))
+                f"ERROR: processor crop window {self.CROP} incompatible with given frame shape {frame.shape}"
             )
 
     def get_flow_direction(self, frame):
