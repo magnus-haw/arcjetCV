@@ -28,7 +28,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'arcjetCV=arcjetCV.main:main',
+            'arcjetCV=arcjetCV.gui.main:main',
         ],
     },
     project_urls={

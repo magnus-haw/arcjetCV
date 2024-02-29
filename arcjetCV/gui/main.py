@@ -5,7 +5,7 @@ Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE 
 """
 from PySide6.QtWidgets import QApplication
 import sys
-from arcjetCV.utils.main_window import MainWindow
+from arcjetCV.gui.main_window import MainWindow
 
 
 def main():
