@@ -93,7 +93,7 @@ class Video(object):
         Retrieves the frame at the specified index.
 
         :param index: index of the frame to retrieve
-        :returns: frame at the specified index
+        :returns: RGB frame at the specified index
         """
         with self._lock:
             self.cap.set(cv.CAP_PROP_POS_FRAMES,index)
