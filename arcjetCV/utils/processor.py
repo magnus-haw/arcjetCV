@@ -18,6 +18,11 @@ class ArcjetProcessor:
     """ Video frame processor
     """
     def __init__(self, videometa):
+        """
+        Initializes the ArcjetProcessor object.
+
+        :param videometa: dictionary containing video metadata
+        """
         self.flow_dir = videometa['FLOW_DIRECTION']
         self.h = videometa['HEIGHT']
         self.w = videometa['WIDTH']
@@ -25,13 +30,19 @@ class ArcjetProcessor:
         self.cnn = CNN()
 
     def update_video_meta(self, videometa):
+        """
+        Updates video metadata.
+
+        :param videometa: dictionary containing updated video metadata
+        """
         self.flow_dir = videometa['FLOW_DIRECTION']
         self.h = videometa['HEIGHT']
         self.w = videometa['WIDTH']
         self.crop = videometa.crop_range()
         
     def get_flow_direction(self, frame):
-        """infer flow direction
+        """
+        Infers flow direction from the provided frame.
 
         :param frame: opencv image
         :returns flowDirection: string, "left or "right"
@@ -59,9 +70,10 @@ class ArcjetProcessor:
 
     def get_image_flags(self, frame, argdict):
         """
-        Uses histogram of 8bit grayscale image (0,255) to classify image type
+        Uses histogram of 8-bit grayscale image (0,255) to classify image type.
 
         :param frame: opencv image
+        :param argdict: dictionary to store flags
         :returns: dictionary of flags
         """
         try:
@@ -89,12 +101,17 @@ class ArcjetProcessor:
         return argdict
 
     def segment(self, img_crop, argdict):
-        """segment image using one of several methods"""
+        """
+        Segments image using one of several methods specified in argdict.
 
+        :param img_crop: cropped opencv image
+        :param argdict: dictionary containing segmentation method and related parameters
+        :returns: contour_dict: dictionary containing contours
+                  flags: dictionary containing flags
+        """
         img_clahe = clahe_normalize(img_crop)
         if argdict["SEGMENT_METHOD"] == "AutoHSV":
-            img_clahe = clahe_normalize(img_crop)
-            contour_dict, flags = contoursAutoHSV(img_clahe, flags=argdict)
+            contour_dict, flags = contoursAutoHSV(img_crop, flags=argdict)
 
         elif argdict["SEGMENT_METHOD"] == "HSV":
             try:
@@ -126,7 +143,15 @@ class ArcjetProcessor:
         return contour_dict, argdict
 
     def get_edges_metrics(self, contour_dict, argdict, offset):
-        """get edges and metrics"""
+        """
+        Retrieves edges and metrics from contour dictionary.
+
+        :param contour_dict: dictionary containing contours
+        :param argdict: dictionary containing metrics
+        :param offset: tuple containing offset values
+        :returns: edges: dictionary containing edges
+                  argdict: updated dictionary containing metrics
+        """
         edges = {}
         for key in contour_dict.keys():
             c = contour_dict[key]
@@ -158,6 +183,13 @@ class ArcjetProcessor:
         return edges, argdict
 
     def make_crop_square(self, frame):
+        """
+        Makes the provided frame square by cropping or padding.
+
+        :param frame: opencv image
+        :returns: square_frame: square opencv image
+                  offset: list containing offset values
+        """
         cropped_frame = frame[self.crop[0][0]:self.crop[0][1], self.crop[1][0]:self.crop[1][1]]
         cropped_height, cropped_width = cropped_frame.shape[:2]
         square_side = max(cropped_height, cropped_width)
@@ -168,6 +200,22 @@ class ArcjetProcessor:
         return square_frame, [start_y, start_x]
 
     def process(self, frame, argdict):
+        """
+        Processes the given frame.
+
+        :param frame: opencv image
+        :param argdict: dictionary containing segmentation parameters
+        :returns: edges: dictionary containing edges
+                  argdict: updated dictionary containing metrics
+        
+        Example:
+        ```python
+        processor = ArcjetProcessor(videometa)
+        frame = cv.imread('frame.jpg')
+        argdict = {"SEGMENT_METHOD": "AutoHSV", "MODEL_FRACTION": 0.005}
+        edges, argdict = processor.process(frame, argdict)
+        ```
+        """
         if self.flow_dir is None: self.flow_dir = self.get_flow_direction(frame)
         frame_crop, offset = self.make_crop_square(frame)
         argdict = self.get_image_flags(frame_crop, argdict)
@@ -176,6 +224,25 @@ class ArcjetProcessor:
         return edges, argdict.copy()
 
     def process_all(self, video, options, first_frame, last_frame, frame_stride, output_json='', write_video=False):
+        """
+        Processes all frames in the video.
+
+        :param video: video object
+        :param options: dictionary containing segmentation options
+        :param first_frame: index of the first frame to process
+        :param last_frame: index of the last frame to process
+        :param frame_stride: stride for frame processing
+        :param output_json: filename for output JSON file
+        :param write_video: boolean indicating whether to write processed video
+
+        Example:
+        ```python
+        video = Video('input_video.mp4')
+        options = {"SEGMENT_METHOD": "AutoHSV", "MODEL_FRACTION": 0.005}
+        processor = ArcjetProcessor(videometa)
+        processor.process_all(video, options, 0, 100, 1, 'output.json', write_video=True)
+        ```
+        """
 
         if write_video:
             video.get_writer()
