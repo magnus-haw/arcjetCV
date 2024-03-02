@@ -109,7 +109,7 @@ class ArcjetProcessor:
         :returns: contour_dict: dictionary containing contours
                   flags: dictionary containing flags
         """
-        img_clahe = clahe_normalize(img_crop)
+
         if argdict["SEGMENT_METHOD"] == "AutoHSV":
             contour_dict, flags = contoursAutoHSV(img_crop, flags=argdict)
 
@@ -121,7 +121,7 @@ class ArcjetProcessor:
                 HSVModelRange = [(0, 0, 150), (121, 125, 255)]
                 HSVShockRange = [(125, 40, 85), (170, 80, 230)]
                 print(f"HSVRange not provided, using default value of HSVModelRange: {HSVModelRange}, HSVShockRange: {HSVShockRange}")
-
+            img_clahe = clahe_normalize(img_crop)
             contour_dict, flags = contoursHSV(img_clahe, log=None, 
                                               minHSVModel=HSVModelRange[0], maxHSVModel=HSVModelRange[1], 
                                               minHSVShock=HSVShockRange[0], maxHSVShock=HSVShockRange[1])
@@ -132,6 +132,7 @@ class ArcjetProcessor:
             except:
                 thresh = 240
                 print(f"Threshold not provided, using default value of {thresh}")
+            img_clahe = clahe_normalize(img_crop)
             contour_dict, flags = contoursGRAY(img_clahe, thresh=thresh, log=None)
 
         elif argdict["SEGMENT_METHOD"] == "CNN":
@@ -174,7 +175,7 @@ class ArcjetProcessor:
 
                 if len(edges[key]) > 0:
                     if key == "MODEL":
-                        outputs = getPoints(edges[key], flow_direction=self.flow_dir, r=[-0.75, -0.25, 0, 0.25, 0.75], prefix="MODEL")
+                        outputs = getPoints(edges[key], flow_direction=self.flow_dir, r=[-0.95, -0.50, 0, 0.50, 0.95], prefix="MODEL")
                     else:  # SHOCK
                         outputs = getPoints(edges[key], flow_direction=self.flow_dir, r=[0], prefix="SHOCK")
                     argdict.update(outputs)

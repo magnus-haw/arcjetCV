@@ -78,7 +78,7 @@ def getEdgeFromContour(c, flow_direction, offset=None):
     return frontedge
 
 
-def getPoints(c, flow_direction="right", r=[-0.75, -0.25, 0, 0.25, 0.75], prefix="MODEL"):
+def getPoints(c, flow_direction="right", r=[-0.95, -0.50, 0, 0.50, 0.95], prefix="MODEL"):
     """
     Given an OpenCV contour, this function returns interpolated points at specified
     relative vertical positions to the center of the contour.
@@ -92,7 +92,7 @@ def getPoints(c, flow_direction="right", r=[-0.75, -0.25, 0, 0.25, 0.75], prefix
     :param flow_direction (str): Indicates the direction of the flow. Acceptable values
                                  are "right", "left", "up", or "down". Default is "right".
     :param r (list): A list of interpolation points relative to the contour's radius.
-                     Default is [-0.75, -0.25, 0, 0.25, 0.75].
+                     Default is [-0.95, -0.50, 0, 0.50, 0.95].
     :param prefix (str): A prefix string for keys in the output dictionary. Default is "MODEL".
 
     Returns:

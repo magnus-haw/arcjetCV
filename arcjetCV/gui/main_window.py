@@ -76,11 +76,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_LoadFiles.clicked.connect(self.load_outputs)
         self.ui.pushButton_PlotData.clicked.connect(self.plot_outputs)
         self.ui.checkBox_display_shock2.stateChanged.connect(self.plot_outputs)
-        self.ui.checkBox_m75_radius.stateChanged.connect(self.plot_outputs)
-        self.ui.checkBox_m25_radius.stateChanged.connect(self.plot_outputs)
+        self.ui.checkBox_m95_radius.stateChanged.connect(self.plot_outputs)
+        self.ui.checkbox_m50_radius.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_model_center.stateChanged.connect(self.plot_outputs)
-        self.ui.checkBox_25_radius.stateChanged.connect(self.plot_outputs)
-        self.ui.checkBox_75_radius.stateChanged.connect(self.plot_outputs)
+        self.ui.checkbox_50_radius.stateChanged.connect(self.plot_outputs)
+        self.ui.checkBox_95_radius.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shock_area.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_model_rad.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shock_center.stateChanged.connect(self.plot_outputs)
@@ -462,7 +462,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax2 = self.ui.Window2.canvas.axes
 
         # Plotting params
-        index, m75, m25, mc, p25, p75, radius = [], [], [], [], [], [], []
+        index, m95, m50, mc, p50, p95, radius = [], [], [], [], [], [], []
         time, sarea, marea, sc, sm, ypos = [], [], [], [], [], []
 
         diameter = self.ui.doubleSpinBox_diameter.value()
@@ -481,24 +481,24 @@ class MainWindow(QtWidgets.QMainWindow):
                     index.append(self.raw_outputs[i]["INDEX"])
                     time.append(self.raw_outputs[i]["INDEX"] / fps)
 
-                    # Model positions (-75%, -25%, center, 25%, 75% radius)
+                    # Model positions (-95%, -50%, center, 50%, 95% radius)
                     if self.raw_outputs[i]["MODEL"] is not None:
                         xpos = self.raw_outputs[i]["MODEL_INTERP_XPOS"]
                         center = self.raw_outputs[i]["MODEL_YCENTER"]
                         self.raw_outputs[i]["MODEL"] = np.array(self.raw_outputs[i]["MODEL"])
-                        m75.append(xpos[0])
-                        m25.append(xpos[1])
+                        m95.append(xpos[0])
+                        m50.append(xpos[1])
                         mc.append(xpos[2])
-                        p25.append(xpos[3])
-                        p75.append(xpos[4])
+                        p50.append(xpos[3])
+                        p95.append(xpos[4])
                         ypos.append(center)
                         radius.append(self.raw_outputs[i]["MODEL_RADIUS"])
                     else:
-                        m75.append(np.nan)
-                        m25.append(np.nan)
+                        m95.append(np.nan)
+                        m50.append(np.nan)
                         mc.append(np.nan)
-                        p25.append(np.nan)
-                        p75.append(np.nan)
+                        p50.append(np.nan)
+                        p95.append(np.nan)
                         ypos.append(np.nan)
                         radius.append(np.nan)
 
@@ -554,11 +554,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.pixel_length = pixel_length
 
                 # Plot XT series
-                ym75 = np.ma.masked_where(mask < 0, m75) * pixel_length
-                ym25 = np.ma.masked_where(mask < 0, m25) * pixel_length
+                ym95 = np.ma.masked_where(mask < 0, m95) * pixel_length
+                ym50 = np.ma.masked_where(mask < 0, m50) * pixel_length
                 ymc = np.ma.masked_where(mask < 0, mc) * pixel_length
-                yp25 = np.ma.masked_where(mask < 0, p25) * pixel_length
-                yp75 = np.ma.masked_where(mask < 0, p75) * pixel_length
+                yp50 = np.ma.masked_where(mask < 0, p50) * pixel_length
+                yp95 = np.ma.masked_where(mask < 0, p95) * pixel_length
                 ysarea = np.ma.masked_where(mask < 0, sarea)
                 ymarea = np.ma.masked_where(mask < 0, marea)
                 ysc = np.ma.masked_where(mask < 0, sc) * pixel_length
@@ -567,25 +567,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 self.PLOTKEYS = []
 
-                if self.ui.checkBox_m75_radius.isChecked():
-                    self.ax2.plot(time, ym75, "ms", label="Model -75%R")
-                    self.PLOTKEYS.append("MODEL_-0.75R " + units)
+                if self.ui.checkBox_m95_radius.isChecked():
+                    self.ax2.plot(time, ym95, "ms", label="Model -95%R")
+                    self.PLOTKEYS.append("MODEL_-0.95R " + units)
 
-                if self.ui.checkBox_m25_radius.isChecked():
-                    self.ax2.plot(time, ym25, "bx", label="Model -25%R")
-                    self.PLOTKEYS.append("MODEL_-0.25R " + units)
+                if self.ui.checkbox_m50_radius.isChecked():
+                    self.ax2.plot(time, ym50, "bx", label="Model -50%R")
+                    self.PLOTKEYS.append("MODEL_-0.50R " + units)
 
                 if self.ui.checkBox_model_center.isChecked():
                     self.ax2.plot(time, ymc, "go", label="Model center")
                     self.PLOTKEYS.append("MODEL_CENTER " + units)
 
-                if self.ui.checkBox_25_radius.isChecked():
-                    self.ax2.plot(time, yp25, "cx", label="Model +25%R")
-                    self.PLOTKEYS.append("MODEL_0.25R " + units)
+                if self.ui.checkbox_50_radius.isChecked():
+                    self.ax2.plot(time, yp50, "cx", label="Model +50%R")
+                    self.PLOTKEYS.append("MODEL_0.50R " + units)
 
-                if self.ui.checkBox_75_radius.isChecked():
-                    self.ax2.plot(time, yp75, "rs", label="Model +75%R")
-                    self.PLOTKEYS.append("MODEL_0.75R " + units)
+                if self.ui.checkBox_95_radius.isChecked():
+                    self.ax2.plot(time, yp95, "rs", label="Model +95%R")
+                    self.PLOTKEYS.append("MODEL_0.95R " + units)
 
                 if self.ui.checkBox_shock_area.isChecked():
                     self.ax2.plot(time, ysarea, "y^", label="Shock area (px)")
@@ -616,8 +616,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 # Save to dictionary data structure
                 output_dict = {"TIME [s]": time}
-                self.length_units = [ym75, ym25, ymc, yp25, yp75, ysc, ysm, yypos]
-                self.length_labels = ["MODEL_-0.75R", "MODEL_-0.25R", "MODEL_CENTER", "MODEL_0.25R", "MODEL_0.75R", 
+                self.length_units = [ym95, ym50, ymc, yp50, yp95, ysc, ysm, yypos]
+                self.length_labels = ["MODEL_-0.95R", "MODEL_-0.50R", "MODEL_CENTER", "MODEL_0.50R", "MODEL_0.95R", 
                                       "SHOCK_CENTER", "SHOCK_TO_MODEL", "MODEL_YPOS"]
                 for k in range(0, len(self.length_units)):
                     output_dict[self.length_labels[k] + " " + units] = (self.length_units[k])
@@ -690,10 +690,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 fig.savefig(str(name + filename))
                 plt.close(fig)
 
-            # Plot "MODEL_-0.75R", "MODEL_-0.25R", "MODEL_CENTER", "MODEL_0.25R", "MODEL_0.75R" in one graph
+            # Plot "MODEL_-0.95R", "MODEL_-0.50R", "MODEL_CENTER", "MODEL_0.50R", "MODEL_0.95R" in one graph
             fig, ax_combined = plt.subplots()
             for i, data in enumerate(self.length_units[:5]):
-                label = f"Model {['-0.75R', '-0.25R', 'Center', '0.25R', '0.75'][i]}"
+                label = f"Model {['-0.95R', '-0.50R', 'Center', '0.50R', '0.95'][i]}"
                 ax_combined.scatter(time, data, label=label)
             ax_combined.set_xlabel("Time (s)")
             ax_combined.set_ylabel(f"Model Positions ({units})")
