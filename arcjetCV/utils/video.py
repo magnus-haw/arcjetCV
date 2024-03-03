@@ -61,6 +61,7 @@ class Video(object):
 
         ### video output
         self.writer = None
+        self.output_path = os.path.join(self.folder,"video_out_"+self.name+'.m4v')
 
     def __str__(self):
         """
@@ -113,16 +114,14 @@ class Video(object):
         Initializes the video writer.
         """
         vid_cod = cv.VideoWriter_fourcc('m','p','4','v')
-        fname = os.path.join(self.folder,"edit_"+self.name+'.m4v')
-        print(f"Writing {fname}")
-        self.writer = cv.VideoWriter(fname, vid_cod, self.fps,(self.shape[1], self.shape[0]))
+        print(f"Writing {self.output_path}")
+        self.writer = cv.VideoWriter(self.output_path, vid_cod, self.fps,(self.shape[1], self.shape[0]))
 
     def close_writer(self):
         """
         Closes the video writer.
         """
         self.writer.release()
-
 
 class VideoMeta(dict):
     '''
@@ -138,9 +137,9 @@ class VideoMeta(dict):
 
     Example:
     ```python
-    video = Video('input_video.mp4')
-    video_meta = VideoMeta(video, 'metadata.json')
-    video_meta.write()
+    video = Video('input_video.mp4') # load video
+    video_meta = VideoMeta(video, 'metadata.json') # create/load metadata obj
+    video_meta.write() # write metadata to file
     ```
     '''
     def __init__(self, video, path):

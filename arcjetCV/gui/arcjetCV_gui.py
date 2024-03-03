@@ -178,12 +178,12 @@ class Ui_MainWindow(object):
         )
         self.label_display_shock.setText("Display Shock:")
 
-        self.checkbox_display_shock = QtWidgets.QCheckBox(self.groupBox_2)
-        self.checkbox_display_shock.setObjectName("checkbox_display_shock")
+        self.checkBox_display_shock = QtWidgets.QCheckBox(self.groupBox_2)
+        self.checkBox_display_shock.setObjectName("checkBox_display_shock")
         self.formLayout.setWidget(
-            3, QtWidgets.QFormLayout.FieldRole, self.checkbox_display_shock
+            3, QtWidgets.QFormLayout.FieldRole, self.checkBox_display_shock
         )
-        self.checkbox_display_shock.setChecked(True)
+        self.checkBox_display_shock.setChecked(True)
 
         self.tab_7 = QtWidgets.QWidget()
         self.tab_7.setObjectName("tab_7")
@@ -653,9 +653,9 @@ class Ui_MainWindow(object):
         self.checkBox_95_radius.setChecked(False)
         self.checkBox_95_radius.setObjectName("checkBox_95_radius")
         self.gridLayout.addWidget(self.checkBox_95_radius, 4, 0, 1, 1)
-        self.checkbox_m50_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
-        self.checkbox_m50_radius.setChecked(True)
-        self.checkbox_m50_radius.setObjectName("checkBox_m50_radius")
+        self.checkBox_m50_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
+        self.checkBox_m50_radius.setChecked(True)
+        self.checkBox_m50_radius.setObjectName("checkBox_m50_radius")
         self.gridLayout.addWidget(self.checkBox_m50_radius, 1, 0, 1, 1)
         self.checkBox_ypos = QtWidgets.QCheckBox(self.groupBox_XT_params)
         self.checkBox_ypos.setObjectName("checkBox_ypos")
@@ -818,9 +818,9 @@ class Ui_MainWindow(object):
             _translate("MainWindow", "Visible Traces on XT plot")
         )
         self.checkBox_95_radius.setText(_translate("MainWindow", "+95% radius"))
-        self.checkbox_m50_radius.setText(_translate("MainWindow", "-50% radius"))
+        self.checkBox_m50_radius.setText(_translate("MainWindow", "-50% radius"))
         self.checkBox_ypos.setText(_translate("MainWindow", "Model axis-position"))
-        self.checkbox_50_radius.setText(_translate("MainWindow", "+50% radius "))
+        self.checkBox_50_radius.setText(_translate("MainWindow", "+50% radius "))
         self.checkBox_shockmodel.setText(_translate("MainWindow", "Shock-model dist"))
         self.checkBox_shock_center.setText(_translate("MainWindow", "Shock center"))
         self.checkBox_model_center.setText(_translate("MainWindow", "Model center"))

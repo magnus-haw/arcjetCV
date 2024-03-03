@@ -1046,7 +1046,7 @@
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QCheckBox" name="checkbox_m50_radius">
+              <widget class="QCheckBox" name="checkBox_m50_radius">
                <property name="text">
                 <string>-50% radius</string>
                </property>
@@ -1063,7 +1063,7 @@
               </widget>
              </item>
              <item row="3" column="0">
-              <widget class="QCheckBox" name="checkbox_50_radius">
+              <widget class="QCheckBox" name="checkBox_50_radius">
                <property name="text">
                 <string>+50% radius </string>
                </property>

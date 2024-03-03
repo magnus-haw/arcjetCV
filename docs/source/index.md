@@ -27,17 +27,23 @@ video = arcv.Video(filepath + ".mp4")
 videometa = arcv.VideoMeta(video, filepath + ".meta")
 videometa["FLOW_DIRECTION"] = "right"
 videometa.set_frame_crop(250, 780, 490, 1020)
+outputprefix = "output"
 
 processor = arcv.ArcjetProcessor(videometa)
-processor.process_all(
+output = processor.process_all(
     video, 
     options={"SEGMENT_METHOD": "CNN"}, 
     first_frame=videometa["FIRST_GOOD_FRAME"], 
     last_frame=videometa["LAST_GOOD_FRAME"], 
-    frame_stride=50,
-    output_json=filepath,
-    write_video=True
+    frame_stride = 10,
+    write_json = True,
+    write_video = True
 )
+
+# output_data_path = output.path
+# video_output_path = video.output_path
+# videometa_filepath = videometa.path
+
 ```
 
 ### Functions and Classes

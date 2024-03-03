@@ -95,7 +95,7 @@ def annotateImage(orig,flags,top=True,left=True):
         if left:
             xp = int(x*.035)
         else:
-            xp = int(y*.85)
+            xp = int(x*.85)
 
         offset=0
         for key in ['OVEREXPOSED', 'UNDEREXPOSED']:
@@ -122,7 +122,7 @@ def getOutlierMask(metrics):
     """
 
     X = np.nan_to_num(np.array(metrics).T)
-    clf = LocalOutlierFactor(n_neighbors=11, contamination='auto')
+    clf = LocalOutlierFactor(n_neighbors=9, contamination='auto')
     # use fit_predict to compute the predicted labels of the training samples
     # (when LOF is used for outlier detection, the estimator has no predict,
     # decision_function and score_samples methods).

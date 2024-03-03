@@ -77,9 +77,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_PlotData.clicked.connect(self.plot_outputs)
         self.ui.checkBox_display_shock2.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_m95_radius.stateChanged.connect(self.plot_outputs)
-        self.ui.checkbox_m50_radius.stateChanged.connect(self.plot_outputs)
+        self.ui.checkBox_m50_radius.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_model_center.stateChanged.connect(self.plot_outputs)
-        self.ui.checkbox_50_radius.stateChanged.connect(self.plot_outputs)
+        self.ui.checkBox_50_radius.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_95_radius.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shock_area.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_model_rad.stateChanged.connect(self.plot_outputs)
@@ -238,7 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for key in contour_dict.keys():
             if key == "MODEL":
                 cv.drawContours(self.rgb_frame, contour_dict[key], -1, (0, 255, 0), 2)
-            elif key == "SHOCK" and self.ui.checkbox_display_shock.isChecked():
+            elif key == "SHOCK" and self.ui.checkBox_display_shock.isChecked():
                 cv.drawContours(self.rgb_frame, contour_dict[key], -1, (0, 0, 255), 2)
 
         # Draw annotations
@@ -319,7 +319,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.VIDEO_LOADED is False:
                     self.ui.spinBox_FrameIndex.valueChanged.connect(self.update_frame_index)
                     self.frame_processed.connect(self.show_img)
-                    self.ui.checkbox_display_shock.stateChanged.connect(self.update_frame_index)
+                    self.ui.checkBox_display_shock.stateChanged.connect(self.update_frame_index)
                     self.ui.maxHue.valueChanged.connect(self.update_frame_index)
                     self.ui.minHue.valueChanged.connect(self.update_frame_index)
                     self.ui.minIntensity.valueChanged.connect(self.update_frame_index)
@@ -387,8 +387,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.videometa.write()
         
         # Process all frames
-        self.processor.process_all(self.video, self.grab_ui_values(), ilow, ihigh, self.ui.spinBox_frame_skips.value(), 
-                                   self.ui.lineEdit_filename.text(), self.ui.checkBox_writeVideo.isChecked())
+        self.processor.process_all(self.video, self.grab_ui_values(), 
+                                   ilow, ihigh, self.ui.spinBox_frame_skips.value(), 
+                                   output_prefix= self.ui.lineEdit_filename.text(), 
+                                   write_json = True, 
+                                   write_video = self.ui.checkBox_writeVideo.isChecked())
 
         # Create a message box
         msg_box = QMessageBox()
@@ -571,7 +574,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ax2.plot(time, ym95, "ms", label="Model -95%R")
                     self.PLOTKEYS.append("MODEL_-0.95R " + units)
 
-                if self.ui.checkbox_m50_radius.isChecked():
+                if self.ui.checkBox_m50_radius.isChecked():
                     self.ax2.plot(time, ym50, "bx", label="Model -50%R")
                     self.PLOTKEYS.append("MODEL_-0.50R " + units)
 
@@ -579,7 +582,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ax2.plot(time, ymc, "go", label="Model center")
                     self.PLOTKEYS.append("MODEL_CENTER " + units)
 
-                if self.ui.checkbox_50_radius.isChecked():
+                if self.ui.checkBox_50_radius.isChecked():
                     self.ax2.plot(time, yp50, "cx", label="Model +50%R")
                     self.PLOTKEYS.append("MODEL_0.50R " + units)
 
