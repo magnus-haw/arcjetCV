@@ -216,12 +216,12 @@
                  </property>
                  <item>
                   <property name="text">
-                   <string>AutoHSV</string>
+                   <string>CNN</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>CNN</string>
+                   <string>AutoHSV</string>
                   </property>
                  </item>
                  <item>
@@ -986,11 +986,6 @@
                    <item>
                     <property name="text">
                      <string>linear</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>quadratic</string>
                     </property>
                    </item>
                   </widget>

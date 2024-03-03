@@ -90,7 +90,8 @@ class OutputListJSON(list):
             # Writing to sample.json
             with open(self.path, "w") as outfile:
                 outfile.write(json_object)
-            print("Edges output written to", self.path)
+
+            print("\n\nEdges output written to", self.path)
 
     def load(self,path,extend=True):
         """

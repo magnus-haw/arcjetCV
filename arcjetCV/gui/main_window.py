@@ -255,6 +255,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frame_processed.emit()
         self.plot_location()
 
+    def connect_elements(self):
+        self.ui.spinBox_FrameIndex.valueChanged.connect(self.update_frame_index)
+        self.frame_processed.connect(self.show_img)
+        self.ui.checkBox_display_shock.stateChanged.connect(self.update_frame_index)
+        self.ui.maxHue.valueChanged.connect(self.update_frame_index)
+        self.ui.minHue.valueChanged.connect(self.update_frame_index)
+        self.ui.minIntensity.valueChanged.connect(self.update_frame_index)
+        self.ui.maxIntensity.valueChanged.connect(self.update_frame_index)
+        self.ui.minSaturation.valueChanged.connect(self.update_frame_index)
+        self.ui.maxSaturation.valueChanged.connect(self.update_frame_index)
+        self.ui.maxHue_2.valueChanged.connect(self.update_frame_index)
+        self.ui.minHue_2.valueChanged.connect(self.update_frame_index)
+        self.ui.minIntensity_2.valueChanged.connect(self.update_frame_index)
+        self.ui.maxIntensity_2.valueChanged.connect(self.update_frame_index)
+        self.ui.minSaturation_2.valueChanged.connect(self.update_frame_index)
+        self.ui.maxSaturation_2.valueChanged.connect(self.update_frame_index)
+        self.ui.checkBox_crop.stateChanged.connect(self.update_frame_index)
+        if self.ui.spinBox_crop_xmin.value() < self.ui.spinBox_crop_xmax.value() and \
+            self.ui.spinBox_crop_ymin.value() < self.ui.spinBox_crop_ymax.value():
+            self.ui.applyCrop.clicked.connect(self.update_frame_index)
+        self.ui.comboBox_filterType.currentTextChanged.connect(self.update_frame_index)
+        self.ui.comboBox_flowDirection.currentTextChanged.connect(self.update_frame_index)
+
     def load_video(self):
         print("------New Video-----")
         dialog = QtWidgets.QFileDialog()
@@ -317,27 +340,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 # Connect UI only on first video load
                 if self.VIDEO_LOADED is False:
-                    self.ui.spinBox_FrameIndex.valueChanged.connect(self.update_frame_index)
-                    self.frame_processed.connect(self.show_img)
-                    self.ui.checkBox_display_shock.stateChanged.connect(self.update_frame_index)
-                    self.ui.maxHue.valueChanged.connect(self.update_frame_index)
-                    self.ui.minHue.valueChanged.connect(self.update_frame_index)
-                    self.ui.minIntensity.valueChanged.connect(self.update_frame_index)
-                    self.ui.maxIntensity.valueChanged.connect(self.update_frame_index)
-                    self.ui.minSaturation.valueChanged.connect(self.update_frame_index)
-                    self.ui.maxSaturation.valueChanged.connect(self.update_frame_index)
-                    self.ui.maxHue_2.valueChanged.connect(self.update_frame_index)
-                    self.ui.minHue_2.valueChanged.connect(self.update_frame_index)
-                    self.ui.minIntensity_2.valueChanged.connect(self.update_frame_index)
-                    self.ui.maxIntensity_2.valueChanged.connect(self.update_frame_index)
-                    self.ui.minSaturation_2.valueChanged.connect(self.update_frame_index)
-                    self.ui.maxSaturation_2.valueChanged.connect(self.update_frame_index)
-                    self.ui.checkBox_crop.stateChanged.connect(self.update_frame_index)
-                    if self.ui.spinBox_crop_xmin.value() < self.ui.spinBox_crop_xmax.value() and \
-                        self.ui.spinBox_crop_ymin.value() < self.ui.spinBox_crop_ymax.value():
-                        self.ui.applyCrop.clicked.connect(self.update_frame_index)
-                    self.ui.comboBox_filterType.currentTextChanged.connect(self.update_frame_index)
-                    self.ui.comboBox_flowDirection.currentTextChanged.connect(self.update_frame_index)
+                    self.connect_elements()
                     self.VIDEO_LOADED = True
                     
                     self.update_frame_index()
@@ -348,7 +351,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg = QMessageBox()
                 msg.setWindowTitle("arcjetCV Warning")
                 msg.setText("! Could not load video !:\n" + str(e))
-                msg.setIconPixmap(QPixmap(self.logo_path))
+                msg.setIcon(QMessageBox.Critical)
                 msg.exec()
 
     def plot_location(self, reset=False):
@@ -397,7 +400,7 @@ class MainWindow(QtWidgets.QMainWindow):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Video Processed")
         msg_box.setText("The video has been processed.")
-        msg_box.setIconPixmap(QPixmap(self.logo_path))
+        msg_box.setIcon(QMessageBox.Information)
         msg_box.exec()  # Display the message box
 
     def grab_ui_values(self):
@@ -795,28 +798,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         else:
                             longstring = "not enough points to fit data"
 
-                    self.ui.textBrowser.setText(longstring)
-                    self.ui.textBrowser.repaint()
-
-                # Quadratic fits
-                if self.ui.comboBox_fit_type.currentText() == "quadratic":
-                    longstring =""
-                    for key in keys:
-                        t = time[inds]
-                        y = self.time_series[key][inds]
-                        if t and y:
-                            fitp,cov = np.polyfit(t,y,2,cov=True)
-                            err = np.sqrt(np.diag(cov))
-                            a,b,c = fitp[0],fitp[1],fitp[2]
-                            fit_dict[key+"_QUADRATIC_FIT"] = (fitp,err)
-                            if key in self.PLOTKEYS:
-                                longstring += key+ "\tMin = %f\t Max = %f\t Delta = %f\n"%(y.min(),y.max(),y.max()-y.min())
-                                longstring += "\tQUAD FIT: y = a*t^2 + b*t + c \n"
-                                longstring += "a = %f+-%f %s"%(a,err[0],units+"/s^2") + "\t"
-                                longstring += "b = %f+-%f %s"%(b,err[1],units+"/s") + "\t"
-                                longstring += "c = %f+-%f %s"%(c,err[2],units) +"\n\n"
-                            else:
-                                longstring = "not enough points to fit data"
                     self.ui.textBrowser.setText(longstring)
                     self.ui.textBrowser.repaint()
 

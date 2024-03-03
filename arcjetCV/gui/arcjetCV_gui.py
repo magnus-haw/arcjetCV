@@ -619,7 +619,6 @@ class Ui_MainWindow(object):
         self.comboBox_fit_type = QtWidgets.QComboBox(self.groupBox_3)
         self.comboBox_fit_type.setObjectName("comboBox_fit_type")
         self.comboBox_fit_type.addItem("")
-        self.comboBox_fit_type.addItem("")
         self.formLayout_6.setWidget(
             0, QtWidgets.QFormLayout.FieldRole, self.comboBox_fit_type
         )
@@ -752,8 +751,8 @@ class Ui_MainWindow(object):
         self.comboBox_flowDirection.setItemText(1, _translate("MainWindow", "left"))
         self.comboBox_flowDirection.setItemText(2, _translate("MainWindow", "up"))
         self.comboBox_flowDirection.setItemText(3, _translate("MainWindow", "down"))
-        self.comboBox_filterType.setItemText(0, _translate("MainWindow", "AutoHSV"))
-        self.comboBox_filterType.setItemText(1, _translate("MainWindow", "CNN"))
+        self.comboBox_filterType.setItemText(0, _translate("MainWindow", "CNN"))
+        self.comboBox_filterType.setItemText(1, _translate("MainWindow", "AutoHSV"))
         self.comboBox_filterType.setItemText(2, _translate("MainWindow", "HSV"))
         self.comboBox_filterType.setItemText(3, _translate("MainWindow", "GRAY"))
         self.label_4.setText(_translate("MainWindow", "Filter Method:"))
@@ -806,7 +805,6 @@ class Ui_MainWindow(object):
         )
         self.groupBox_3.setTitle(_translate("MainWindow", "Fitting Parameters"))
         self.comboBox_fit_type.setItemText(0, _translate("MainWindow", "linear"))
-        self.comboBox_fit_type.setItemText(1, _translate("MainWindow", "quadratic"))
         self.label_12.setText(_translate("MainWindow", "Fit type:"))
         self.label_13.setText(_translate("MainWindow", "Start time:"))
         self.label_14.setText(_translate("MainWindow", "End time:"))
