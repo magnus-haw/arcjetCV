@@ -837,3 +837,5 @@ class Ui_MainWindow(object):
         self.actionLoad_Filter_2.setText(_translate("MainWindow", "Load Filter"))
         self.actionSave_Filter_2.setText(_translate("MainWindow", "Save Filter"))
         self.actionExit_2.setText(_translate("MainWindow", "Exit"))
+
+        
