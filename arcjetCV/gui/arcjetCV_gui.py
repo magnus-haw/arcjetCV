@@ -801,7 +801,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "Mask nframes:"))
         self.tabWidget_2.setTabText(
             self.tabWidget_2.indexOf(self.tab_5),
-            _translate("MainWindow", "Plotting params"),
+            _translate("MainWindow", "Plotting parameters"),
         )
         self.groupBox_3.setTitle(_translate("MainWindow", "Fitting Parameters"))
         self.comboBox_fit_type.setItemText(0, _translate("MainWindow", "linear"))
@@ -810,7 +810,7 @@ class Ui_MainWindow(object):
         self.label_14.setText(_translate("MainWindow", "End time:"))
         self.tabWidget_2.setTabText(
             self.tabWidget_2.indexOf(self.tab_6),
-            _translate("MainWindow", "Fitting params"),
+            _translate("MainWindow", "Fitting parameters"),
         )
         self.groupBox_XT_params.setTitle(
             _translate("MainWindow", "Visible Traces on XT plot")

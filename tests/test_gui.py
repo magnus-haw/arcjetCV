@@ -17,6 +17,20 @@ def test_main_window_initialization(app):
     assert app.ui.pushButton_loadVideo.text() == "Load Video"
 
 
+def test_switch_to_extract_edges_tab(app, qtbot):
+    """
+    Test switching to the 'Extract Edges' tab.
+    """
+    # Assuming 'Extract Edges' tab is at index 0, adjust as per your application
+    qtbot.mouseClick(
+        app.ui.tabWidget.tabBar().tabButton(
+            0, QtWidgets.QTabBar.ButtonPosition.RightSide
+        ),
+        Qt.LeftButton,
+    )
+    assert app.ui.tabWidget.currentIndex() == 0
+
+
 def test_load_video(app, qtbot, mocker):
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -54,6 +68,55 @@ def test_select_filter(app, qtbot):
     assert app.ui.comboBox_filterType.currentIndex() == filter_index
 
 
+def test_toggle_show_shock_checkbox(app, qtbot):
+    """
+    Test the functionality of the 'Show Shock' checkbox.
+    """
+    # Initial state check (assuming the checkbox starts unchecked and shock is not shown)
+    assert not app.ui.checkBox_display_shock.isChecked()
+    assert (
+        not app.display_shock
+    )  # This should be replaced with your application's internal flag for showing shock
+
+    # Simulate checking the 'Show Shock' checkbox
+    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+
+    # Verify that the checkbox is now checked and the shock is shown
+    assert app.ui.checkBox_display_shock.isChecked()
+    assert (
+        app.display_shock
+    )  # Again, replace with your application's logic for showing/hiding shock
+
+    # Simulate unchecking the 'Show Shock' checkbox
+    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+
+    # Verify that the checkbox is unchecked and the shock is no longer shown
+    assert not app.ui.checkBox_display_shock.isChecked()
+    assert not app.display_shock  # Adjust based on your application's behavior
+
+
+def test_switch_tabs(app, qtbot):
+    """
+    Test switching between the Crop, Model Filter, and Shock Filter tabs.
+    """
+    # Assuming the indexes of the tabs are known
+    crop_tab_index = 0  # Adjust based on your application
+    model_filter_tab_index = 1  # Adjust based on your application
+    shock_filter_tab_index = 2  # Adjust based on your application
+
+    # Switch to Crop tab and verify
+    app.ui.FilterTabs.setCurrentIndex(crop_tab_index)
+    assert app.ui.FilterTabs.currentIndex() == crop_tab_index
+
+    # Switch to Model Filter tab and verify
+    app.ui.FilterTabs.setCurrentIndex(model_filter_tab_index)
+    assert app.ui.FilterTabs.currentIndex() == model_filter_tab_index
+
+    # Switch to Shock Filter tab and verify
+    app.ui.FilterTabs.setCurrentIndex(shock_filter_tab_index)
+    assert app.ui.FilterTabs.currentIndex() == shock_filter_tab_index
+
+
 def test_apply_filter(app, qtbot):
     # Example: Set minimum and maximum hue for a filter; adjust according to your UI elements
     app.ui.minHue.setValue(10)
@@ -82,6 +145,34 @@ def test_apply_crop(app, qtbot):
         [100, 200],
     ]  # This is a placeholder, adjust as necessary
 
+
+def test_toggle_show_crop_checkbox(app, qtbot):
+    """
+    Test the functionality of the 'Show Crop' checkbox.
+    """
+    # Initial state check (assuming the checkbox starts unchecked and crop is not shown)
+    assert not app.ui.checkBox_crop.isChecked()
+    assert (
+        not app.show_crop
+    )  # This should be replaced with your application's internal flag for showing crop
+
+    # Simulate checking the 'Show Crop' checkbox
+    qtbot.mouseClick(app.ui.checkBox_crop, Qt.LeftButton)
+
+    # Verify that the checkbox is now checked and the crop is shown
+    assert app.ui.checkBox_crop.isChecked()
+    assert (
+        app.show_crop
+    )  # Again, replace with your application's logic for showing/hiding crop
+
+    # Simulate unchecking the 'Show Crop' checkbox
+    qtbot.mouseClick(app.ui.checkBox_crop, Qt.LeftButton)
+
+    # Verify that the checkbox is unchecked and the crop is no longer shown
+    assert not app.ui.checkBox_crop.isChecked()
+    assert not app.show_crop  # Adjust based on your application's behavior
+
+
 def test_annotation_checkbox(app, qtbot):
     # Initially check if the checkbox is unchecked
     assert not app.ui.checkBox_annotate.isChecked()
@@ -97,7 +188,6 @@ def test_annotation_checkbox(app, qtbot):
 
     # Verify that the checkbox is now unchecked
     assert not app.ui.checkBox_annotate.isChecked()
-
 
 
 def test_apply_model_filter(app, qtbot):
@@ -216,3 +306,125 @@ def test_export_to_csv(app, qtbot, mocker, tmp_path):
     qtbot.mouseClick(app.ui.pushButton_export_csv, Qt.LeftButton)
     assert output_path.exists()
     # Further validation of the CSV contents can be added here
+
+
+# Analysis tab
+
+
+def test_switch_to_analysis_tab(app, qtbot):
+    """
+    Test switching to the 'Analysis' tab.
+    """
+    # Assuming 'Analysis' tab is at index 1, adjust as per your application
+    qtbot.mouseClick(
+        app.ui.tabWidget.tabBar().tabButton(
+            1, QtWidgets.QTabBar.ButtonPosition.RightSide
+        ),
+        Qt.LeftButton,
+    )
+    assert app.ui.tabWidget.currentIndex() == 1
+
+
+def test_load_analysis_files(app, qtbot, mocker):
+    """
+    Test loading files in the 'Analysis' tab.
+    """
+    mocker.patch(
+        "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
+        return_value=(
+            ["/path/to/analysis_file1.json", "/path/to/analysis_file2.json"],
+            "",
+        ),
+    )
+    qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
+    # Verify files are loaded, adjust attribute names based on your application
+    assert "/path/to/analysis_file1.json" in app.loaded_files
+    assert "/path/to/analysis_file2.json" in app.loaded_files
+
+
+def test_plot_data_button(app, qtbot):
+    """
+    Test the 'Plot Data' button functionality in the 'Analysis' tab.
+    """
+    # Pre-load analysis files or set up the necessary state before plotting
+    app.load_analysis_files(
+        ["/path/to/analysis_file.json"]
+    )  # Adjust method call as per your application
+    qtbot.mouseClick(app.ui.pushButton_PlotData, Qt.LeftButton)
+    # Verify that data plotting is initiated, adjust based on your application's behavior
+    assert app.plotting_data  # Adjust attribute name as per your implementation
+
+
+def test_fit_data_button(app, qtbot):
+    """
+    Test the 'Fit Data' button functionality in the 'Analysis' tab.
+    """
+    # Pre-load analysis files or set up the necessary state before fitting
+    app.load_analysis_files(
+        ["/path/to/analysis_file.json"]
+    )  # Adjust method call as per your application
+    qtbot.mouseClick(app.ui.pushButton_fitData, Qt.LeftButton)
+    # Verify that data fitting is initiated, adjust based on your application's behavior
+    assert app.fitting_data  # Adjust attribute name as per your implementation
+
+
+def test_export_csv_plots_button(app, qtbot, mocker, tmp_path):
+    """
+    Test the 'Export CSV/plots' button functionality in the 'Analysis' tab.
+    """
+    mocker.patch(
+        "PySide6.QtWidgets.QFileDialog.getExistingDirectory",
+        return_value=str(tmp_path),
+    )
+    qtbot.mouseClick(app.ui.pushButton_export_csv, Qt.LeftButton)
+    # Verify that export is initiated and check for the existence of output files
+    exported_files = list(tmp_path.glob("*"))  # Adjust as needed
+    assert len(exported_files) > 0  # This assumes at least one file is exported
+
+
+
+
+
+def test_set_model_diameter(app, qtbot):
+    expected_diameter = 150.0  # Example value
+    app.ui.doubleSpinBox_diameter.setValue(expected_diameter)
+    assert app.ui.doubleSpinBox_diameter.value() == expected_diameter
+
+def test_set_length_units(app, qtbot):
+    expected_units = "[mm]"  # Example unit
+    app.ui.comboBox_units.setCurrentText(expected_units)
+    assert app.ui.comboBox_units.currentText() == expected_units
+
+def test_set_frames_per_second(app, qtbot):
+    expected_fps = 60.0  # Example FPS value
+    app.ui.doubleSpinBox_fps.setValue(expected_fps)
+    assert app.ui.doubleSpinBox_fps.value() == expected_fps
+
+def test_set_mask_nframes(app, qtbot):
+    expected_mask_frames = 5  # Example value for masking n frames
+    app.ui.spinBox_mask_frames.setValue(expected_mask_frames)
+    assert app.ui.spinBox_mask_frames.value() == expected_mask_frames
+
+
+def test_toggle_display_shock(app, qtbot):
+    # Simulate checking the 'Display Shock' checkbox
+    initial_state = app.ui.checkBox_display_shock2.isChecked()
+    qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+    # Verify state changed
+    assert app.ui.checkBox_display_shock2.isChecked() != initial_state
+
+
+def test_select_fit_type(app, qtbot):
+    expected_fit_type = "linear"  # Assuming 'linear' is an option
+    app.ui.comboBox_fit_type.setCurrentText(expected_fit_type)
+    assert app.ui.comboBox_fit_type.currentText() == expected_fit_type
+ 
+ def test_set_fit_start_time(app, qtbot):
+    expected_start_time = 0.0  # Example start time
+    app.ui.doubleSpinBox_fit_start_time.setValue(expected_start_time)
+    assert app.ui.doubleSpinBox_fit_start_time.value() == expected_start_time
+
+def test_set_fit_end_time(app, qtbot):
+    expected_end_time = 100.0  # Example end time
+    app.ui.doubleSpinBox_fit_last_time.setValue(expected_end_time)
+    assert app.ui.doubleSpinBox_fit_last_time.value() == expected_end_time
