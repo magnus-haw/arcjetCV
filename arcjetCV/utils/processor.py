@@ -14,22 +14,24 @@ from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_numb
 from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
 
+
 class ArcjetProcessor:
-    """ 
+    """
     Video frame processor
 
     Primary image processing class: used to read in video data, extract leading edges,
-    hold processed arrays, and output processed data to file. 
+    hold processed arrays, and output processed data to file.
     """
+
     def __init__(self, videometa):
         """
         Initializes the ArcjetProcessor object.
 
         :param videometa: dictionary containing video metadata
         """
-        self.flow_dir = videometa['FLOW_DIRECTION']
-        self.h = videometa['HEIGHT']
-        self.w = videometa['WIDTH']
+        self.flow_dir = videometa["FLOW_DIRECTION"]
+        self.h = videometa["HEIGHT"]
+        self.w = videometa["WIDTH"]
         self.crop = videometa.crop_range()
         self.cnn = CNN()
 
@@ -39,11 +41,11 @@ class ArcjetProcessor:
 
         :param videometa: dictionary containing updated video metadata
         """
-        self.flow_dir = videometa['FLOW_DIRECTION']
-        self.h = videometa['HEIGHT']
-        self.w = videometa['WIDTH']
+        self.flow_dir = videometa["FLOW_DIRECTION"]
+        self.h = videometa["HEIGHT"]
+        self.w = videometa["WIDTH"]
         self.crop = videometa.crop_range()
-        
+
     def get_flow_direction(self, frame):
         """
         Infers flow direction from the provided frame.
@@ -101,13 +103,12 @@ class ArcjetProcessor:
         imgsize = gray.size
 
         ### classification criteria
-        
+
         # bright pixels occupy more than one histogram bin (not a single shade)
-        modelvis = ( (histr[12:250] / imgsize) > 0.00).sum() != 1
+        modelvis = ((histr[12:250] / imgsize) > 0.00).sum() != 1
         # bright pixels exceed a threshold fraction of the full image
         modelvis *= (histr[50:250].sum() / imgsize) > modelfraction
         argdict["MODEL_VISIBLE"] = modelvis
-
 
         argdict["OVEREXPOSED"] = (histr[243:].sum() / imgsize) > modelfraction
         argdict["UNDEREXPOSED"] = histr[150:].sum() / imgsize < modelfraction
@@ -137,13 +138,20 @@ class ArcjetProcessor:
                 # If the ranges are not specified, use default values and print a message
                 HSVModelRange = [(0, 0, 150), (121, 125, 255)]
                 HSVShockRange = [(125, 40, 85), (170, 80, 230)]
-                print(f"HSVRange not provided, using default value of HSVModelRange: {HSVModelRange}, HSVShockRange: {HSVShockRange}")
+                print(
+                    f"HSVRange not provided, using default value of HSVModelRange: {HSVModelRange}, HSVShockRange: {HSVShockRange}"
+                )
             # Normalize the cropped image for better segmentation
             img_clahe = clahe_normalize(img_crop)
             # Call the contoursHSV function with the normalized image and HSV ranges
-            contour_dict, flags = contoursHSV(img_clahe, log=None, 
-                                            minHSVModel=HSVModelRange[0], maxHSVModel=HSVModelRange[1], 
-                                            minHSVShock=HSVShockRange[0], maxHSVShock=HSVShockRange[1])
+            contour_dict, flags = contoursHSV(
+                img_clahe,
+                log=None,
+                minHSVModel=HSVModelRange[0],
+                maxHSVModel=HSVModelRange[1],
+                minHSVShock=HSVShockRange[0],
+                maxHSVShock=HSVShockRange[1],
+            )
 
         elif argdict["SEGMENT_METHOD"] == "GRAY":
             # If the method is GRAY, try to retrieve the threshold value from argdict
@@ -161,11 +169,11 @@ class ArcjetProcessor:
         elif argdict["SEGMENT_METHOD"] == "CNN":
             # If the method is CNN, call the contoursCNN function with the cropped image and the CNN model
             contour_dict, flags = contoursCNN(img_crop, self.cnn)
-        
-        else: 
+
+        else:
             # If none of the specified methods match, return None to indicate failure
             return
-            
+
         # Update the original argdict with the flags returned from the segmentation function
         argdict.update(flags)
         # Return the dictionary of contours and the updated argdict
@@ -199,13 +207,27 @@ class ArcjetProcessor:
                     argdict[key + "_CENTROID_Y"] = np.nan
 
                 ### get front edge
-                edges[key] = getEdgeFromContour(c, self.flow_dir, offset=(self.crop[0][0] - offset[0], self.crop[1][0] - offset[1]))
+                edges[key] = getEdgeFromContour(
+                    c,
+                    self.flow_dir,
+                    offset=(self.crop[0][0] - offset[0], self.crop[1][0] - offset[1]),
+                )
 
                 if len(edges[key]) > 0:
                     if key == "MODEL":
-                        outputs = getPoints(edges[key], flow_direction=self.flow_dir, r=[-0.95, -0.50, 0, 0.50, 0.95], prefix="MODEL")
+                        outputs = getPoints(
+                            edges[key],
+                            flow_direction=self.flow_dir,
+                            r=[-0.95, -0.50, 0, 0.50, 0.95],
+                            prefix="MODEL",
+                        )
                     else:  # SHOCK
-                        outputs = getPoints(edges[key], flow_direction=self.flow_dir, r=[0], prefix="SHOCK")
+                        outputs = getPoints(
+                            edges[key],
+                            flow_direction=self.flow_dir,
+                            r=[0],
+                            prefix="SHOCK",
+                        )
                     argdict.update(outputs)
             else:
                 edges[key] = None
@@ -221,30 +243,36 @@ class ArcjetProcessor:
         """
         # Crop the frame based on predefined crop coordinates stored in self.crop
         # self.crop is expected to be a tuple or list with two elements, each an (start, end) pair for y and x dimensions respectively
-        cropped_frame = frame[self.crop[0][0]:self.crop[0][1], self.crop[1][0]:self.crop[1][1]]
+        cropped_frame = frame[
+            self.crop[0][0] : self.crop[0][1], self.crop[1][0] : self.crop[1][1]
+        ]
 
         # Check if the cropped frame is grayscale (i.e., has only one channel)
         if len(cropped_frame.shape) == 2 or cropped_frame.shape[2] == 1:
-            # Convert grayscale to RGB 
+            # Convert grayscale to RGB
             cropped_frame = cv.cvtColor(cropped_frame, cv.COLOR_GRAY2RGB)
-        
+
         # Determine the height and width of the cropped frame
         cropped_height, cropped_width = cropped_frame.shape[:2]
-        
+
         # Calculate the side length of the new square frame as the max of cropped height and width
         square_side = max(cropped_height, cropped_width)
-        
+
         # Initialize a square frame filled with zeros (black) of the same type as the cropped frame
-        square_frame = np.zeros((square_side, square_side, 3), dtype=cropped_frame.dtype)
-        
+        square_frame = np.zeros(
+            (square_side, square_side, 3), dtype=cropped_frame.dtype
+        )
+
         # Calculate starting points (y, x) to paste the cropped frame into the square frame
         # so that it is centered within the square frame
         start_y = (square_side - cropped_height) // 2
         start_x = (square_side - cropped_width) // 2
-        
+
         # Paste the cropped frame into the square frame at the calculated starting points
-        square_frame[start_y:start_y + cropped_height, start_x:start_x + cropped_width] = cropped_frame
-        
+        square_frame[
+            start_y : start_y + cropped_height, start_x : start_x + cropped_width
+        ] = cropped_frame
+
         # Return the square frame along with the offset values indicating where the cropped frame
         # was placed within the square frame
         return square_frame, [start_y, start_x]
@@ -257,7 +285,7 @@ class ArcjetProcessor:
         :param argdict: dictionary containing segmentation parameters
         :returns: edges: dictionary containing edges
                   argdict: updated dictionary containing metrics
-        
+
         Example:
         ```python
         processor = ArcjetProcessor(videometa)
@@ -267,25 +295,35 @@ class ArcjetProcessor:
         ```
         """
         # Determine the flow direction of the frame if not already set
-        if self.flow_dir is None: 
+        if self.flow_dir is None:
             self.flow_dir = self.get_flow_direction(frame)
-        
+
         # Make the frame square to ensure consistent processing, obtaining the cropped frame and offset
         frame_crop, offset = self.make_crop_square(frame)
-        
+
         # Update argdict with image flags based on the cropped frame
         argdict = self.get_image_flags(frame_crop, argdict)
-        
+
         # Segment the cropped frame, updating argdict with segmentation results
         contour_dict, argdict = self.segment(frame_crop, argdict)
-        
+
         # Calculate edge metrics based on contours, updating argdict further
         edges, argdict = self.get_edges_metrics(contour_dict, argdict, offset)
-        
+
         # Return the edges and a copy of the updated argdict
         return edges, argdict.copy()
 
-    def process_all(self, video: Video, options, first_frame, last_frame, frame_stride, output_prefix="", write_json=True, write_video=False):
+    def process_all(
+        self,
+        video: Video,
+        options,
+        first_frame,
+        last_frame,
+        frame_stride,
+        output_prefix="",
+        write_json=True,
+        write_video=False,
+    ):
         """
         Processes all frames in the video.
 
@@ -336,11 +374,11 @@ class ArcjetProcessor:
                 for key in contour_dict.keys():
                     color = (0, 255, 0) if key == "MODEL" else (255, 0, 255)
                     cv.drawContours(frame, contour_dict[key], -1, color, 2)
-                
+
                 # Annotate the frame with its index for reference
                 annotate_image_with_frame_number(frame, frame_index)
                 argdict.update(contour_dict)
-                
+
                 # update output dictionary
                 out_json.append(argdict.copy())
 
@@ -350,12 +388,13 @@ class ArcjetProcessor:
                     video.writer.write(frame)
 
                 # Print processing progress
-                sys.stdout.write(f"\rProcessing video using {options['SEGMENT_METHOD']} ... " + 
-                                f"{min(((((frame_index - first_frame) / frame_stride) + 1) / 
-                                np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%")
+                sys.stdout.write(
+                    f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
+                    + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
+                )
             except:
                 continue
-        
+
         if write_json:
             out_json.write()
 
