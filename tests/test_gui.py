@@ -1,5 +1,6 @@
 import pytest
-from PySide6.QtWidgets import QApplication, Qt
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt
 from arcjetCV.gui import MainWindow  # Adjust import path as needed
 
 
@@ -81,6 +82,23 @@ def test_apply_crop(app, qtbot):
         [100, 200],
     ]  # This is a placeholder, adjust as necessary
 
+def test_annotation_checkbox(app, qtbot):
+    # Initially check if the checkbox is unchecked
+    assert not app.ui.checkBox_annotate.isChecked()
+
+    # Simulate clicking the checkbox to enable annotation
+    qtbot.mouseClick(app.ui.checkBox_annotate, Qt.LeftButton)
+
+    # Verify that the checkbox is now checked
+    assert app.ui.checkBox_annotate.isChecked()
+
+    # Optionally, simulate clicking again to disable annotation
+    qtbot.mouseClick(app.ui.checkBox_annotate, Qt.LeftButton)
+
+    # Verify that the checkbox is now unchecked
+    assert not app.ui.checkBox_annotate.isChecked()
+
+
 
 def test_apply_model_filter(app, qtbot):
     """
@@ -133,6 +151,60 @@ def test_apply_shock_filter(app, qtbot):
         "saturation": [90, 100],
         "intensity": [110, 120],
     }  # Adjust based on actual data structure
+
+
+def test_set_frame_range(app, qtbot):
+    """
+    Test setting the frame range for processing.
+    """
+    # Set frame range values
+    app.ui.spinBox_FirstGoodFrame.setValue(10)
+    app.ui.spinBox_LastGoodFrame.setValue(100)
+
+    # Verify that the frame range values are set correctly
+    assert app.videometa["FIRST_GOOD_FRAME"] == 10
+    assert app.videometa["LAST_GOOD_FRAME"] == 100
+    # Adjust the attribute names based on your application's implementation
+
+
+def test_process_every_nth_frame(app, qtbot):
+    """
+    Test setting the application to process every Nth frame.
+    """
+    # Set the value for processing every Nth frame
+    app.ui.spinBox_frame_skips.setValue(5)
+
+    # Verify that the setting is applied correctly
+    assert (
+        app.processor.frame_skip == 5
+    )  # Adjust the attribute name as per your application's implementation
+
+
+def test_set_output_filename(app, qtbot):
+    """
+    Test setting the output filename.
+    """
+    # Set the output filename
+    app.ui.lineEdit_filename.setText("output_filename")
+
+    # Verify that the filename is set correctly
+    assert (
+        app.processor.output_filename == "output_filename"
+    )  # Adjust the attribute name based on your application's implementation
+
+
+def test_toggle_write_video(app, qtbot):
+    """
+    Test toggling the 'Write video?' checkbox.
+    """
+    # Initial state check
+    initial_state = app.ui.checkBox_writeVideo.isChecked()
+
+    # Toggle the checkbox
+    qtbot.mouseClick(app.ui.checkBox_write_video, Qt.LeftButton)
+
+    # Verify the checkbox state is toggled
+    assert app.ui.checkBox_writeVideo.isChecked() != initial_state
 
 
 def test_export_to_csv(app, qtbot, mocker, tmp_path):
