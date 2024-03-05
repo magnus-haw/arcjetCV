@@ -382,8 +382,6 @@ def test_export_csv_plots_button(app, qtbot, mocker, tmp_path):
     assert len(exported_files) > 0  # This assumes at least one file is exported
 
 
-
-
 def test_switch_to_plotting_params_tab(app, qtbot):
     """
     Test switching to the 'Plotting params' tab within the 'Analysis' tab.
@@ -400,21 +398,23 @@ def test_switch_to_plotting_params_tab(app, qtbot):
     assert app.ui.tabWidget_2.currentIndex() == 0
 
 
-
 def test_set_model_diameter(app, qtbot):
     expected_diameter = 150.0  # Example value
     app.ui.doubleSpinBox_diameter.setValue(expected_diameter)
     assert app.ui.doubleSpinBox_diameter.value() == expected_diameter
+
 
 def test_set_length_units(app, qtbot):
     expected_units = "[mm]"  # Example unit
     app.ui.comboBox_units.setCurrentText(expected_units)
     assert app.ui.comboBox_units.currentText() == expected_units
 
+
 def test_set_frames_per_second(app, qtbot):
     expected_fps = 60.0  # Example FPS value
     app.ui.doubleSpinBox_fps.setValue(expected_fps)
     assert app.ui.doubleSpinBox_fps.value() == expected_fps
+
 
 def test_set_mask_nframes(app, qtbot):
     expected_mask_frames = 5  # Example value for masking n frames
@@ -428,6 +428,7 @@ def test_toggle_display_shock(app, qtbot):
     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
     # Verify state changed
     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
+
 
 def test_switch_to_fitting_params_tab(app, qtbot):
     """
@@ -444,15 +445,18 @@ def test_switch_to_fitting_params_tab(app, qtbot):
     )
     assert app.ui.tabWidget_2.currentIndex() == 1
 
+
 def test_select_fit_type(app, qtbot):
     expected_fit_type = "linear"  # Assuming 'linear' is an option
     app.ui.comboBox_fit_type.setCurrentText(expected_fit_type)
     assert app.ui.comboBox_fit_type.currentText() == expected_fit_type
- 
- def test_set_fit_start_time(app, qtbot):
+
+
+def test_set_fit_start_time(app, qtbot):
     expected_start_time = 0.0  # Example start time
     app.ui.doubleSpinBox_fit_start_time.setValue(expected_start_time)
     assert app.ui.doubleSpinBox_fit_start_time.value() == expected_start_time
+
 
 def test_set_fit_end_time(app, qtbot):
     expected_end_time = 100.0  # Example end time
@@ -465,35 +469,42 @@ def test_toggle_checkbox_95_radius(app, qtbot):
     qtbot.mouseClick(app.ui.checkBox_95_radius, Qt.LeftButton)
     assert app.ui.checkBox_95_radius.isChecked() != initial_state
 
+
 def test_toggle_checkbox_m50_radius(app, qtbot):
     initial_state = app.ui.checkBox_m50_radius.isChecked()
     qtbot.mouseClick(app.ui.checkBox_m50_radius, Qt.LeftButton)
     assert app.ui.checkBox_m50_radius.isChecked() != initial_state
+
 
 def test_toggle_checkbox_ypos(app, qtbot):
     initial_state = app.ui.checkBox_ypos.isChecked()
     qtbot.mouseClick(app.ui.checkBox_ypos, Qt.LeftButton)
     assert app.ui.checkBox_ypos.isChecked() != initial_state
 
+
 def test_toggle_checkbox_50_radius(app, qtbot):
     initial_state = app.ui.checkBox_50_radius.isChecked()
     qtbot.mouseClick(app.ui.checkBox_50_radius, Qt.LeftButton)
     assert app.ui.checkBox_50_radius.isChecked() != initial_state
+
 
 def test_toggle_checkbox_shockmodel(app, qtbot):
     initial_state = app.ui.checkBox_shockmodel.isChecked()
     qtbot.mouseClick(app.ui.checkBox_shockmodel, Qt.LeftButton)
     assert app.ui.checkBox_shockmodel.isChecked() != initial_state
 
+
 def test_toggle_checkbox_shock_center(app, qtbot):
     initial_state = app.ui.checkBox_shock_center.isChecked()
     qtbot.mouseClick(app.ui.checkBox_shock_center, Qt.LeftButton)
     assert app.ui.checkBox_shock_center.isChecked() != initial_state
 
+
 def test_toggle_checkbox_model_center(app, qtbot):
     initial_state = app.ui.checkBox_model_center.isChecked()
     qtbot.mouseClick(app.ui.checkBox_model_center, Qt.LeftButton)
     assert app.ui.checkBox_model_center.isChecked() != initial_state
+
 
 def test_toggle_checkbox_m95_radius(app, qtbot):
     # Note: This checkbox seems to be listed twice. Ensure unique names or only include it once.
@@ -501,10 +512,12 @@ def test_toggle_checkbox_m95_radius(app, qtbot):
     qtbot.mouseClick(app.ui.checkBox_m95_radius, Qt.LeftButton)
     assert app.ui.checkBox_m95_radius.isChecked() != initial_state
 
+
 def test_toggle_checkbox_model_rad(app, qtbot):
     initial_state = app.ui.checkBox_model_rad.isChecked()
     qtbot.mouseClick(app.ui.checkBox_model_rad, Qt.LeftButton)
     assert app.ui.checkBox_model_rad.isChecked() != initial_state
+
 
 def test_toggle_checkbox_shock_area(app, qtbot):
     initial_state = app.ui.checkBox_shock_area.isChecked()
