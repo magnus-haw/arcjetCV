@@ -1,6 +1,7 @@
 import json
 import threading
 import numpy as np
+import datetime
 from arcjetCV.utils.utils import splitfn
 
 
@@ -29,10 +30,14 @@ class NumpyEncoder(json.JSONEncoder):
         """
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        if isinstance(obj, np.uint8) or isinstance(obj, np.int32):
+        elif isinstance(obj, np.integer):
             return int(obj)
-        if isinstance(obj, np.bool_):
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.bool_):
             return bool(obj)
+        elif isinstance(obj, datetime.datetime):
+            return obj.__str__()
         return json.JSONEncoder.default(self, obj)
 
 
