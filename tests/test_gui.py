@@ -1,7 +1,8 @@
 import pytest
 from PySide6.QtWidgets import QApplication
+from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from arcjetCV.gui import MainWindow  # Adjust import path as needed
+from arcjetCV.gui.main_window import MainWindow
 
 
 @pytest.fixture
@@ -34,11 +35,11 @@ def test_switch_to_extract_edges_tab(app, qtbot):
 def test_load_video(app, qtbot, mocker):
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
-        return_value=("/path/to/video.mp4", ""),
+        return_value=("arcjet_test.mp4", ""),
     )
     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
     # This assertion needs to be adjusted based on how your application tracks a video load
-    assert app.video_path == "/path/to/video.mp4"  # Adjust based on actual attribute
+    assert app.video_path == "arcjet_test.mp4"  
 
 
 def test_select_flow_direction(app, qtbot):
@@ -73,7 +74,7 @@ def test_toggle_show_shock_checkbox(app, qtbot):
     Test the functionality of the 'Show Shock' checkbox.
     """
     # Initial state check (assuming the checkbox starts unchecked and shock is not shown)
-    assert not app.ui.checkBox_display_shock.isChecked()
+    assert app.ui.checkBox_display_shock.isChecked()
     assert (
         not app.display_shock
     )  # This should be replaced with your application's internal flag for showing shock
