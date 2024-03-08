@@ -132,14 +132,14 @@ class ArcjetProcessor:
         elif argdict["SEGMENT_METHOD"] == "HSV":
             # If the method is HSV, first try to retrieve HSV range values from argdict
             try:
-                HSVModelRange = argdict["HSV_MODEL_RANGE"]
-                HSVShockRange = argdict["HSV_SHOCK_RANGE"]
+                self.HSVModelRange = argdict["HSV_MODEL_RANGE"]
+                self.HSVShockRange = argdict["HSV_SHOCK_RANGE"]
             except KeyError:
                 # If the ranges are not specified, use default values and print a message
-                HSVModelRange = [(0, 0, 150), (121, 125, 255)]
-                HSVShockRange = [(125, 40, 85), (170, 80, 230)]
+                self.HSVModelRange = [(0, 0, 150), (121, 125, 255)]
+                self.HSVShockRange = [(125, 40, 85), (170, 80, 230)]
                 print(
-                    f"HSVRange not provided, using default value of HSVModelRange: {HSVModelRange}, HSVShockRange: {HSVShockRange}"
+                    f"HSVRange not provided, using default value of self.HSVModelRange: {self.HSVModelRange}, self.HSVShockRange: {self.HSVShockRange}"
                 )
             # Normalize the cropped image for better segmentation
             img_clahe = clahe_normalize(img_crop)
@@ -147,10 +147,10 @@ class ArcjetProcessor:
             contour_dict, flags = contoursHSV(
                 img_clahe,
                 log=None,
-                minHSVModel=HSVModelRange[0],
-                maxHSVModel=HSVModelRange[1],
-                minHSVShock=HSVShockRange[0],
-                maxHSVShock=HSVShockRange[1],
+                minHSVModel=self.HSVModelRange[0],
+                maxHSVModel=self.HSVModelRange[1],
+                minHSVShock=self.HSVShockRange[0],
+                maxHSVShock=self.HSVShockRange[1],
             )
 
         elif argdict["SEGMENT_METHOD"] == "GRAY":
@@ -351,8 +351,8 @@ class ArcjetProcessor:
         # Setup output JSON file
         if output_prefix == "":
             output_prefix = video.name
-        filename = "%s_%i_%i.json" % (output_prefix, first_frame, last_frame)
-        out_json = OutputListJSON(os.path.join(video.folder, filename))
+        self.filename = "%s_%i_%i.json" % (output_prefix, first_frame, last_frame)
+        out_json = OutputListJSON(os.path.join(video.folder, self.filename))
 
         # Iterate over frames from first_frame to last_frame, with steps of frame_stride
         for frame_index in range(first_frame, last_frame + 1, frame_stride):
