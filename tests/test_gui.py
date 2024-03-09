@@ -41,7 +41,7 @@ def test_switch_to_extract_edges_tab(app, qtbot):
 
 def test_load_video(app, qtbot, mocker):
     expected_video_path = (
-        "/Users/alexandrequintart/NASA/arcjetCV_release/arcjetCV/tests/arcjet_test.mp4"
+        "tests/arcjet_test.mp4"
     )
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -125,7 +125,7 @@ def test_apply_crop(app, qtbot, mocker):
     Test loading a video and then applying crop settings.
     """
     expected_video_path = (
-        "/Users/alexandrequintart/NASA/arcjetCV_release/arcjetCV/tests/arcjet_test.mp4"
+        "tests/arcjet_test.mp4"
     )
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -158,7 +158,7 @@ def test_toggle_show_crop_checkbox(app, qtbot, mocker):
     Test the functionality of the 'Show Crop' checkbox.
     """
     expected_video_path = (
-        "/Users/alexandrequintart/NASA/arcjetCV_release/arcjetCV/tests/arcjet_test.mp4"
+        "tests/arcjet_test.mp4"
     )
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -306,7 +306,7 @@ def test_load_analysis_files(app, qtbot, mocker):
     """
     Test loading files in the 'Analysis' tab and verifying UI updates.
     """
-    expected_file_path = "/Users/alexandrequintart/NASA/arcjetCV_release/arcjetCV/tests/arcjet_test_0_800.json"
+    expected_file_path = "tests/arcjet_test_10_100.json"
     expected_summary_start = "Loaded 1 files"
 
     mocker.patch(
@@ -325,7 +325,7 @@ def test_plot_data_button(app, qtbot, mocker):
     """
 
     expected_file_path = [
-        "/Users/alexandrequintart/NASA/arcjetCV_release/arcjetCV/tests/arcjet_test_0_800.json"
+        "tests/arcjet_test_10_100.json"
     ]
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",

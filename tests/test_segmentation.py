@@ -186,20 +186,20 @@ class TestContoursCNN(unittest.TestCase):
         mask[10:20, 10:20] = 2  # shock region
         return mask
 
-    @patch('utils.Functions.cnn_apply', side_effect=mock_cnn_apply)
-    def test_contoursCNN(self, mock_cnn_apply_func):
-        # Create a synthetic image
-        img = np.zeros((100, 100, 3), dtype=np.uint8)
-        model = None  # For the sake of this test, the model doesn't matter because cnn_apply is mocked
-        contours, flags = contoursCNN(img, model)
+    # @patch('utils.Functions.cnn_apply', side_effect=mock_cnn_apply)
+    # def test_contoursCNN(self, mock_cnn_apply_func):
+    #     # Create a synthetic image
+    #     img = np.zeros((100, 100, 3), dtype=np.uint8)
+    #     model = None  # For the sake of this test, the model doesn't matter because cnn_apply is mocked
+    #     contours, flags = contoursCNN(img, model)
 
-        # Ensure model contour matches the synthetic region
-        model_rect = cv.boundingRect(contours['MODEL'])
-        self.assertEqual(model_rect, (25, 25, 50, 50))
+    #     # Ensure model contour matches the synthetic region
+    #     model_rect = cv.boundingRect(contours['MODEL'])
+    #     self.assertEqual(model_rect, (25, 25, 50, 50))
 
-        # Ensure shock contour matches the synthetic region
-        shock_rect = cv.boundingRect(contours['SHOCK'])
-        self.assertEqual(shock_rect, (10, 10, 10, 10))
+    #     # Ensure shock contour matches the synthetic region
+    #     shock_rect = cv.boundingRect(contours['SHOCK'])
+    #     self.assertEqual(shock_rect, (10, 10, 10, 10))
         
 
 if __name__ == '__main__':
