@@ -27,7 +27,7 @@ jobs:
           conda init bash
           source ~/.bashrc
           conda activate arcjetCV
-          conda install -c conda-forge pytest pytest-qt pytest-mock
+          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main
           python -m pip install --upgrade pip
           python -m  pip install -e .
           python -c "import arcjetCV"
