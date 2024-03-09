@@ -1,4 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/arcjetcv/badge/?version=latest)](https://arcjetcv.readthedocs.io/en/latest/?badge=latest)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/arcjetcv/badges/version.svg)](https://anaconda.org/conda-forge/arcjetcv)
 
 -----
 
