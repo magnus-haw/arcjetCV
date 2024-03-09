@@ -8,9 +8,37 @@ from arcjetCV.segmentation.time.time_segmentation import time_segmentation, extr
 
 
 class Video(object):
-    ''' Convenience wrapper for opencv video capture
+    '''
+    Convenience wrapper for opencv video capture.
+
+    This class provides a simple interface for working with video files using OpenCV. It encapsulates functionality for reading frames from a video file, setting the current frame, and writing processed frames to a new video file.
+
+    Attributes:
+        fpath (str): Path to the video file.
+        name (str): Name of the video file.
+        folder (str): Directory containing the video file.
+        ext (str): Extension of the video file.
+        cap: OpenCV VideoCapture object for reading video frames.
+        nframes (int): Total number of frames in the video.
+        fps (float): Frames per second of the video.
+        shape (tuple): Shape of the video frames (height, width, channels).
+        last_frame: Last frame read from the video.
+        writer: OpenCV VideoWriter object for writing processed frames.
+        _lock: Threading lock for thread-safe access to the video capture object.
+
+    Example:
+    ```python
+    video = Video('input_video.mp4')
+    print(video)
+    frame = video.get_frame(0)
+    ```
     '''
     def __init__(self, path):
+        """
+        Initializes the Video object.
+
+        :param path: path to the video file
+        """
         ### path variables
         self.fpath = path
         folder, name, ext = splitfn(path)
@@ -33,45 +61,94 @@ class Video(object):
 
         ### video output
         self.writer = None
+        self.output_path = os.path.join(self.folder,"video_out_"+self.name+'.m4v')
 
     def __str__(self):
+        """
+        Returns a string representation of the Video object.
+        """
         return 'Video: {}, shape={}, nframes={}'.format(self.fpath,self.shape,self.nframes,)
 
     def get_next_frame(self):
+        """
+        Retrieves the next frame from the video.
+
+        :returns: next frame
+        """
         with self._lock:
             _, self.last_frame = self.cap.read()
             return self.last_frame
 
     def set_frame(self, index):
+        """
+        Sets the frame at the specified index.
+
+        :param index: index of the frame to set
+        """
         with self._lock:
             self.cap.set(cv.CAP_PROP_POS_FRAMES,index)
             return
 
     def get_frame(self, index):
+        """
+        Retrieves the frame at the specified index.
+
+        :param index: index of the frame to retrieve
+        :returns: RGB frame at the specified index
+        """
         with self._lock:
             self.cap.set(cv.CAP_PROP_POS_FRAMES,index)
             _, self.last_frame = self.cap.read()
             return cv.cvtColor(self.last_frame, cv.COLOR_BGR2RGB)
 
     def close(self):
+        """
+        Closes the video capture.
+        """
         if self.writer is not None:
             self.writer.release()
         self.cap.release()
 
     def get_writer(self):
+        """
+        Initializes the video writer.
+        """
         vid_cod = cv.VideoWriter_fourcc('m','p','4','v')
-        fname = os.path.join(self.folder,"edit_"+self.name+'.m4v')
-        print(f"Writing {fname}")
-        self.writer = cv.VideoWriter(fname, vid_cod, self.fps,(self.shape[1], self.shape[0]))
+        print(f"Writing {self.output_path}")
+        self.writer = cv.VideoWriter(self.output_path, vid_cod, self.fps,(self.shape[1], self.shape[0]))
 
     def close_writer(self):
+        """
+        Closes the video writer.
+        """
         self.writer.release()
 
-
 class VideoMeta(dict):
-    ''' Subclass of dictionary designed to save/load video metadata in JSON format
+    '''
+    Subclass of dictionary designed to save/load video metadata in JSON format.
+
+    This class extends the dictionary class to provide functionality for saving and loading video metadata in JSON format. It also includes methods for resetting frame crop parameters and setting frame crop parameters.
+
+    Attributes:
+        folder (str): Directory containing the video metadata file.
+        name (str): Name of the video metadata file.
+        ext (str): Extension of the video metadata file.
+        path (str): Path to the video metadata file.
+
+    Example:
+    ```python
+    video = Video('input_video.mp4') # load video
+    video_meta = VideoMeta(video, 'metadata.json') # create/load metadata obj
+    video_meta.write() # write metadata to file
+    ```
     '''
     def __init__(self, video, path):
+        """
+        Initializes the VideoMeta object.
+
+        :param video: Video object
+        :param path: path to the video file
+        """
         super(VideoMeta, self).__init__()
         folder, name, ext = splitfn(path)
         self.folder = folder
@@ -134,6 +211,9 @@ class VideoMeta(dict):
             self.write()
     
     def write(self):
+        """
+        Writes the metadata to a JSON file.
+        """
         print(f"Writing {self.path} file ... ", end='')
         fout = open(self.path,'w+')
         json.dump(self, fout)
@@ -141,6 +221,11 @@ class VideoMeta(dict):
         print("Done")
 
     def load(self,path):
+        """
+        Loads metadata from a JSON file.
+
+        :param path: path to the JSON file
+        """
         fin = open(path,'r')
         dload = json.load(fin)
         self.update(dload)
@@ -155,16 +240,30 @@ class VideoMeta(dict):
         self.path = path
     
     def reset_frame_crop(self):
+        """
+        Resets frame crop parameters to defaults.
+        """
         self["CROP_YMIN"] = int(self["HEIGHT"] * 0.10)
         self["CROP_YMAX"] = int(self["HEIGHT"] * 0.90)
         self["CROP_XMIN"] = int(self["WIDTH"] * 0.10)
         self["CROP_XMAX"] = int(self["WIDTH"] * 0.90)
     
     def set_frame_crop(self, ymin, ymax, xmin, xmax):
+        """
+        Sets frame crop parameters.
+
+        :param ymin: minimum y coordinate
+        :param ymax: maximum y coordinate
+        :param xmin: minimum x coordinate
+        :param xmax: maximum x coordinate
+        """
         self["CROP_YMIN"] = ymin
         self["CROP_YMAX"] = ymax
         self["CROP_XMIN"] = xmin
         self["CROP_XMAX"] = xmax
 
     def crop_range(self):
+        """
+        Returns the crop range.
+        """
         return [[self['CROP_YMIN'],self['CROP_YMAX']],[self['CROP_XMIN'], self['CROP_XMAX']]]

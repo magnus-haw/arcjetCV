@@ -178,12 +178,12 @@ class Ui_MainWindow(object):
         )
         self.label_display_shock.setText("Display Shock:")
 
-        self.checkbox_display_shock = QtWidgets.QCheckBox(self.groupBox_2)
-        self.checkbox_display_shock.setObjectName("checkbox_display_shock")
+        self.checkBox_display_shock = QtWidgets.QCheckBox(self.groupBox_2)
+        self.checkBox_display_shock.setObjectName("checkBox_display_shock")
         self.formLayout.setWidget(
-            3, QtWidgets.QFormLayout.FieldRole, self.checkbox_display_shock
+            3, QtWidgets.QFormLayout.FieldRole, self.checkBox_display_shock
         )
-        self.checkbox_display_shock.setChecked(True)
+        self.checkBox_display_shock.setChecked(True)
 
         self.tab_7 = QtWidgets.QWidget()
         self.tab_7.setObjectName("tab_7")
@@ -619,7 +619,6 @@ class Ui_MainWindow(object):
         self.comboBox_fit_type = QtWidgets.QComboBox(self.groupBox_3)
         self.comboBox_fit_type.setObjectName("comboBox_fit_type")
         self.comboBox_fit_type.addItem("")
-        self.comboBox_fit_type.addItem("")
         self.formLayout_6.setWidget(
             0, QtWidgets.QFormLayout.FieldRole, self.comboBox_fit_type
         )
@@ -649,21 +648,21 @@ class Ui_MainWindow(object):
         self.groupBox_XT_params.setObjectName("groupBox_XT_params")
         self.gridLayout = QtWidgets.QGridLayout(self.groupBox_XT_params)
         self.gridLayout.setObjectName("gridLayout")
-        self.checkBox_75_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
-        self.checkBox_75_radius.setChecked(False)
-        self.checkBox_75_radius.setObjectName("checkBox_75_radius")
-        self.gridLayout.addWidget(self.checkBox_75_radius, 4, 0, 1, 1)
-        self.checkBox_m25_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
-        self.checkBox_m25_radius.setChecked(True)
-        self.checkBox_m25_radius.setObjectName("checkBox_m25_radius")
-        self.gridLayout.addWidget(self.checkBox_m25_radius, 1, 0, 1, 1)
+        self.checkBox_95_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
+        self.checkBox_95_radius.setChecked(False)
+        self.checkBox_95_radius.setObjectName("checkBox_95_radius")
+        self.gridLayout.addWidget(self.checkBox_95_radius, 4, 0, 1, 1)
+        self.checkBox_m50_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
+        self.checkBox_m50_radius.setChecked(True)
+        self.checkBox_m50_radius.setObjectName("checkBox_m50_radius")
+        self.gridLayout.addWidget(self.checkBox_m50_radius, 1, 0, 1, 1)
         self.checkBox_ypos = QtWidgets.QCheckBox(self.groupBox_XT_params)
         self.checkBox_ypos.setObjectName("checkBox_ypos")
         self.gridLayout.addWidget(self.checkBox_ypos, 4, 1, 1, 1)
-        self.checkBox_25_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
-        self.checkBox_25_radius.setChecked(True)
-        self.checkBox_25_radius.setObjectName("checkBox_25_radius")
-        self.gridLayout.addWidget(self.checkBox_25_radius, 3, 0, 1, 1)
+        self.checkBox_50_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
+        self.checkBox_50_radius.setChecked(True)
+        self.checkBox_50_radius.setObjectName("checkBox_50_radius")
+        self.gridLayout.addWidget(self.checkBox_50_radius, 3, 0, 1, 1)
         self.checkBox_shockmodel = QtWidgets.QCheckBox(self.groupBox_XT_params)
         self.checkBox_shockmodel.setObjectName("checkBox_shockmodel")
         self.gridLayout.addWidget(self.checkBox_shockmodel, 3, 1, 1, 1)
@@ -674,11 +673,11 @@ class Ui_MainWindow(object):
         self.checkBox_model_center.setChecked(True)
         self.checkBox_model_center.setObjectName("checkBox_model_center")
         self.gridLayout.addWidget(self.checkBox_model_center, 2, 0, 1, 1)
-        self.checkBox_m75_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
-        self.checkBox_m75_radius.setChecked(False)
-        self.checkBox_m75_radius.setTristate(False)
-        self.checkBox_m75_radius.setObjectName("checkBox_m75_radius")
-        self.gridLayout.addWidget(self.checkBox_m75_radius, 0, 0, 1, 1)
+        self.checkBox_m95_radius = QtWidgets.QCheckBox(self.groupBox_XT_params)
+        self.checkBox_m95_radius.setChecked(False)
+        self.checkBox_m95_radius.setTristate(False)
+        self.checkBox_m95_radius.setObjectName("checkBox_m95_radius")
+        self.gridLayout.addWidget(self.checkBox_m95_radius, 0, 0, 1, 1)
         self.checkBox_model_rad = QtWidgets.QCheckBox(self.groupBox_XT_params)
         self.checkBox_model_rad.setObjectName("checkBox_model_rad")
         self.gridLayout.addWidget(self.checkBox_model_rad, 1, 1, 1, 1)
@@ -752,8 +751,8 @@ class Ui_MainWindow(object):
         self.comboBox_flowDirection.setItemText(1, _translate("MainWindow", "left"))
         self.comboBox_flowDirection.setItemText(2, _translate("MainWindow", "up"))
         self.comboBox_flowDirection.setItemText(3, _translate("MainWindow", "down"))
-        self.comboBox_filterType.setItemText(0, _translate("MainWindow", "AutoHSV"))
-        self.comboBox_filterType.setItemText(1, _translate("MainWindow", "CNN"))
+        self.comboBox_filterType.setItemText(0, _translate("MainWindow", "CNN"))
+        self.comboBox_filterType.setItemText(1, _translate("MainWindow", "AutoHSV"))
         self.comboBox_filterType.setItemText(2, _translate("MainWindow", "HSV"))
         self.comboBox_filterType.setItemText(3, _translate("MainWindow", "GRAY"))
         self.label_4.setText(_translate("MainWindow", "Filter Method:"))
@@ -802,29 +801,28 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "Mask nframes:"))
         self.tabWidget_2.setTabText(
             self.tabWidget_2.indexOf(self.tab_5),
-            _translate("MainWindow", "Plotting params"),
+            _translate("MainWindow", "Plotting parameters"),
         )
         self.groupBox_3.setTitle(_translate("MainWindow", "Fitting Parameters"))
         self.comboBox_fit_type.setItemText(0, _translate("MainWindow", "linear"))
-        self.comboBox_fit_type.setItemText(1, _translate("MainWindow", "quadratic"))
         self.label_12.setText(_translate("MainWindow", "Fit type:"))
         self.label_13.setText(_translate("MainWindow", "Start time:"))
         self.label_14.setText(_translate("MainWindow", "End time:"))
         self.tabWidget_2.setTabText(
             self.tabWidget_2.indexOf(self.tab_6),
-            _translate("MainWindow", "Fitting params"),
+            _translate("MainWindow", "Fitting parameters"),
         )
         self.groupBox_XT_params.setTitle(
             _translate("MainWindow", "Visible Traces on XT plot")
         )
-        self.checkBox_75_radius.setText(_translate("MainWindow", "+75% radius"))
-        self.checkBox_m25_radius.setText(_translate("MainWindow", "-25% radius"))
+        self.checkBox_95_radius.setText(_translate("MainWindow", "+95% radius"))
+        self.checkBox_m50_radius.setText(_translate("MainWindow", "-50% radius"))
         self.checkBox_ypos.setText(_translate("MainWindow", "Model axis-position"))
-        self.checkBox_25_radius.setText(_translate("MainWindow", "+25% radius "))
+        self.checkBox_50_radius.setText(_translate("MainWindow", "+50% radius "))
         self.checkBox_shockmodel.setText(_translate("MainWindow", "Shock-model dist"))
         self.checkBox_shock_center.setText(_translate("MainWindow", "Shock center"))
         self.checkBox_model_center.setText(_translate("MainWindow", "Model center"))
-        self.checkBox_m75_radius.setText(_translate("MainWindow", "-75% radius"))
+        self.checkBox_m95_radius.setText(_translate("MainWindow", "-95% radius"))
         self.checkBox_model_rad.setText(_translate("MainWindow", "Model radius"))
         self.checkBox_shock_area.setText(_translate("MainWindow", "Shock area"))
         self.groupBox_data_summary.setTitle(_translate("MainWindow", "Data Summary"))
@@ -839,3 +837,5 @@ class Ui_MainWindow(object):
         self.actionLoad_Filter_2.setText(_translate("MainWindow", "Load Filter"))
         self.actionSave_Filter_2.setText(_translate("MainWindow", "Save Filter"))
         self.actionExit_2.setText(_translate("MainWindow", "Exit"))
+
+        

@@ -4,27 +4,65 @@
 
 # arcjetCV
 
-App to process arcjet videos and segment the edge of the shock and of the sample.
+Package to process arcjet videos and segment the edge of the shock and of the sample.
 
 ## Installation
 
-Create conda environment:
+### Prerequisite
+The installation of the arcjetCV GUI and python package require a valid
+[Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or
+[Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation.
 
-    conda env create -f env/arcjetCV_env_[cpu/gpu].yml
+### Unix Users
 
-and activate it:
+The software can be installed by running:
 
-    conda activate arcjetCV
+```bash
+conda create --name arcjetcv conda-forge::arcjetcv
+```
 
-then run the installation:
+### Windows Users and Developers
 
-    pip install .
+For local development of arcjetCV and for Windows users, these are the recommended installation steps:
+
+```bash
+git clone https://github.com/magnus-haw/arcjetCV.git
+cd arcjetCV
+conda env create -f env/arcjetCV_env_[cpu/gpu].yml
+conda activate arcjetCV
+python -m pip install -e . 
+```
+
+The -e flag stands for 'editable' and it means that any change to the local source code will have immediate effect on the arcjetCV python package and GUI.
+
+## How to Run
+
+You can now launch the GUI by running:
+
+```bash
+conda activate arcjetCV
+arcjetCV
+```
+
+or you can import arcjetCV's python API inside a python script, e.g. test.py:
+
+```python
+import arcjetCV as arcv
+video = arcv.Video("tests/arcjet_test.mp4")
+```
+
+and then run it as:
+
+```bash
+conda activate arcjetCV
+python test.py
+```
 
 ## Citing
 
 If you use arcjetCV in your research, please use the following BibTeX entries to cite it:
 
-```
+```BibTeX
 @inbook{doi:10.2514/6.2023-1912,
 author = {Alexandre Quintart and Magnus A. Haw},
 title = {ArcjetCV: a new machine learning application for extracting time-resolved recession measurements from arc jet test videos},
@@ -34,13 +72,6 @@ URL = {https://arc.aiaa.org/doi/abs/10.2514/6.2023-1912},
 eprint = {https://arc.aiaa.org/doi/pdf/10.2514/6.2023-1912},
 }
 ```
-
-## Run the GUI
-
-You can now launch the GUI by running:
-
-    conda activate arcjetCV
-    arcjetCV
 
 ## Authors
 Creator:  Magnus Haw

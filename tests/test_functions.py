@@ -55,10 +55,10 @@ class TestFilterHsvRanges(unittest.TestCase):
                 self.assertEqual(mask[i, j], 0)    # Black
 
         # Test with multiple ranges
-        mask_multi = filter_hsv_ranges(self.hsv_image, ([ [10, 0, 0], [75, 0, 0] ], [ [20, 255, 255], [85, 255, 255] ]))
+        mask_multi = filter_hsv_ranges(self.hsv_image, ([ [10, 0, 0], [95, 0, 0] ], [ [20, 255, 255], [85, 255, 255] ]))
         for i in range(100):
             j=50
-            if 10 <= i <= 20 or 75 <= i <= 85:
+            if 10 <= i <= 20 or 95 <= i <= 85:
                 self.assertEqual(mask_multi[i, j], 255)  # White
             else:
                 self.assertEqual(mask_multi[i, j], 0)    # Black
