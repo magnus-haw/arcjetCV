@@ -83,10 +83,13 @@ def test_toggle_show_shock_checkbox(app, qtbot):
     Test the functionality of the 'Show Shock' checkbox.
     """
     assert app.ui.checkBox_display_shock.isChecked()
+    
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+    qtbot.wait(100)  # event might be asynchronous
     assert not app.ui.checkBox_display_shock.isChecked()
+    
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-
+    qtbot.wait(100)
     assert app.ui.checkBox_display_shock.isChecked()
 
 
