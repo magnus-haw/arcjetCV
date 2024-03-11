@@ -19,6 +19,7 @@ def find_test_video_path():
 def app(qtbot):
     test_app = QApplication.instance() if QApplication.instance() else QApplication([])
     window = MainWindow()
+    window.testing = True
     qtbot.addWidget(window)
     window.hide() 
     return window
