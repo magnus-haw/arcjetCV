@@ -406,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             except Exception as e:
                 if self.testing:
-                    print("Could not load video")
+                    print("! Could not load video !:\n" + str(e))
                 else:
                     msg = QMessageBox()
                     msg.setWindowTitle("arcjetCV Warning")
