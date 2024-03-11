@@ -55,6 +55,7 @@ class Video(object):
         self.shape = np.shape(frame)
         self.h, self.w, self.chan = self.shape
         self.last_frame = frame
+        print(f'Loaded {self.fpath} with {self.nframes} frames and shape {self.shape}')
         
         if self.chan not in [1, 3]:
             raise IndexError("ERROR: number of channels of input video (%i) is not 1 or 3!" % self.chan)

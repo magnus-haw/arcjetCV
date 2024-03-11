@@ -50,14 +50,14 @@ def test_main_window_initialization(app):
 
 def test_load_video(app, qtbot, mocker):
     expected_video_path = find_test_video_path()
-    print("ciao", expected_video_path)
     mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
     
-    folder = os.path.dirname(expected_video_path)
-    for entry in os.listdir(folder):
-        full_path = os.path.join(folder, entry)
-        if os.path.isfile(full_path):
-            print(entry)
+    # print("ciao", expected_video_path)
+    # folder = os.path.dirname(expected_video_path)
+    # for entry in os.listdir(folder):
+    #     full_path = os.path.join(folder, entry)
+    #     if os.path.isfile(full_path):
+    #         print(entry)
 
     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
 
