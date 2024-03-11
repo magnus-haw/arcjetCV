@@ -44,4 +44,4 @@ jobs:
           conda init bash
           source ~/.bashrc
           conda activate arcjetCV
-          pytest
+          pytest -s
