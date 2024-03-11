@@ -479,6 +479,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.msg_box.setText("The video has been processed.")
             self.msg_box.setIcon(QMessageBox.Information)
             self.msg_box.exec()  # Display the message box
+        return True
 
     def grab_ui_values(self):
         inputdict = {"SEGMENT_METHOD": str(self.ui.comboBox_filterType.currentText())}
