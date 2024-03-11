@@ -35,7 +35,7 @@ jobs:
           conda env create -f env/arcjetCV_env_cpu.yml
           conda init bash
           source ~/.bashrc
-          conda activate arcjetcv
+          conda activate arcjetCV
           conda install -c conda-forge pytest pytest-qt pytest-mock qt-main pytest-xvfb
           python -m  pip install -e .
           python -c "import arcjetCV"
@@ -44,5 +44,5 @@ jobs:
         run: |
           conda init bash
           source ~/.bashrc
-          conda activate arcjetcv
+          conda activate arcjetCV
           pytest
