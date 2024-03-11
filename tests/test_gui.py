@@ -5,7 +5,14 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
+from pathlib import Path
 
+
+def find_test_video_path():
+    project_root = Path(__file__).resolve().parent
+    while not (project_root / 'setup.py').exists() and project_root.parent != project_root:
+        project_root = project_root.parent
+    return str(project_root / 'tests' / 'arcjet_test.mp4')
 
 
 @pytest.fixture
@@ -39,21 +46,17 @@ def test_main_window_initialization(app):
 #     assert app.ui.tabWidget.currentIndex() == target_index
 
 
-# def test_load_video(app, qtbot, mocker):
-#     expected_video_path = (
-#         "tests/arcjet_test.mp4"
-#     )
-#     mocker.patch(
-#         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
-#         return_value=(expected_video_path, ""),
-#     )
+def test_load_video(app, qtbot, mocker):
+    expected_video_path = find_test_video_path()
+    print(expected_video_path)
+    mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
 
-#     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
+    qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
 
-#     assert app.path == expected_video_path
-#     assert app.VIDEO_LOADED is True
-#     assert app.video is not None
-#     assert app.videometa is not None
+    assert app.path == expected_video_path
+    assert app.VIDEO_LOADED is True
+    assert app.video is not None
+    assert app.videometa is not None
 
 
 # def test_select_flow_direction(app, qtbot):
@@ -124,13 +127,8 @@ def test_main_window_initialization(app):
 #     """
 #     Test loading a video and then applying crop settings.
 #     """
-#     expected_video_path = (
-#         "tests/arcjet_test.mp4"
-#     )
-#     mocker.patch(
-#         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
-#         return_value=(expected_video_path, ""),
-#     )
+    # expected_video_path = find_test_video_path()
+    # mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
 
 #     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
 
@@ -157,13 +155,8 @@ def test_main_window_initialization(app):
 #     """
 #     Test the functionality of the 'Show Crop' checkbox.
 #     """
-#     expected_video_path = (
-#         "tests/arcjet_test.mp4"
-#     )
-#     mocker.patch(
-#         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
-#         return_value=(expected_video_path, ""),
-#     )
+    # expected_video_path = find_test_video_path()
+    # mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
 
 #     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
 
