@@ -5,13 +5,14 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from pathlib import Path
+import os
 
 
-def find_test_video_path():
+def find_tests_path():
     project_root = Path(__file__).resolve().parent
     while not (project_root / 'setup.py').exists() and project_root.parent != project_root:
         project_root = project_root.parent
-    return str(project_root / 'tests' / 'arcjet_test.mp4')
+    return str(project_root / 'tests')
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def test_switch_to_extract_edges_tab(app, qtbot):
 
 
 def test_load_video(app, qtbot, mocker):
-    expected_video_path = find_test_video_path()
+    expected_video_path = os.path.join(find_tests_path(), 'arcjet_test.mp4')
     mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
 
     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
@@ -126,7 +127,7 @@ def test_apply_crop(app, qtbot, mocker):
     """
     Test loading a video and then applying crop settings.
     """
-    expected_video_path = find_test_video_path()
+    expected_video_path = os.path.join(find_tests_path(), 'arcjet_test.mp4')
     mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
 
     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
@@ -154,7 +155,7 @@ def test_toggle_show_crop_checkbox(app, qtbot, mocker):
     """
     Test the functionality of the 'Show Crop' checkbox.
     """
-    expected_video_path = find_test_video_path()
+    expected_video_path = os.path.join(find_tests_path(), 'arcjet_test.mp4')
     mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(expected_video_path, ""))
 
     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
@@ -295,16 +296,11 @@ def test_load_analysis_files(app, qtbot, mocker):
     """
     Test loading files in the 'Analysis' tab and verifying UI updates.
     """
-    expected_file_path = "tests/arcjet_test_10_100.json"
-    expected_summary_start = "Loaded 1 files"
-
-    mocker.patch(
-        "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
-        return_value=([expected_file_path], ""),
-    )
+    expected_file_path = os.path.join(find_tests_path(), "arcjet_test_10_100.json")
+    mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileNames", return_value=([expected_file_path], ""))
 
     qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
-    assert expected_summary_start in app.ui.label_data_summary.text()
+    assert "Loaded 1 files" in app.ui.label_data_summary.text()
     assert "Finished plotting data" == app.ui.basebar.text()
 
 
@@ -313,13 +309,8 @@ def test_plot_data_button(app, qtbot, mocker):
     Test the 'Plot Data' button functionality in the 'Analysis' tab after loading analysis files.
     """
 
-    expected_file_path = [
-        "tests/arcjet_test_10_100.json"
-    ]
-    mocker.patch(
-        "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
-        return_value=(expected_file_path, ""),
-    )
+    expected_file_path = os.path.join(find_tests_path(), "arcjet_test_10_100.json")
+    mocker.patch("PySide6.QtWidgets.QFileDialog.getOpenFileNames", return_value=([expected_file_path], ""))
 
     qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
     qtbot.mouseClick(app.ui.pushButton_PlotData, Qt.LeftButton)
