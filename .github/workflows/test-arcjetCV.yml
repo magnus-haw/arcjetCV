@@ -12,22 +12,29 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]  # macos-latest, windows-latest,
-        python-version: ['3.9']
+        python-version: ['3.10']
+    env:
+      DISPLAY: ':99.0'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Install apt dependencies ${{ matrix.os }}
         run: |
-          sudo apt-get update && sudo apt-get install libgl1 libopengl0 libgl-dev libegl-dev libx11-dev libxcb1-dev -y
+          sudo apt-get update
+          sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 x11-utils -y
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+          sudo apt-get install libgl1 libopengl0 libgl-dev libegl-dev libx11-dev libxcb1-dev -y
+      - name: Install conda dependencies
+        run: |
           conda env create -f env/arcjetCV_env_cpu.yml
           conda init bash
           source ~/.bashrc
           conda activate arcjetCV
-          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main
+          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main pytest-xvfb
           python -m pip install --upgrade pip
           python -m  pip install -e .
           python -c "import arcjetCV"
