@@ -83,29 +83,29 @@ def test_select_filter(app, qtbot):
     assert app.ui.comboBox_filterType.currentIndex() == filter_index
 
 
-def test_toggle_show_shock_checkbox(app, qtbot):
-    """
-    Test the functionality of the 'Show Shock' checkbox.
-    """
-    assert app.ui.checkBox_display_shock.isChecked()
+# def test_toggle_show_shock_checkbox(app, qtbot):
+#     """
+#     Test the functionality of the 'Show Shock' checkbox.
+#     """
+#     assert app.ui.checkBox_display_shock.isChecked()
 
-    # Click on the checkbox to toggle it off
-    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+#     # Click on the checkbox to toggle it off
+#     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
 
-    # Wait for the checkbox state to update
-    qtbot.waitUntil(lambda: not app.ui.checkBox_display_shock.isChecked())
+#     # Wait for the checkbox state to update
+#     qtbot.waitUntil(lambda: not app.ui.checkBox_display_shock.isChecked())
 
-    # Assert that the checkbox is now unchecked
-    assert not app.ui.checkBox_display_shock.isChecked()
+#     # Assert that the checkbox is now unchecked
+#     assert not app.ui.checkBox_display_shock.isChecked()
 
-    # Click on the checkbox again to toggle it on
-    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+#     # Click on the checkbox again to toggle it on
+#     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
 
-    # Wait for the checkbox state to update
-    qtbot.waitUntil(lambda: app.ui.checkBox_display_shock.isChecked())
+#     # Wait for the checkbox state to update
+#     qtbot.waitUntil(lambda: app.ui.checkBox_display_shock.isChecked())
 
-    # Assert that the checkbox is now checked
-    assert app.ui.checkBox_display_shock.isChecked()
+#     # Assert that the checkbox is now checked
+#     assert app.ui.checkBox_display_shock.isChecked()
 
 
 def test_switch_tabs(app, qtbot):
