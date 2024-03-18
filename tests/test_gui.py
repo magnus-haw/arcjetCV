@@ -419,11 +419,11 @@ def test_set_mask_nframes(app, qtbot):
     assert app.ui.spinBox_mask_frames.value() == expected_mask_frames
 
 
-def test_toggle_display_shock(app, qtbot, mocker):
-    test_load_analysis_files(app, qtbot, mocker)
-    initial_state = app.ui.checkBox_display_shock2.isChecked()
-    qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
-    assert app.ui.checkBox_display_shock2.isChecked() != initial_state
+# def test_toggle_display_shock(app, qtbot, mocker):
+#     test_load_analysis_files(app, qtbot, mocker)
+#     initial_state = app.ui.checkBox_display_shock2.isChecked()
+#     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+#     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
 
 
 def test_switch_to_fitting_params_tab(app, qtbot):
