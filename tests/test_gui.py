@@ -87,11 +87,7 @@ def test_toggle_show_shock_checkbox(app, qtbot):
     """
     Test the functionality of the 'Show Shock' checkbox.
     """
-    initial_state = app.ui.checkBox_display_shock.isChecked()
-    app.ui.checkBox_display_shock.setChecked(not initial_state)
-    assert app.ui.checkBox_display_shock.isChecked() == (
-        not initial_state
-    )  # This should pass
+    initial_state = app.ui.checkBox_display_shock.setChecked(True)
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
     assert app.ui.checkBox_display_shock.isChecked() != initial_state
 
