@@ -87,9 +87,12 @@ def test_toggle_display_shock_checkbox(app, qtbot):
     """
     Test the functionality of the 'Show Shock' checkbox.
     """
-    initial_state = app.ui.checkBox_display_shock.setChecked(True)
+    app.ui.checkBox_display_shock.setChecked(True)
+    initial_state = app.ui.checkBox_display_shock.isChecked()
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
     assert app.ui.checkBox_display_shock.isChecked() != initial_state
+    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+    assert app.ui.checkBox_display_shock.isChecked() == initial_state
 
 
 def test_switch_tabs(app, qtbot):
@@ -405,9 +408,12 @@ def test_set_mask_nframes(app, qtbot):
 
 def test_toggle_display_shock_2(app, qtbot, mocker):
     test_load_analysis_files(app, qtbot, mocker)
-    initial_state = app.ui.checkBox_display_shock2.setChecked(True)
+    app.ui.checkBox_display_shock2.setChecked(True)
+    initial_state = app.ui.checkBox_display_shock2.isChecked()
     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
+    qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+    assert app.ui.checkBox_display_shock2.isChecked() == initial_state
 
 
 def test_switch_to_fitting_params_tab(app, qtbot):
