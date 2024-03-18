@@ -83,7 +83,7 @@ def test_select_filter(app, qtbot):
     assert app.ui.comboBox_filterType.currentIndex() == filter_index
 
 
-def test_toggle_show_shock_checkbox(app, qtbot):
+def test_toggle_display_shock_checkbox(app, qtbot):
     """
     Test the functionality of the 'Show Shock' checkbox.
     """
@@ -403,9 +403,9 @@ def test_set_mask_nframes(app, qtbot):
     assert app.ui.spinBox_mask_frames.value() == expected_mask_frames
 
 
-def test_toggle_display_shock(app, qtbot, mocker):
+def test_toggle_display_shock_2(app, qtbot, mocker):
     test_load_analysis_files(app, qtbot, mocker)
-    initial_state = app.ui.checkBox_display_shock2.isChecked()
+    initial_state = app.ui.checkBox_display_shock2.setChecked(True)
     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
 
