@@ -88,10 +88,11 @@ def test_toggle_show_shock_checkbox(app, qtbot):
     Test the functionality of the 'Show Shock' checkbox.
     """
     initial_state = app.ui.checkBox_display_shock.isChecked()
-    print(f"Before click: {app.ui.checkBox_display_shock.isChecked()}")
+    app.ui.checkBox_display_shock.setChecked(not initial_state)
+    assert app.ui.checkBox_display_shock.isChecked() == (
+        not initial_state
+    )  # This should pass
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-    qtbot.wait(100)  # Allow some time for the event to be processed
-    print(f"After click: {app.ui.checkBox_display_shock.isChecked()}")
     assert app.ui.checkBox_display_shock.isChecked() != initial_state
 
 
@@ -406,11 +407,11 @@ def test_set_mask_nframes(app, qtbot):
     assert app.ui.spinBox_mask_frames.value() == expected_mask_frames
 
 
-# def test_toggle_display_shock_2(app, qtbot, mocker):
-#     test_load_analysis_files(app, qtbot, mocker)
-#     initial_state = app.ui.checkBox_display_shock2.isChecked()
-#     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
-#     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
+def test_toggle_display_shock(app, qtbot, mocker):
+    test_load_analysis_files(app, qtbot, mocker)
+    initial_state = app.ui.checkBox_display_shock2.isChecked()
+    qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+    assert app.ui.checkBox_display_shock2.isChecked() != initial_state
 
 
 def test_switch_to_fitting_params_tab(app, qtbot):
