@@ -83,29 +83,13 @@ def test_select_filter(app, qtbot):
     assert app.ui.comboBox_filterType.currentIndex() == filter_index
 
 
-# def test_toggle_show_shock_checkbox(app, qtbot):
-#     """
-#     Test the functionality of the 'Show Shock' checkbox.
-#     """
-#     assert app.ui.checkBox_display_shock.isChecked()
-
-#     # Click on the checkbox to toggle it off
-#     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-
-#     # Wait for the checkbox state to update
-#     qtbot.waitUntil(lambda: not app.ui.checkBox_display_shock.isChecked())
-
-#     # Assert that the checkbox is now unchecked
-#     assert not app.ui.checkBox_display_shock.isChecked()
-
-#     # Click on the checkbox again to toggle it on
-#     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-
-#     # Wait for the checkbox state to update
-#     qtbot.waitUntil(lambda: app.ui.checkBox_display_shock.isChecked())
-
-#     # Assert that the checkbox is now checked
-#     assert app.ui.checkBox_display_shock.isChecked()
+def test_toggle_show_shock_checkbox(app, qtbot):
+    """
+    Test the functionality of the 'Show Shock' checkbox.
+    """
+    initial_state = app.ui.checkBox_display_shock.isChecked()
+    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+    assert app.ui.checkBox_display_shock.isChecked() != initial_state
 
 
 def test_switch_tabs(app, qtbot):
@@ -419,11 +403,11 @@ def test_set_mask_nframes(app, qtbot):
     assert app.ui.spinBox_mask_frames.value() == expected_mask_frames
 
 
-# def test_toggle_display_shock(app, qtbot, mocker):
-#     test_load_analysis_files(app, qtbot, mocker)
-#     initial_state = app.ui.checkBox_display_shock2.isChecked()
-#     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
-#     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
+def test_toggle_display_shock(app, qtbot, mocker):
+    test_load_analysis_files(app, qtbot, mocker)
+    initial_state = app.ui.checkBox_display_shock2.isChecked()
+    qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+    assert app.ui.checkBox_display_shock2.isChecked() != initial_state
 
 
 def test_switch_to_fitting_params_tab(app, qtbot):
