@@ -89,12 +89,22 @@ def test_toggle_show_shock_checkbox(app, qtbot):
     """
     assert app.ui.checkBox_display_shock.isChecked()
 
+    # Click on the checkbox to toggle it off
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-    qtbot.wait(100)  # event might be asynchronous
+
+    # Wait for the checkbox state to update
+    qtbot.waitUntil(lambda: not app.ui.checkBox_display_shock.isChecked())
+
+    # Assert that the checkbox is now unchecked
     assert not app.ui.checkBox_display_shock.isChecked()
 
+    # Click on the checkbox again to toggle it on
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-    qtbot.wait(100)
+
+    # Wait for the checkbox state to update
+    qtbot.waitUntil(lambda: app.ui.checkBox_display_shock.isChecked())
+
+    # Assert that the checkbox is now checked
     assert app.ui.checkBox_display_shock.isChecked()
 
 
