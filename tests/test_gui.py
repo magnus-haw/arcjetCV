@@ -90,8 +90,10 @@ def test_toggle_display_shock_checkbox(app, qtbot):
     app.ui.checkBox_display_shock.setChecked(True)
     initial_state = app.ui.checkBox_display_shock.isChecked()
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+    QApplication.processEvents()
     assert app.ui.checkBox_display_shock.isChecked() != initial_state
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+    QApplication.processEvents()
     assert app.ui.checkBox_display_shock.isChecked() == initial_state
 
 
@@ -411,8 +413,10 @@ def test_toggle_display_shock_2(app, qtbot, mocker):
     app.ui.checkBox_display_shock2.setChecked(True)
     initial_state = app.ui.checkBox_display_shock2.isChecked()
     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+    QApplication.processEvents()
     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
+    QApplication.processEvents()
     assert app.ui.checkBox_display_shock2.isChecked() == initial_state
 
 
