@@ -392,8 +392,8 @@ class ArcjetProcessor:
                     f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
                     + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
                 )
-            except:
-                continue
+            except Exception as e:
+                print(f"Failed at frame {frame_index} with error:\n" + str(e))
 
         if write_json:
             out_json.write()

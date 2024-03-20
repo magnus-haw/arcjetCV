@@ -27,7 +27,6 @@ video = arcv.Video(filepath + ".mp4")
 videometa = arcv.VideoMeta(video, filepath + ".meta")
 videometa["FLOW_DIRECTION"] = "right"
 videometa.set_frame_crop(250, 780, 490, 1020)
-outputprefix = "output"
 
 processor = arcv.ArcjetProcessor(videometa)
 output = processor.process_all(
@@ -43,7 +42,6 @@ output = processor.process_all(
 # output_data_path = output.path
 # video_output_path = video.output_path
 # videometa_filepath = videometa.path
-
 ```
 
 ### Functions and Classes

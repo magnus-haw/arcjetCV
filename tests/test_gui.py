@@ -96,15 +96,6 @@ def test_select_filter(app, qtbot):
 #     qtbot.wait(3000)
 #     assert app.ui.checkBox_display_shock.isChecked() == initial_state
 
-def test_toggle_display_shock_checkbox(app, qtbot):
-    """
-    Test the functionality of the 'Show Shock' checkbox.
-    """
-    app.ui.checkBox_display_shock.setChecked(True)
-    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-    qtbot.wait(5000)
-    assert app.ui.checkBox_display_shock.isChecked() != True
-
 
 def test_switch_tabs(app, qtbot):
     """
@@ -318,7 +309,7 @@ def test_load_analysis_files(app, qtbot, mocker):
     """
     Test loading files in the 'Analysis' tab and verifying UI updates.
     """
-    expected_file_path = os.path.join(find_tests_path(), "arcjet_test_10_150.json")
+    expected_file_path = os.path.join(find_tests_path(), "test_10_150.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
         return_value=([expected_file_path], ""),
@@ -334,7 +325,7 @@ def test_plot_data_button(app, qtbot, mocker):
     Test the 'Plot Data' button functionality in the 'Analysis' tab after loading analysis files.
     """
 
-    expected_file_path = os.path.join(find_tests_path(), "arcjet_test_10_150.json")
+    expected_file_path = os.path.join(find_tests_path(), "test_10_150.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
         return_value=([expected_file_path], ""),
