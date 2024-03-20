@@ -7,10 +7,12 @@ controlled by the index.rst file.
 
 In order to compile the documentation locally, you need to install a new conda environment as: 
 
-    conda env create --file sphinx_env.yml
-    conda activate sphinx_rtd
-    make html
+```bash
+conda env create --file sphinx_env.yml
+conda activate sphinx_rtd
+make html
+```
 
 This creates the documentation inside the docs/build/html folder (just double click the index.html file to open it in a browser).
-Alternatively, the "make latex" command compiles a pdf file, which serves as the user-manual. Finally, you can use
-"make clean" to clear previous builds.
+Alternatively, the `make latex` command compiles a pdf file, which serves as the user-manual. Finally, you can use
+`make clean` to clear previous builds.
