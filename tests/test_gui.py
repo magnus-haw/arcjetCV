@@ -83,18 +83,10 @@ def test_select_filter(app, qtbot):
     assert app.ui.comboBox_filterType.currentIndex() == filter_index
 
 
-# def test_toggle_display_shock_checkbox(app, qtbot):
-#     """
-#     Test the functionality of the 'Show Shock' checkbox.
-#     """
-#     app.ui.checkBox_display_shock.setChecked(True)
-#     initial_state = app.ui.checkBox_display_shock.isChecked()
-#     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-#     qtbot.wait(3000)
-#     assert app.ui.checkBox_display_shock.isChecked() != initial_state
-#     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-#     qtbot.wait(3000)
-#     assert app.ui.checkBox_display_shock.isChecked() == initial_state
+def test_toggle_display_shock(app, qtbot, mocker):
+    initial_state = app.ui.checkBox_display_shock.setChecked(True)
+    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
+    assert app.ui.checkBox_display_shock.isChecked() != initial_state
 
 
 def test_switch_tabs(app, qtbot):
