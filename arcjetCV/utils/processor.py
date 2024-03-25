@@ -346,7 +346,13 @@ class ArcjetProcessor:
 
         # Initialize video writer if write_video is True
         if write_video:
-            video.get_writer()
+
+            video_output_name = "video_out_%s_%i_%i.m4v" % (
+                output_prefix,
+                first_frame,
+                last_frame,
+            )
+            video.get_writer(video_output_name)
 
         # Setup output JSON file
         if output_prefix == "":
