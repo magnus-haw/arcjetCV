@@ -154,6 +154,7 @@ train_masks/
 # ML weights
 *.pt
 !Unet-xception-last-checkpoint.pt
+!Unet-xception_25_original.pt
 !time-checkpoint.pt
 *.pkl
 *.pth
