@@ -1,32 +1,47 @@
-# Introduction
+# Using arcjetCV: The Graphical User Interface
 
-Arcjet Computer Vision (```arcjetCV```) is a software application built to automate analysis of arc jet ground test video footage. This includes tracking material recession, sting arm motion, and the shock-material standoff distance. Consequently, ArcjetCV provides a new capability to resolve and validate new physics associated with non-linear processes. This is an essential step to reduce testing, modeling, and validation uncertainties for heatshield material performance.
-
-Arc jets are plasma wind tunnels used to test the performance of heatshield materials for spacecraft atmospheric entry. These facilities present an extremely harsh flow environment with heat fluxes up to 109 W/$m^2$ for up to 30 minutes. The plasma is low-temperature ($\sim1$ eV) but high pressure ($>$ 10 kPa) creating high-enthalpy supersonic flows similar to atmospheric entry conditions. Typically, material samples are measured before and after a test to characterize the total recession. However, this does not capture time-dependent effects such as material expansion and non-linear recession.
-
-Since manual segmentation is onerous, very few time-resolved measurements of material recession/expansion/shrinkage under arcjet test conditions exist. ArcjetCV seeks to automate these measurements such that time-resolved material behavior can be extracted for every arc jet test.
-
-ArcjetCV makes new time-resolved measurements of material recession, expansion new analysis of arcjet test videos which measure both the time-dependent 2D recession of the material samples and the shock standoff distance. The results show non-linear time-dependent effects are present for some conditions. The material and shock edges are extracted from the videos by training and applying a convolutional neural network. Due to the consistent camera settings, the machine learning model achieves high accuracy ($\pm$ 2 px) relative to manually segmented images with only a small number of training frames.
-
-# Using arcjetCV: the graphical user interface
-
-The graphical user interface is divided into two parts: the processing tab "Extract Edges" and the post-processing tab "Analysis". These tabs process the video and then post-process the extracted edges, respectively.
+The graphical user interface (GUI) of arcjetCV is divided into two main tabs: "Extract Edges" for processing and "Analysis" for post-processing. These tabs enable users to process videos to extract edges and then analyze these extracted edges, respectively.
 
 ## Processing
 
-![Video processing tab: Shows edge detection for individual frames and contains settings for edge filters, start/stop indices, and flow direction.](GUI1.png)
+![Video processing tab showing edge detection for individual frames, including settings for edge filters, start/stop indices, and flow direction.](GUI1.png)
 
-1. **Load video:** The first step is to load a video by clicking on the "Load Video" button on the top right of the right panel and locating a suitable file. Acceptable file types are \*.mp4, \*.avi, \*.mov, \*.m4v. There are no explicit restrictions on file size or length; however, it's suggested that larger files (>500 MB) should be processed on a powerful machine with a suitable GPU.
-2. **Review processing parameters:** After loading the video, arcjetCV will guess values for the start/end frame indices, the flow direction, and the region of interest (ROI). These should be adjusted as needed by the user.
-   - **Set flow direction:** This parameter sets the flow direction which then determines which side of the material sample is considered the leading edge. Options are LEFT, RIGHT, UP, DOWN.
-   - **Set start/end frames:** The starting and ending frames can be set in the "Output parameters" section at the bottom right. These are visible as vertical green lines on the intensity bar plot below the main video window. The current visible frame is shown as a vertical red line. The simplest method of navigating the video to determine the first and last frames is clicking on step features visible in the intensity plot and then refining using the frame index modifier at the top of the "Input Parameters" section.
-   - **Setting the region of interest:** The region of interest (ROI) is visualized as a white rectangle and can be set by clicking on the video and dragging around the model. Only the frame subsection within the ROI will be processed.
-     NOTE: the ROI should be applicable for both the start and end frames.
-     NOTE: The minimum area for the ROI has to be at least 40 pixels by 40 pixels.
-     NOTE: The ROI should encompass both the edge of the sample and any potential shock present.
-3. **Select edge filter:** The next step is to select an edge detection filter. arcjetCV has 4 filter modes: AutoHSV, CNN, HSV, Gray. The current video frame is displayed on the left side of the window with edge and text overlays. The filtered shock edges are drawn as red lines and the material sample edges will be drawn as green lines. To toggle shock detection, use the checkbox located to the right of the GUI interface.
-4. **Test filter performance:** It is informative to test the filter on a few frames near the beginning, middle, and end of the video since the camera settings/sample color/sample brightness will change over the course of a run. This can be done by skipping through the video by clicking on representative portions of the intensity bar plot below the frame or by changing the frame index input near the top of the panel. Zooming in using the pan/zoom tools lets the user easily evaluate the edge accuracy and/or measure the RGB/HSV values in a region.
-5. **Process frames:** To process a set of frames, select a frame range (first, last) in the "Output parameters" section of the bottom right panel. Since most recession is slow compared to the frame rate, it's usually convenient to process every N-th frame (default is 5, every 50th is typical for high speed videos). An output filename and output video option can be modified as well. Clicking the "Process All" button will then process the given frames with the current filter parameters. This action will create an output file with the edge data and a meta file with the saved processing settings in the same folder as the video file. The export video checkbox will create an output video with the overlayed edge detection and text. NOTE: The exported video is useful for debugging any unusual recession behavior.
-6. **Process in several steps:** It is occasionally necessary to process a given video in multiple steps using different filters (e.g., use a manual HSV filter for the first couple of frames and then use the CNN to process the remainder). Since the "Analysis" tab is designed to load multiple processing output files, this is a simple procedure.
+1. **Load Video:** Begin by loading a video file through the "Load Video" button located at the top right of the right panel. Supported file formats include *.mp4, *.avi, *.mov, and *.m4v. While there are no strict restrictions on file size or length, processing large files (>500 MB) is recommended on a powerful machine equipped with a suitable GPU.
+
+2. **Review Processing Parameters:** Upon loading a video, arcjetCV attempts to auto-guess the start/end frame indices, flow direction, and the region of interest (ROI). Adjust these parameters as necessary:
+    - **Set Flow Direction:** Determines the flow direction, affecting which side of the material sample is considered the leading edge. Options include LEFT, RIGHT, UP, DOWN.
+    - **Set Start/End Frames:** Define the starting and ending frames in the "Output Parameters" section. These frames are marked by vertical green lines on the intensity bar plot below the main video window, with the current frame indicated by a vertical red line.
+    - **Set the Region of Interest (ROI):** The ROI, visualized as a white rectangle, can be adjusted by clicking and dragging on the video frame. Only the section within the ROI will be processed. Ensure the ROI is suitable for both the start and end frames, encompasses at least 40x40 pixels, and includes both the sample edge and any potential shock presence.
+
+3. **Select Edge Filter:** Choose an edge detection filter from the available options: AutoHSV, CNN, HSV, and Gray. The effect of the selected filter is displayed in real-time on the video frame.
+
+4. **Test Filter Performance:** To ensure reliable edge detection, test the filter at various points throughout the video—beginning, middle, and end. This approach helps accommodate changes in camera settings, sample color, or brightness over time.
+
+5. **Process Frames:** After setting the frame range and selecting a filter, click "Process All" to begin processing. This generates an output file with edge data and a settings meta file in the video's directory. Optionally, an annotated video can also be exported.
+
+6. **Multiple Steps Processing:** For complex cases, processing the video in sections with different filters may be necessary. The "Analysis" tab supports loading and analyzing data from multiple processed files.
 
 ### Edge Filters
+
+- **AutoHSV:** Utilizes a predefined union of multiple HSV ranges for contour detection, transforming BGR to HSV for enhanced contrast.
+- **CNN:** Employs a convolutional neural network trained on various frames for precise edge extraction. While accurate, it is slower (~1 second per frame) than other methods.
+- **HSV:** Finds contours within manually specified HSV ranges, also leveraging BGR-HSV transformation.
+- **Gray:** Detects objects based on the grayscale intensity, ideal for bright sample edges but less effective for shock detection.
+
+## Post-processing
+
+The "Analyze" tab includes tools for visualizing, fitting, and exporting processed edge data. Functions include loading edge data, plotting, fitting to models, and exporting results.
+
+1. **Load Processed Edges:** Load edge data files (*.json) generated during processing. Multiple files from different video sections can be loaded simultaneously.
+
+2. **Plot Data:** Visualizes XY edge traces and time-dependent quantities extracted from edges. Selectable metrics and interactive plot features are available for detailed analysis.
+
+3. **Input Units/Scale:** Adjust plot scales based on material sample diameter and video frame rate. Modifying these parameters requires re-plotting and re-exporting data to reflect changes.
+
+4. **Fit Data:** Apply fitting functions to plotted data. Fitting parameters can be adjusted in the "Fitting Parameters" sub-tab.
+
+5. **Export Data:** Results can be exported to CSV, including time series data and fitting parameters. Plots are also saved automatically.
+
+Additional information and statistics about the processed data are displayed in the "Data Summary" section.
+
+![Post-processing window showcasing the analysis tools and features available in arcjetCV.](GUI3.png)
