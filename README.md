@@ -74,10 +74,10 @@ eprint = {https://arc.aiaa.org/doi/pdf/10.2514/6.2023-1912},
 ```
 
 ## Authors
-Creator:  Magnus Haw
+Creators:  Magnus Haw, Alexandre Quintart
 
-Contributors:
-Alexandre Quintart, Federico Semeraro
+Contributor:
+Federico Semeraro
 
 ## Legal / License
 Copyright © 2024 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.
