@@ -6,9 +6,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 os.system("sphinx-apidoc -fMT ../../arcjetCV -o api --templatedir=template -e")
 
 project = 'arcjetCV'
-copyright = '2024, arcjetCV Team'
 author = 'arcjetCV Team'
-release = 'v0.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -19,7 +17,12 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'nbsphinx',
+    'nbsphinx_link',
 ]
+
+# avoid running the notebook's cells
+nbsphinx_execute = 'never'
 
 myst_enable_extensions = [
     "dollarmath",

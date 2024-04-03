@@ -1,10 +1,14 @@
 [![Documentation Status](https://readthedocs.org/projects/arcjetcv/badge/?version=latest)](https://arcjetcv.readthedocs.io/en/latest/?badge=latest)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/arcjetcv/badges/version.svg)](https://anaconda.org/conda-forge/arcjetcv)
+[![tutorial](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/magnus-haw/arcjetCV/blob/develop/tutorial.ipynb)
 
 -----
 
 # arcjetCV
 
 Package to process arcjet videos and segment the edge of the shock and of the sample.
+
+![arcjetCV Functionality](https://github.com/magnus-haw/arcjetCV/blob/develop/docs/source/arcjet_video.gif)
 
 ## Installation
 
@@ -74,10 +78,10 @@ eprint = {https://arc.aiaa.org/doi/pdf/10.2514/6.2023-1912},
 ```
 
 ## Authors
-Creator:  Magnus Haw
+Creator:  Magnus Haw, Alexandre Quintart
 
 Contributors:
-Alexandre Quintart, Federico Semeraro
+Federico Semeraro
 
 ## Legal / License
 Copyright © 2024 United States Government as represented by the Administrator of the National Aeronautics and Space Administration.  All Rights Reserved.

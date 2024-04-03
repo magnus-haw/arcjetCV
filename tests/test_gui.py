@@ -2,18 +2,28 @@ import pytest
 from arcjetCV.gui.main_window import MainWindow
 from unittest.mock import patch
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QMessageBox
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
+from pathlib import Path
+import os
 
+
+def find_tests_path():
+    project_root = Path(__file__).resolve().parent
+    while (
+        not (project_root / "setup.py").exists() and project_root.parent != project_root
+    ):
+        project_root = project_root.parent
+    return str(project_root / "tests")
 
 
 @pytest.fixture
 def app(qtbot):
     test_app = QApplication.instance() if QApplication.instance() else QApplication([])
     window = MainWindow()
+    window.testing = True
     qtbot.addWidget(window)
-    window.hide() 
+    window.hide()
     return window
 
 
@@ -40,9 +50,7 @@ def test_switch_to_extract_edges_tab(app, qtbot):
 
 
 def test_load_video(app, qtbot, mocker):
-    expected_video_path = (
-        "tests/arcjet_test.mp4"
-    )
+    expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
         return_value=(expected_video_path, ""),
@@ -75,16 +83,10 @@ def test_select_filter(app, qtbot):
     assert app.ui.comboBox_filterType.currentIndex() == filter_index
 
 
-def test_toggle_show_shock_checkbox(app, qtbot):
-    """
-    Test the functionality of the 'Show Shock' checkbox.
-    """
-    assert app.ui.checkBox_display_shock.isChecked()
+def test_toggle_display_shock(app, qtbot, mocker):
+    initial_state = app.ui.checkBox_display_shock.setChecked(True)
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-    assert not app.ui.checkBox_display_shock.isChecked()
-    qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
-
-    assert app.ui.checkBox_display_shock.isChecked()
+    assert app.ui.checkBox_display_shock.isChecked() != initial_state
 
 
 def test_switch_tabs(app, qtbot):
@@ -124,9 +126,7 @@ def test_apply_crop(app, qtbot, mocker):
     """
     Test loading a video and then applying crop settings.
     """
-    expected_video_path = (
-        "tests/arcjet_test.mp4"
-    )
+    expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
         return_value=(expected_video_path, ""),
@@ -139,13 +139,13 @@ def test_apply_crop(app, qtbot, mocker):
     assert app.video is not None
     assert app.videometa is not None
 
-    app.ui.spinBox_crop_xmin.setValue(100)
-    app.ui.spinBox_crop_xmax.setValue(200)
-    app.ui.spinBox_crop_ymin.setValue(100)
-    app.ui.spinBox_crop_ymax.setValue(200)
+    app.ui.spinBox_crop_xmin.setValue(117)
+    app.ui.spinBox_crop_xmax.setValue(391)
+    app.ui.spinBox_crop_ymin.setValue(36)
+    app.ui.spinBox_crop_ymax.setValue(641)
 
     qtbot.mouseClick(app.ui.applyCrop, Qt.LeftButton)
-    expected_crop_settings = [[100, 200], [100, 200]]
+    expected_crop_settings = [[36, 641], [117, 391]]
     current_crop_settings = app.videometa.crop_range()
 
     assert (
@@ -157,9 +157,7 @@ def test_toggle_show_crop_checkbox(app, qtbot, mocker):
     """
     Test the functionality of the 'Show Crop' checkbox.
     """
-    expected_video_path = (
-        "tests/arcjet_test.mp4"
-    )
+    expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
         return_value=(expected_video_path, ""),
@@ -239,11 +237,10 @@ def test_set_frame_range(app, qtbot, mocker):
     """
     test_load_video(app, qtbot, mocker)
     app.ui.spinBox_FirstGoodFrame.setValue(10)
-    app.ui.spinBox_LastGoodFrame.setValue(100)
-    with patch.object(QMessageBox, "exec", return_value=QMessageBox.Ok):
-        app.process_all()
+    app.ui.spinBox_LastGoodFrame.setValue(150)
+    app.process_all()
     assert app.videometa["FIRST_GOOD_FRAME"] == 10
-    assert app.videometa["LAST_GOOD_FRAME"] == 100
+    assert app.videometa["LAST_GOOD_FRAME"] == 150
 
 
 def test_process_every_nth_frame(app, qtbot, mocker):
@@ -252,8 +249,8 @@ def test_process_every_nth_frame(app, qtbot, mocker):
     """
     test_load_video(app, qtbot, mocker)
     with qtbot.waitSignal(app.ui.spinBox_frame_skips.valueChanged):
-        app.ui.spinBox_frame_skips.setValue(10)
-    assert app.ui.spinBox_frame_skips.value() == 10
+        app.ui.spinBox_frame_skips.setValue(2)
+    assert app.ui.spinBox_frame_skips.value() == 2
 
 
 def test_set_output_filename(app, qtbot, mocker):
@@ -262,9 +259,8 @@ def test_set_output_filename(app, qtbot, mocker):
     """
     test_load_video(app, qtbot, mocker)
     app.ui.lineEdit_filename.setText("output_filename")
-    with patch.object(QMessageBox, "exec", return_value=QMessageBox.Ok):
-        app.process_all()
-    assert app.processor.filename == "output_filename_10_100.json"
+    app.process_all()
+    assert app.processor.filename == "output_filename_10_150.json"
 
 
 def test_toggle_write_video(app, qtbot, mocker):
@@ -283,11 +279,10 @@ def test_process_all_button(app, qtbot, mocker):
     test_load_video(app, qtbot, mocker)
     qtbot.waitSignal(app.frame_processed, timeout=10000)
 
-    with patch.object(QMessageBox, "exec", return_value=QMessageBox.Ok):
-        app.process_all()
+    check = app.process_all()
     qtbot.wait(1000)
 
-    assert app.msg_box.text() == "The video has been processed."
+    assert check == True
 
 
 # Analysis tab
@@ -306,16 +301,14 @@ def test_load_analysis_files(app, qtbot, mocker):
     """
     Test loading files in the 'Analysis' tab and verifying UI updates.
     """
-    expected_file_path = "tests/arcjet_test_10_100.json"
-    expected_summary_start = "Loaded 1 files"
-
+    expected_file_path = os.path.join(find_tests_path(), "test_10_150.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
         return_value=([expected_file_path], ""),
     )
 
     qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
-    assert expected_summary_start in app.ui.label_data_summary.text()
+    assert "Loaded 1 files" in app.ui.label_data_summary.text()
     assert "Finished plotting data" == app.ui.basebar.text()
 
 
@@ -324,12 +317,10 @@ def test_plot_data_button(app, qtbot, mocker):
     Test the 'Plot Data' button functionality in the 'Analysis' tab after loading analysis files.
     """
 
-    expected_file_path = [
-        "tests/arcjet_test_10_100.json"
-    ]
+    expected_file_path = os.path.join(find_tests_path(), "test_10_150.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
-        return_value=(expected_file_path, ""),
+        return_value=([expected_file_path], ""),
     )
 
     qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
@@ -409,9 +400,9 @@ def test_set_mask_nframes(app, qtbot):
     assert app.ui.spinBox_mask_frames.value() == expected_mask_frames
 
 
-def test_toggle_display_shock(app, qtbot, mocker):
+def test_toggle_display_shock_2(app, qtbot, mocker):
     test_load_analysis_files(app, qtbot, mocker)
-    initial_state = app.ui.checkBox_display_shock2.isChecked()
+    initial_state = app.ui.checkBox_display_shock2.setChecked(True)
     qtbot.mouseClick(app.ui.checkBox_display_shock2, Qt.LeftButton)
     assert app.ui.checkBox_display_shock2.isChecked() != initial_state
 

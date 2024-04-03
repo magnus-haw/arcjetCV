@@ -1,7 +1,6 @@
 name: arcjetCV
 channels:
   - pytorch
-  - nvidia
   - conda-forge
   - defaults
 dependencies:

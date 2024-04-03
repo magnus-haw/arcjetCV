@@ -124,8 +124,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-.dmypy.json
-dmypy.json
 
 # Pyre type checker
 .pyre/
@@ -146,8 +144,8 @@ dmypy.json
 *.meta
 train_frames/
 train_masks/
-settings.json
 *.json
+!tests/test_10_150.json
 
 # IDEs
 .vscode
@@ -156,6 +154,7 @@ settings.json
 # ML weights
 *.pt
 !Unet-xception-last-checkpoint.pt
+!Unet-xception_25_original.pt
 !time-checkpoint.pt
 *.pkl
 *.pth

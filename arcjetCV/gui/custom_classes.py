@@ -20,7 +20,7 @@ class MplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         self.figure = Figure(figsize=(width, height), dpi=dpi)
-        self.figure.set_tight_layout(True)
+        self.figure.set_layout_engine('tight')
         self.axes = self.figure.add_subplot(111)
         super(MplCanvas, self).__init__(self.figure)
 

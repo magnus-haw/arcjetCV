@@ -323,6 +323,7 @@ class ArcjetProcessor:
         output_prefix="",
         write_json=True,
         write_video=False,
+        display_shock=True,
     ):
         """
         Processes all frames in the video.
@@ -346,7 +347,13 @@ class ArcjetProcessor:
 
         # Initialize video writer if write_video is True
         if write_video:
-            video.get_writer()
+
+            video_output_name = "video_out_%s_%i_%i.m4v" % (
+                output_prefix,
+                first_frame,
+                last_frame,
+            )
+            video.get_writer(video_output_name)
 
         # Setup output JSON file
         if output_prefix == "":
@@ -371,9 +378,21 @@ class ArcjetProcessor:
                 contour_dict, argdict = self.process(frame, options)
 
                 # Draw model and shock contours on the frame for visualization
-                for key in contour_dict.keys():
-                    color = (0, 255, 0) if key == "MODEL" else (255, 0, 255)
-                    cv.drawContours(frame, contour_dict[key], -1, color, 2)
+                color_map = {
+                    "MODEL": (0, 255, 0),
+                    "SHOCK": (255, 0, 255),
+                }  # Define colors for MODEL and SHOCK
+
+                if display_shock:
+                    for key, contours in contour_dict.items():
+                        cv.drawContours(
+                            frame, contours, -1, color_map.get(key, (255, 0, 255)), 2
+                        )
+                else:
+                    # Draw only the MODEL contours if display_shock is False
+                    cv.drawContours(
+                        frame, contour_dict["MODEL"], -1, color_map["MODEL"], 2
+                    )
 
                 # Annotate the frame with its index for reference
                 annotate_image_with_frame_number(frame, frame_index)
@@ -392,8 +411,8 @@ class ArcjetProcessor:
                     f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
                     + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
                 )
-            except:
-                continue
+            except Exception as e:
+                print(f"Failed at frame {frame_index} with error:\n" + str(e))
 
         if write_json:
             out_json.write()

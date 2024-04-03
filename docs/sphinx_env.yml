@@ -8,3 +8,7 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - myst-parser
+  - nbsphinx
+  - nbsphinx-link
+  - pandoc
+  - ipython  # for colors in notebook
