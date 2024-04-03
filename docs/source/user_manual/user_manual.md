@@ -9,18 +9,13 @@ Since manual segmentation is onerous, very few time-resolved measurements of mat
 ArcjetCV makes new time-resolved measurements of material recession, expansion new analysis of arcjet test videos which measure both the time-dependent 2D recession of the material samples and the shock standoff distance. The results show non-linear time-dependent effects are present for some conditions. The material and shock edges are extracted from the videos by training and applying a convolutional neural network. Due to the consistent camera settings, the machine learning model achieves high accuracy ($\pm$ 2 px) relative to manually segmented images with only a small number of training frames.
  -->
 
-Using arcjetCV: The Graphical User Interface
+Introduction
 ============================================
 
 The graphical user interface of arcjetCV is divided into two parts: the "Extract Edges" processing tab and the "Analysis" post-processing tab. These tabs are responsible for processing the video and post-processing the extracted edges, respectively.
 
 Processing
-----------
-
-.. figure:: /path/to/GUI1.png
-   :width: 70%
-   :align: center
-   :caption: The video processing tab shows edge detection for individual frames and contains settings for edge filters, start/stop indices, and flow direction.
+============================================
 
 The process involves several steps:
 
@@ -82,7 +77,7 @@ ArcjetCV provides several edge filter options:
   Detects objects based on the grayscale of the frame.
 
 Post-Processing
----------------
+============================================
 
 The **Analyze** tab contains tools for visualizing and fitting the processed edge data. The primary functions include loading, plotting, fitting edge data, and exporting post-processed data.
 
