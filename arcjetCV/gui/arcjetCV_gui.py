@@ -15,7 +15,7 @@ from arcjetCV.gui.custom_classes import MatplotlibWidget
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowIcon(QtGui.QIcon("gui/logo/arcjetCV_logo.png"))
+        MainWindow.setWindowIcon(QtGui.QIcon("gui/logo/arcjetCV_logo_.png"))
         MainWindow.resize(800, 500)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -228,29 +228,40 @@ class Ui_MainWindow(object):
         )
         self.horizontalLayout_20 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_20.setObjectName("horizontalLayout_20")
+
+        # Create horizontal layout for checkboxes
+        self.horizontalLayout_checkboxes = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_checkboxes.setObjectName("horizontalLayout_checkboxes")
+
+        self.checkBox_crop = QtWidgets.QCheckBox(self.tab_7)
+        self.checkBox_crop.setChecked(True)
+        self.checkBox_crop.setTristate(False)
+        self.checkBox_crop.setObjectName("checkBox_crop")
+        self.horizontalLayout_checkboxes.addWidget(self.checkBox_crop)
+
         self.checkBox_annotate = QtWidgets.QCheckBox(self.tab_7)
         self.checkBox_annotate.setChecked(True)
         self.checkBox_annotate.setObjectName("checkBox_annotate")
-        self.horizontalLayout_20.addWidget(self.checkBox_annotate)
+        self.horizontalLayout_checkboxes.addWidget(self.checkBox_annotate)
+
+        # Add the horizontal layout with checkboxes to the form layout
+        self.formLayout_8.setLayout(
+            2, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_checkboxes
+        )
+
+        # Create the applyCrop push button
         self.applyCrop = QtWidgets.QPushButton(self.tab_7)
         self.applyCrop.setObjectName("pushButton")
-        self.horizontalLayout_20.addWidget(self.applyCrop)
-        self.formLayout_8.setLayout(
-            2, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_20
-        )
+
+        # Place the applyCrop button below the horizontal layout of checkboxes in the form layout
+        self.formLayout_8.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.applyCrop)
         self.label_19 = QtWidgets.QLabel(self.tab_7)
         self.label_19.setObjectName("label_19")
         self.formLayout_8.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_19)
         self.label_21 = QtWidgets.QLabel(self.tab_7)
         self.label_21.setObjectName("label_21")
         self.formLayout_8.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_21)
-        self.checkBox_crop = QtWidgets.QCheckBox(self.tab_7)
-        self.checkBox_crop.setChecked(True)
-        self.checkBox_crop.setTristate(False)
-        self.checkBox_crop.setObjectName("checkBox_crop")
-        self.formLayout_8.setWidget(
-            2, QtWidgets.QFormLayout.LabelRole, self.checkBox_crop
-        )
+
         self.FilterTabs.addTab(self.tab_7, "")
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
@@ -837,5 +848,3 @@ class Ui_MainWindow(object):
         self.actionLoad_Filter_2.setText(_translate("MainWindow", "Load Filter"))
         self.actionSave_Filter_2.setText(_translate("MainWindow", "Save Filter"))
         self.actionExit_2.setText(_translate("MainWindow", "Exit"))
-
-        

@@ -32,7 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Initialize the user interface
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        
+
         self.testing = False
 
         # Set the application icon
@@ -273,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if key == "MODEL":
                 cv.drawContours(self.rgb_frame, contour_dict[key], -1, (0, 255, 0), 2)
             elif key == "SHOCK" and self.ui.checkBox_display_shock.isChecked():
-                cv.drawContours(self.rgb_frame, contour_dict[key], -1, (0, 0, 255), 2)
+                cv.drawContours(self.rgb_frame, contour_dict[key], -1, (255, 0, 0), 2)
 
         # Draw annotations
         annotate_image_with_frame_number(self.rgb_frame, frame_index)
@@ -468,6 +468,7 @@ class MainWindow(QtWidgets.QMainWindow):
             output_prefix=self.ui.lineEdit_filename.text(),
             write_json=True,
             write_video=self.ui.checkBox_writeVideo.isChecked(),
+            display_shock=self.ui.checkBox_display_shock.isChecked(),
         )
 
         # Create a message box
@@ -550,7 +551,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("!!! File loading failed !!!:\n" + str(e))
             else:
-                QMessageBox.warning(None, "Warning", "!!! File loading failed !!!:\n" + str(e))
+                QMessageBox.warning(
+                    None, "Warning", "!!! File loading failed !!!:\n" + str(e)
+                )
 
         self.plot_outputs()
 
@@ -809,14 +812,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Not enough data to plot")
                 else:
-                    QMessageBox.warning(None, "Warning", "!!! Not enough data to plot !!!: only %i points" % len(self.raw_outputs))
+                    QMessageBox.warning(
+                        None,
+                        "Warning",
+                        "!!! Not enough data to plot !!!: only %i points"
+                        % len(self.raw_outputs),
+                    )
 
         except Exception as e:
             self.ui.basebar.setText("!!! Plotting failed !!!")
             if self.testing:
                 print("Warning", "!!! Plotting failed !!!:\n" + str(e))
             else:
-                QMessageBox.warning(None, "Warning", "!!! Plotting failed !!!:\n" + str(e))
+                QMessageBox.warning(
+                    None, "Warning", "!!! Plotting failed !!!:\n" + str(e)
+                )
 
         self.ui.Window1.repaint()
         self.ui.Window2.repaint()
@@ -866,7 +876,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("Warning", "!!! Plot saving failed !!!:\n" + str(e))
             else:
-                QMessageBox.warning(None, "Warning", "!!! Plot saving failed !!!:\n" + str(e))
+                QMessageBox.warning(
+                    None, "Warning", "!!! Plot saving failed !!!:\n" + str(e)
+                )
 
     def export_to_csv(self):
         if self.time_series is not None:
@@ -923,7 +935,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Warning", "!!! CSV export failed !!!:\n" + str(e))
                 else:
-                    QMessageBox.warning(None, "Warning", "!!! CSV export failed !!!:\n" + str(e))
+                    QMessageBox.warning(
+                        None, "Warning", "!!! CSV export failed !!!:\n" + str(e)
+                    )
 
     def fit_data(self):
         if self.time_series is not None:
@@ -984,4 +998,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Warning", "!!! Fitting failed !!!:\n" + str(e))
                 else:
-                    QMessageBox.warning(None, "Warning", "!!! Fitting failed !!!:\n" + str(e))
+                    QMessageBox.warning(
+                        None, "Warning", "!!! Fitting failed !!!:\n" + str(e)
+                    )
