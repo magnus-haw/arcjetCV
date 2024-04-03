@@ -8,6 +8,8 @@
 
 Package to process arcjet videos and segment the edge of the shock and of the sample.
 
+![arcjetCV Functionality](path_to_your_image.png)
+
 ## Installation
 
 ### Prerequisite
