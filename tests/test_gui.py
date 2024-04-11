@@ -50,7 +50,7 @@ def test_switch_to_extract_edges_tab(app, qtbot):
 
 
 def test_load_video(app, qtbot, mocker):
-    expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
+    expected_video_path = os.path.join(find_tests_path(), "arcjet_test_2.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
         return_value=(expected_video_path, ""),
@@ -126,7 +126,7 @@ def test_apply_crop(app, qtbot, mocker):
     """
     Test loading a video and then applying crop settings.
     """
-    expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
+    expected_video_path = os.path.join(find_tests_path(), "arcjet_test_2.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
         return_value=(expected_video_path, ""),
@@ -157,7 +157,7 @@ def test_toggle_show_crop_checkbox(app, qtbot, mocker):
     """
     Test the functionality of the 'Show Crop' checkbox.
     """
-    expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
+    expected_video_path = os.path.join(find_tests_path(), "arcjet_test_2.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
         return_value=(expected_video_path, ""),
@@ -236,11 +236,11 @@ def test_set_frame_range(app, qtbot, mocker):
     Test setting the frame range for processing.
     """
     test_load_video(app, qtbot, mocker)
-    app.ui.spinBox_FirstGoodFrame.setValue(10)
-    app.ui.spinBox_LastGoodFrame.setValue(150)
+    app.ui.spinBox_FirstGoodFrame.setValue(150)
+    app.ui.spinBox_LastGoodFrame.setValue(400)
     app.process_all()
-    assert app.videometa["FIRST_GOOD_FRAME"] == 10
-    assert app.videometa["LAST_GOOD_FRAME"] == 150
+    assert app.videometa["FIRST_GOOD_FRAME"] == 150
+    assert app.videometa["LAST_GOOD_FRAME"] == 400
 
 
 def test_process_every_nth_frame(app, qtbot, mocker):
@@ -260,7 +260,7 @@ def test_set_output_filename(app, qtbot, mocker):
     test_load_video(app, qtbot, mocker)
     app.ui.lineEdit_filename.setText("output_filename")
     app.process_all()
-    assert app.processor.filename == "output_filename_10_150.json"
+    assert app.processor.filename == "output_filename_150_400.json"
 
 
 def test_toggle_write_video(app, qtbot, mocker):
@@ -301,7 +301,7 @@ def test_load_analysis_files(app, qtbot, mocker):
     """
     Test loading files in the 'Analysis' tab and verifying UI updates.
     """
-    expected_file_path = os.path.join(find_tests_path(), "test_10_150.json")
+    expected_file_path = os.path.join(find_tests_path(), "arcjet_test_2_150_400.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
         return_value=([expected_file_path], ""),
@@ -317,7 +317,7 @@ def test_plot_data_button(app, qtbot, mocker):
     Test the 'Plot Data' button functionality in the 'Analysis' tab after loading analysis files.
     """
 
-    expected_file_path = os.path.join(find_tests_path(), "test_10_150.json")
+    expected_file_path = os.path.join(find_tests_path(), "arcjet_test_2_150_400.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
         return_value=([expected_file_path], ""),
