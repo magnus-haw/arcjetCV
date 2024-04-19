@@ -101,7 +101,3 @@ The **Analyze** tab contains tools for visualizing and fitting the processed edg
 
    Export the plotted and fitted data to CSV using the "Export CSV/Plots" button.
 
-.. figure:: /path/to/GUI3.png
-   :width: 70%
-   :align: center
-   :caption: The post-processing window.
