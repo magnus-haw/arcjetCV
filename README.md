@@ -67,13 +67,11 @@ python test.py
 If you use arcjetCV in your research, please use the following BibTeX entries to cite it:
 
 ```BibTeX
-@inbook{doi:10.2514/6.2023-1912,
-author = {Alexandre Quintart and Magnus A. Haw},
-title = {ArcjetCV: a new machine learning application for extracting time-resolved recession measurements from arc jet test videos},
-booktitle = {AIAA SCITECH 2023 Forum},
-doi = {10.2514/6.2023-1912},
-URL = {https://arc.aiaa.org/doi/abs/10.2514/6.2023-1912},
-eprint = {https://arc.aiaa.org/doi/pdf/10.2514/6.2023-1912},
+@article{arcjetCV,
+  title={arcjetCV: an open-source software to analyze material ablation},
+  author={Quintart, Alexandre and Haw, Magnus and Semeraro, Federico},
+  journal={arXiv preprint arXiv:2404.11492},
+  year={2024}
 }
 ```
 
