@@ -64,7 +64,7 @@ python test.py
 
 ## Citing
 
-If you use arcjetCV in your research, please use the following BibTeX entries to cite it:
+If you use arcjetCV in your research, please use the following BibTeX entry to cite [our paper](https://arxiv.org/abs/2404.11492):
 
 ```BibTeX
 @article{arcjetCV,
