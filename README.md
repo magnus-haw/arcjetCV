@@ -24,6 +24,8 @@ The software can be installed by running:
 ```bash
 conda create --name arcjetcv conda-forge::arcjetcv
 ```
+####Note for macOS Users:
+Please ensure you use the osx-64 channel from Conda Forge when installing arcjetCV. Currently, arcjetCV is not available on the osx-arm64 channel.
 
 ### Windows Users and Developers
 
