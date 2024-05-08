@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set the application icon
         self.logo_path = os.path.join(
-            Path(__file__).parent.absolute(), "logo/arcjetCV_logo_white_.png"
+            Path(__file__).parent.absolute(), "logo/arcjetCV_logo_white.png"
         )
         self.setWindowIcon(QIcon(self.logo_path))
 
