@@ -15,7 +15,6 @@ from arcjetCV.gui.custom_classes import MatplotlibWidget
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowIcon(QtGui.QIcon("gui/logo/arcjetCV_logo_.png"))
         MainWindow.resize(800, 500)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
