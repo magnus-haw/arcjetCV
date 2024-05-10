@@ -450,7 +450,7 @@ class Ui_MainWindow(object):
         )
         self.spinBox_frame_skips = QtWidgets.QSpinBox(self.groupBox)
         self.spinBox_frame_skips.setMinimum(1)
-        self.spinBox_frame_skips.setMaximum(200)
+        self.spinBox_frame_skips.setMaximum(500)
         self.spinBox_frame_skips.setProperty("value", 5)
         self.spinBox_frame_skips.setObjectName("spinBox_frame_skips")
         self.formLayout_5.setWidget(
@@ -586,7 +586,7 @@ class Ui_MainWindow(object):
         )
         self.doubleSpinBox_fps = QtWidgets.QDoubleSpinBox(self.tab_5)
         self.doubleSpinBox_fps.setMinimum(1.0)
-        self.doubleSpinBox_fps.setMaximum(120.0)
+        self.doubleSpinBox_fps.setMaximum(12000.0)
         self.doubleSpinBox_fps.setProperty("value", 30.0)
         self.doubleSpinBox_fps.setObjectName("doubleSpinBox_fps")
         self.formLayout_3.setWidget(
