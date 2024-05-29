@@ -32,6 +32,12 @@ Please ensure you use the osx-64 channel from Conda Forge when installing arcjet
 
 For local development of arcjetCV and for Windows users, these are the recommended installation steps:
 
+1. **Install `git lfs` (Git Large File Storage):**
+
+   You can download and install it from [here](https://git-lfs.github.com/).
+
+2. **Clone the repository and install the package:**
+
 ```bash
 git clone https://github.com/magnus-haw/arcjetCV.git
 cd arcjetCV
