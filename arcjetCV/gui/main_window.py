@@ -8,7 +8,7 @@ from numbers import Number
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon,QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv
 from matplotlib.widgets import RectangleSelector
@@ -36,13 +36,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.testing = False
 
         # Set the application icon
-        self.logo_path = os.path.join(
+        self.logo_white_path = os.path.join(
             Path(__file__).parent.absolute(), "logo/arcjetCV_logo_white.png"
         )
+        self.logo_path = os.path.join(Path(__file__).parent.absolute(), "logo/arcjetCV_logo_.png")
         self.setWindowIcon(QIcon(self.logo_path))
 
         # Load and process the application logo
-        self.rgb_frame = cv.imread(self.logo_path)
+        self.rgb_frame = cv.imread(self.logo_white_path)
         self.rgb_frame = cv.cvtColor(self.rgb_frame, cv.COLOR_BGR2RGB)
 
         # Initialize frame and plotting windows
@@ -549,10 +550,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         except Exception as e:
             if self.testing:
-                print("!!! File loading failed !!!:\n" + str(e))
+                print("! File loading failed !:\n" + str(e))
             else:
-                QMessageBox.warning(
-                    None, "Warning", "!!! File loading failed !!!:\n" + str(e)
+                self.arcjetcv_message_box("Warning", "! File loading failed !:\n" + str(e)
                 )
 
         self.plot_outputs()
@@ -812,20 +812,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Not enough data to plot")
                 else:
-                    QMessageBox.warning(
-                        None,
+                    self.arcjetcv_message_box(
                         "Warning",
-                        "!!! Not enough data to plot !!!: only %i points"
-                        % len(self.raw_outputs),
+                        "! Not enough data to plot !: only %i points"
+                        % len(self.raw_outputs)
                     )
 
         except Exception as e:
-            self.ui.basebar.setText("!!! Plotting failed !!!")
+            self.ui.basebar.setText("! Plotting failed !")
             if self.testing:
-                print("Warning", "!!! Plotting failed !!!:\n" + str(e))
+                print("Warning", "! Plotting failed !:\n" + str(e))
             else:
-                QMessageBox.warning(
-                    None, "Warning", "!!! Plotting failed !!!:\n" + str(e)
+                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e)
                 )
 
         self.ui.Window1.repaint()
@@ -872,12 +870,11 @@ class MainWindow(QtWidgets.QMainWindow):
             plt.close(fig)
 
         except Exception as e:
-            self.ui.basebar.setText("!!! Plot saving failed !!!")
+            self.ui.basebar.setText("! Plot saving failed !")
             if self.testing:
-                print("Warning", "!!! Plot saving failed !!!:\n" + str(e))
+                print("Warning", "! Plot saving failed !:\n" + str(e))
             else:
-                QMessageBox.warning(
-                    None, "Warning", "!!! Plot saving failed !!!:\n" + str(e)
+                self.arcjetcv_message_box("Warning", "! Plot saving failed !:\n" + str(e)
                 )
 
     def export_to_csv(self):
@@ -931,12 +928,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     df.to_csv(csv_file_path, index=False)
 
             except Exception as e:
-                self.ui.basebar.setText("!!! CSV export failed !!!")
+                self.ui.basebar.setText("! CSV export failed !")
                 if self.testing:
-                    print("Warning", "!!! CSV export failed !!!:\n" + str(e))
+                    print("Warning", "! CSV export failed !:\n" + str(e))
                 else:
-                    QMessageBox.warning(
-                        None, "Warning", "!!! CSV export failed !!!:\n" + str(e)
+                    self.arcjetcv_message_box("Warning", "! CSV export failed !:\n" + str(e)
                     )
 
     def fit_data(self):
@@ -994,10 +990,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.fit_dict = fit_dict
 
             except Exception as e:
-                self.ui.basebar.setText("!!! Fitting failed !!!")
+                self.ui.basebar.setText("! Fitting failed !")
                 if self.testing:
-                    print("Warning", "!!! Fitting failed !!!:\n" + str(e))
+                    print("Warning", "! Fitting failed !:\n" + str(e))
                 else:
-                    QMessageBox.warning(
-                        None, "Warning", "!!! Fitting failed !!!:\n" + str(e)
-                    )
+                    self.arcjetcv_message_box("Warning", "! Fitting failed !:\n" + str(e))
+
+    def arcjetcv_message_box(self,title,message):
+
+        msg_box = QMessageBox()
+        msg_box.setIconPixmap(QPixmap(self.logo_path))
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec_()
