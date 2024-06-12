@@ -8,7 +8,6 @@ dependencies:
   - python
   - pip
   - pyside6
-  - ocl-icd-system
   - opencv
   - matplotlib
   - pandas
