@@ -5,7 +5,7 @@
 -----
 
 <div align="center">
-  <img src="https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="50%">
+  <img src="https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
 </div>
 
 # arcjetCV
