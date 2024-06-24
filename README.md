@@ -4,9 +4,9 @@
 
 -----
 
-# arcjetCV
-
 ![arcjetCV Logo](https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png)
+
+# arcjetCV
 
 Package to process arcjet videos and segment the edge of the shock and of the sample.
 
