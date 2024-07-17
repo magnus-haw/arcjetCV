@@ -22,7 +22,7 @@ The installation of the arcjetCV GUI and python package require:
 - [Git Large File Storage](https://git-lfs.github.com/) (git-lfs) installation. 
 -  [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation. 
 
-### Unix Users
+### Unix Users (Linux and macOS)
 
 The software can be installed by running:
 
