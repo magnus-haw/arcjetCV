@@ -20,10 +20,9 @@ Package to process arcjet videos and segment the edge of the shock and of the sa
 
 Before you start, ensure you have the following tools installed on your system:
 
-1. **Git:** Follow the [Git installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
-2. **Git Large File Storage (git-lfs):** Follow the [Git LFS installation guide](https://git-lfs.github.com/).
-3. **Miniconda or Anaconda:** Follow the respective installation guide for [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html).
-4. **(macOS only) Install Xcode Command Line Tools:**
+
+1. **Miniconda or Anaconda:** Follow the respective installation guide for [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html).
+2. **(macOS only) Install Xcode Command Line Tools:**
 
     Ensure that you have the Xcode Command Line Tools installed by running:
 
