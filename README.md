@@ -44,7 +44,7 @@ For local development of arcjetCV and for Windows users, these are the recommend
 
 2. **Install `git`:**
 
-   You can download and install it from [here]([https://git-lfs.github.com/](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)).
+   You can download and install it from [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
 2. **Install `git lfs` (Git Large File Storage):**
 
