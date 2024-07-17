@@ -17,9 +17,10 @@ Package to process arcjet videos and segment the edge of the shock and of the sa
 ## Installation
 
 ### Prerequisites
-The installation of the arcjetCV GUI and python package require a valid git installation, installation of the git-lfs [(git large file storage)](https://git-lfs.github.com/) add-on and a 
-[Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or
-[Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation. 
+The installation of the arcjetCV GUI and python package require:
+- Git [(git)](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installation. 
+- Git-lfs [(git large file storage)](https://git-lfs.github.com/) installation. 
+-  [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation. 
 
 ### Unix Users
 
@@ -41,11 +42,15 @@ xcode-select --install
 
 For local development of arcjetCV and for Windows users, these are the recommended installation steps:
 
-1. **Install `git lfs` (Git Large File Storage):**
+2. **Install `git`:**
+
+   You can download and install it from [here]([https://git-lfs.github.com/](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)).
+
+2. **Install `git lfs` (Git Large File Storage):**
 
    You can download and install it from [here](https://git-lfs.github.com/).
 
-2. **Clone the repository and install the package:**
+4. **Clone the repository and install the package:**
 
 ```bash
 git clone https://github.com/magnus-haw/arcjetCV.git
