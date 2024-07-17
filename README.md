@@ -42,7 +42,7 @@ conda create --name arcjetcv conda-forge::arcjetcv
 
 For local development of arcjetCV and for Windows users, these are the recommended installation steps:
 
-2. **Install `git`:**
+1. **Install `git`:**
 
    You can download and install it from [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
@@ -50,7 +50,7 @@ For local development of arcjetCV and for Windows users, these are the recommend
 
    You can download and install it from [here](https://git-lfs.github.com/).
 
-4. **Clone the repository and install the package:**
+3. **Clone the repository and install the package:**
 
 ```bash
 git clone https://github.com/magnus-haw/arcjetCV.git
