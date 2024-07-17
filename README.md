@@ -17,7 +17,7 @@ Package to process arcjet videos and segment the edge of the shock and of the sa
 ## Installation
 
 ### Prerequisites
-The installation of the arcjetCV GUI and python package require:
+The installation of the arcjetCV GUI and python package requires:
 - [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installation. 
 - [Git Large File Storage](https://git-lfs.github.com/) (git-lfs) installation. 
 -  [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation. 
