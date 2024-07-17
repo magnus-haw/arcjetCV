@@ -17,25 +17,26 @@ Package to process arcjet videos and segment the edge of the shock and of the sa
 ## Installation
 
 ### Prerequisites
-The installation of the arcjetCV GUI and python package requires:
-- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) installation. 
-- [Git Large File Storage](https://git-lfs.github.com/) (git-lfs) installation. 
--  [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation. 
 
+Before you start, ensure you have the following tools installed on your system:
+
+1. **Git:** Follow the [Git installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+2. **Git Large File Storage (git-lfs):** Follow the [Git LFS installation guide](https://git-lfs.github.com/).
+3. **Miniconda or Anaconda:** Follow the respective installation guide for [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html).
+4. **(macOS only) Install Xcode Command Line Tools:**
+
+    Ensure that you have the Xcode Command Line Tools installed by running:
+
+    ```bash
+    xcode-select --install
+    ```
+    
 ### Unix Users (Linux and macOS)
 
 The software can be installed by running:
 
 ```bash
 conda create --name arcjetcv conda-forge::arcjetcv
-```
-#### Note for macOS Users:
-
-
-Please ensure that you have the Xcode Command Line Tools installed:
-
-```bash
-xcode-select --install
 ```
 
 ### Windows Users and Developers
