@@ -6,13 +6,14 @@ import os
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
-with open('arcjetCV/__init__.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
+_version_re = re.compile(r"__version__\s+=\s+(.*)")
+with open("arcjetCV/__init__.py", "rb") as f:
+    version = str(
+        ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
+    )
 
 setup(
-    name='arcjetCV',
+    name="arcjetCV",
     version=version,
     author="arcjetCV team",
     description="A package to compute material properties from micro-CT data.",
@@ -21,14 +22,23 @@ setup(
     url="https://github.com/magnus-haw/arcjetCV",
     packages=find_packages(),
     package_data={
-        '': ['*.txt', '*.md', '*.png', '*.pt'],
-        'arcjetCV': ['gui/logo/*.png'],
+        "": ["*.txt", "*.md", "*.png", "*.pt"],
+        "arcjetCV": ["gui/logo/*.png"],
     },
     install_requires=[
+        "pyside6",
+        "opencv-python",  # OpenCV for image processing
+        "matplotlib",  # Plotting library
+        "pandas",  # Data analysis library
+        "pyarrow",  # Apache Arrow for data serialization
+        "scikit-learn",  # Machine learning algorithms
+        "segmentation-models-pytorch",  # Deep learning segmentation models
+        "torch",  # PyTorch framework
+        "torchvision",  # PyTorch vision package
     ],
     entry_points={
-        'console_scripts': [
-            'arcjetCV=arcjetCV.gui.main:main',
+        "console_scripts": [
+            "arcjetCV=arcjetCV.gui.main:main",
         ],
     },
     project_urls={
@@ -36,10 +46,10 @@ setup(
     },
     platforms=["Linux", "Mac", "Windows"],
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Physics',
+        "Development Status :: 5 - Production/Stable",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Physics",
     ],
 )
