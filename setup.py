@@ -16,7 +16,7 @@ setup(
     name="arcjetCV",
     version=version,
     author="arcjetCV team",
-    description="A package to compute material properties from micro-CT data.",
+    description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/magnus-haw/arcjetCV",
