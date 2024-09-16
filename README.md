@@ -5,14 +5,16 @@
 -----
 
 <div align="center">
-  <img src="https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
+  <img src="https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
+
 </div>
 
 # arcjetCV
 
 Package to process arcjet videos and segment the edge of the shock and of the sample.
 
-![arcjetCV Functionality](https://github.com/magnus-haw/arcjetCV/blob/main/docs/source/arcjet_video.gif)
+![arcjetCV Functionality](https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/docs/source/arcjet_video.gif)
+
 
 ## Installation
 
