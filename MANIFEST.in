@@ -1,2 +1,0 @@
-exclude arcjetCV/segmentation/contour/Unet-xception_25_original.pt
-exclude arcjetCV/segmentation/contour/Unet-xception-last-checkpoint.pt

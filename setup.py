@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
 import re
 import ast
-import os
 
+# Read the README file for long description
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+# Extract version number from the package
 _version_re = re.compile(r"__version__\s+=\s+(.*)")
 with open("arcjetCV/__init__.py", "rb") as f:
     version = str(
@@ -21,20 +22,27 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/magnus-haw/arcjetCV",
     packages=find_packages(),
+    include_package_data=True,  # Include package data based on the rules below
     package_data={
-        "": ["*.txt", "*.md", "*.png", "*.pt"],
-        "arcjetCV": ["gui/logo/*.png"],
+        "": ["*.txt", "*.md", "*.png", "*.gif"],  # Include these file types
+        "arcjetCV": ["gui/logo/*.png"],  # Include specific logo images
+    },
+    exclude_package_data={
+        "arcjetCV": [
+            "segmentation/contour/Unet-xception_25_original.pt",  # Exclude .pt files
+            "segmentation/contour/Unet-xception-last-checkpoint.pt",
+        ],
     },
     install_requires=[
         "pyside6",
-        "opencv-python",  # OpenCV for image processing
-        "matplotlib",  # Plotting library
-        "pandas",  # Data analysis library
-        "pyarrow",  # Apache Arrow for data serialization
-        "scikit-learn",  # Machine learning algorithms
-        "segmentation-models-pytorch",  # Deep learning segmentation models
-        "torch",  # PyTorch framework
-        "torchvision",  # PyTorch vision package
+        "opencv-python",
+        "matplotlib",
+        "pandas",
+        "pyarrow",
+        "scikit-learn",
+        "segmentation-models-pytorch",
+        "torch",
+        "torchvision",
     ],
     entry_points={
         "console_scripts": [
