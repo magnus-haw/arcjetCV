@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 # Define the setup configuration
 setup(
     name="arcjetCV",
-    version="0.0.4.dev5",  # Set the version directly here
+    version="0.0.4.dev6",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
