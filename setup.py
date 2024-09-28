@@ -1,21 +1,13 @@
 from setuptools import setup, find_packages
-import re
-import ast
 
 # Read the README file for long description
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-# Extract version number from the package
-_version_re = re.compile(r"__version__\s+=\s+(.*)")
-with open("arcjetCV/__init__.py", "rb") as f:
-    version = str(
-        ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
-    )
-
+# Define the setup configuration
 setup(
     name="arcjetCV",
-    version=version,
+    version="0.0.4.dev5",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
@@ -34,7 +26,7 @@ setup(
         ],
     },
     install_requires=[
-        "pyside6",
+        "pyside6>=6.5.0",  # Ensure compatibility with PySide6 versions
         "opencv-python",
         "matplotlib",
         "pandas",
