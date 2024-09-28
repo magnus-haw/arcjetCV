@@ -41,6 +41,7 @@ setup(
             "arcjetCV=arcjetCV.gui.main:main",
             "arcjetcv=arcjetCV.gui.main:main",   
         ],
+    }
 
     project_urls={
         "Bug Tracker": "https://github.com/magnus-haw/arcjetCV/issues",
