@@ -6,14 +6,22 @@ import os
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+
 # Define a function to check for platform-specific dependencies
 def check_linux_dependencies():
-    if sys.platform.startswith('linux'):
-        print("\n[INFO] Linux detected: Ensure the following system libraries are installed:")
-        print("\n[INFO] Run the following command to install the necessary Qt dependencies:")
-        print("\n[Ubuntu/Debian] sudo apt-get install libxcb-xinerama0 libxcb1 libx11-xcb1 libxcb-cursor0")
+    if sys.platform.startswith("linux"):
+        print(
+            "\n[INFO] Linux detected: Ensure the following system libraries are installed:"
+        )
+        print(
+            "\n[INFO] Run the following command to install the necessary Qt dependencies:"
+        )
+        print(
+            "\n[Ubuntu/Debian] sudo apt-get install libxcb-xinerama0 libxcb1 libx11-xcb1 libxcb-cursor0"
+        )
         print("[Fedora] sudo dnf install libxcb libX11-xcb libxcb-cursor")
         print("[Arch] sudo pacman -S libxcb xcb-util xcb-util-cursor\n")
+
 
 # Run the platform check before proceeding
 check_linux_dependencies()
@@ -21,7 +29,7 @@ check_linux_dependencies()
 # Define the setup configuration
 setup(
     name="arcjetCV",
-    version="0.0.4.dev8",  # Set the version directly here
+    version="0.0.5",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
