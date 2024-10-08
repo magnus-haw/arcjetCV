@@ -15,25 +15,69 @@ Package to process arcjet videos and segment the edge of the shock and of the sa
 
 ![arcjetCV Functionality](https://i.imgur.com/YOUR_IMAGE_ID.gif)
 
-
 ## Installation
 
-### Prerequisites
-The installation of the arcjetCV GUI and python package require a valid git installation, installation of the git-lfs [(git large file storage)](https://git-lfs.github.com/) add-on and a 
-[Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or
-[Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) installation. 
+### PyPi Installation (Universal)
 
-### Unix Users
+#### Prerequisites:
+- Ensure you have **Python 3.8** or higher installed.
 
-The software can be installed by running:
+To install **arcjetCV** via **pip** from **PyPi**, run:
+
+```bash
+pip install arcjetCV
+```
+
+This will install **arcjetCV** along with its dependencies.
+
+#### Note for macOS Users:
+You might need to install Xcode Command Line Tools:
+
+```bash
+xcode-select --install
+```
+
+#### Note for Linux Users:
+
+You may need to install **libxcb-cursor**. Use your package manager to install it:
+
+For **Ubuntu/Debian**-based distributions:
+```bash
+sudo apt-get install libxcb-cursor0
+```
+
+For **Fedora**:
+```bash
+sudo dnf install libxcb-cursor
+```
+
+For **Arch Linux**:
+```bash
+sudo pacman -S libxcb
+```
+
+### Conda Installation
+
+#### Prerequisites:
+- A valid **git** installation.
+- Installation of **git-lfs** [(Git Large File Storage)](https://git-lfs.github.com/) for handling large files.
+- **Miniconda** or **Anaconda** for environment and package management:
+  - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
+  - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
+
+For users who prefer **conda** for managing environments, follow these steps:
+
+1. Create a new conda environment and install arcjetCV:
 
 ```bash
 conda create --name arcjetcv conda-forge::arcjetcv
+conda activate arcjetcv
 ```
+
+This will install **arcjetCV** along with all its dependencies in an isolated environment.
+
 #### Note for macOS Users:
-
-
-Please ensure that you have the Xcode Command Line Tools installed:
+Make sure the Xcode Command Line Tools are installed:
 
 ```bash
 xcode-select --install
@@ -41,46 +85,53 @@ xcode-select --install
 
 ### Windows Users and Developers
 
-For local development of arcjetCV and for Windows users, these are the recommended installation steps:
+#### Prerequisites:
+- **Git LFS** [(Git Large File Storage)](https://git-lfs.github.com/) for handling large files.
+- **Miniconda** or **Anaconda** for environment and package management.
 
-1. **Install `git lfs` (Git Large File Storage):**
+For Windows users or for local development of **arcjetCV**, follow these steps:
 
-   You can download and install it from [here](https://git-lfs.github.com/).
+1. Install `git-lfs`:
 
-2. **Clone the repository and install the package:**
+   Download and install it from [here](https://git-lfs.github.com/).
+
+2. Clone the repository and install the package:
 
 ```bash
 git clone https://github.com/magnus-haw/arcjetCV.git
 cd arcjetCV
 conda env create -f env/arcjetCV_env_[cpu/gpu].yml
-conda activate arcjetCV
-python -m pip install -e . 
+conda activate arcjetcv
+python -m pip install -e .
 ```
 
-The -e flag stands for 'editable' and it means that any change to the local source code will have immediate effect on the arcjetCV python package and GUI.
+The `-e` flag stands for 'editable' and means that any changes to the local source code will immediately affect the **arcjetCV** package and GUI.
+
 
 ## How to Run
 
 You can now launch the GUI by running:
 
 ```bash
-conda activate arcjetCV
+conda activate arcjetcv # (if using conda)
 arcjetCV
 ```
 
-or you can import arcjetCV's python API inside a python script, e.g. test.py:
+Alternatively, you can use **arcjetCV's Python API** inside a Python script, e.g., `test.py`:
 
 ```python
 import arcjetCV as arcv
 video = arcv.Video("tests/arcjet_test.mp4")
 ```
 
-and then run it as:
+Run the script with:
 
 ```bash
-conda activate arcjetCV
+conda activate arcjetcv # (if using conda)
 python test.py
 ```
+
+
 
 ## Citing
 
