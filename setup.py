@@ -3,7 +3,7 @@ import sys
 import os
 
 # Read the README file for long description
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README_pypi.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 
