@@ -910,3 +910,5 @@ if __name__ == "__main__":
     main = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(main)
+    main.show()
+    app.exec()
