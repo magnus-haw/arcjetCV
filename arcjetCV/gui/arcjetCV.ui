@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1185</width>
-    <height>746</height>
+    <height>786</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,13 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
+      <widget class="QWidget" name="tab_8">
+       <attribute name="title">
+        <string>Calibrate</string>
+       </attribute>
+      </widget>
       <widget class="QWidget" name="tab">
        <attribute name="title">
         <string>Extract Edges</string>
@@ -258,8 +263,8 @@
                   <rect>
                    <x>0</x>
                    <y>10</y>
-                   <width>321</width>
-                   <height>106</height>
+                   <width>311</width>
+                   <height>101</height>
                   </rect>
                  </property>
                  <layout class="QFormLayout" name="formLayout_8">
@@ -269,6 +274,13 @@
                   <property name="labelAlignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                   </property>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_19">
+                    <property name="text">
+                     <string>X (min:max)</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="1">
                    <layout class="QHBoxLayout" name="horizontalLayout_18">
                     <item>
@@ -288,6 +300,47 @@
                       </property>
                       <property name="value">
                        <number>20</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_21">
+                    <property name="text">
+                     <string>Y (min:max)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QPushButton" name="pushButton">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_20">
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_crop">
+                      <property name="text">
+                       <string>Show crop?</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                      <property name="tristate">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox_annotate">
+                      <property name="text">
+                       <string>Annotate?</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -316,54 +369,6 @@
                      </widget>
                     </item>
                    </layout>
-                  </item>
-                  <item row="2" column="1">
-                   <layout class="QHBoxLayout" name="horizontalLayout_20">
-                    <item>
-                     <widget class="QPushButton" name="pushButton">
-                      <property name="text">
-                       <string>Apply</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="checkBox_annotate">
-                      <property name="text">
-                       <string>Annotate?</string>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_19">
-                    <property name="text">
-                     <string>X (min:max)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_21">
-                    <property name="text">
-                     <string>Y (min:max)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QCheckBox" name="checkBox_crop">
-                    <property name="text">
-                     <string>Show crop?</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                    <property name="tristate">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
                   </item>
                  </layout>
                 </widget>
@@ -590,15 +595,28 @@
                </widget>
               </widget>
              </item>
-             <item>
-              <widget class="QPushButton" name="pushButton_applyindex">
-               <property name="text">
-                <string>Apply</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_save_frame">
+            <property name="text">
+             <string>Save Current Frame</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QGroupBox" name="groupBox">
@@ -717,19 +735,6 @@
              <size>
               <width>40</width>
               <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <spacer name="verticalSpacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
              </size>
             </property>
            </spacer>

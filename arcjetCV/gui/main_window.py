@@ -290,6 +290,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frame_processed.emit()
         self.plot_location()
 
+    def save_frame(self):
+        frame_index = self.ui.spinBox_FrameIndex.value()
+        image =self.video.get_frame(frame_index)
+
+        file_dialog = QtWidgets.QFileDialog()
+        file_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.bmp *.tif)")
+        if file_dialog.exec():
+            fpath = file_dialog.selectedFiles()[0]
+            cv.imwrite(fpath, image)
+            print("------SAVED FRAME %i-----"%frame_index)
+            return True
+        else:
+            return False
+        
+
     def connect_elements(self):
         self.ui.spinBox_FrameIndex.valueChanged.connect(self.update_frame_index)
         self.frame_processed.connect(self.show_img)

@@ -156,3 +156,5 @@ def annotate_image_with_frame_number(image, frame_number):
 
     # Draw the frame text on the image
     cv.putText(image, frame_text, text_position, font, font_scale, (0, 255, 0), font_thickness)
+
+
