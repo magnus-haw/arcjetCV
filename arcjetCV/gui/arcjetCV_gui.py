@@ -61,7 +61,6 @@ class Ui_MainWindow(object):
         self.label_img.setMinimumSize(QSize(731, 451))
         self.label_img.setMaximumSize(QSize(16777215, 16777215))
         self.label_img.setMouseTracking(True)
-        self.label_img.setAlignment(Qt.AlignCenter)
 
         self.verticalLayout.addWidget(self.label_img)
 
@@ -827,7 +826,7 @@ class Ui_MainWindow(object):
         self.actionSave_Filter_2.setText(QCoreApplication.translate("MainWindow", u"Save Filter", None))
         self.actionExit_2.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_8), QCoreApplication.translate("MainWindow", u"Calibrate", None))
-        self.label_img.setText("")
+        
         self.pushButton_loadVideo.setText(QCoreApplication.translate("MainWindow", u"Load Video", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Input parameters", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Frame Index:", None))
@@ -903,7 +902,8 @@ class Ui_MainWindow(object):
         self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 
-from PySide6 import QtWidgets, QApplication
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QApplication
 
 if __name__ == "__main__":
     app = QApplication()
