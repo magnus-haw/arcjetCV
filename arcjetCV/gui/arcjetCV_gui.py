@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1175, 824)
+        MainWindow.resize(1175, 794)
         self.actionLoad_video = QAction(MainWindow)
         self.actionLoad_video.setObjectName(u"actionLoad_video")
         self.actionExit = QAction(MainWindow)
@@ -46,49 +46,65 @@ class Ui_MainWindow(object):
         self.tab_8.setObjectName(u"tab_8")
         self.gridLayout_4 = QGridLayout(self.tab_8)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.listView_calibration_imgs = QListView(self.tab_8)
-        self.listView_calibration_imgs.setObjectName(u"listView_calibration_imgs")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.verticalSpacer_3 = QSpacerItem(20, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+        self.gridLayout_4.addItem(self.verticalSpacer_3, 3, 3, 1, 1)
+
+        self.groupBox_5 = QGroupBox(self.tab_8)
+        self.groupBox_5.setObjectName(u"groupBox_5")
+        self.groupBox_5.setMaximumSize(QSize(350, 16777215))
+        self.gridLayout_10 = QGridLayout(self.groupBox_5)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.pushButton = QPushButton(self.groupBox_5)
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.gridLayout_10.addWidget(self.pushButton, 0, 0, 1, 1)
+
+        self.pushButton_2 = QPushButton(self.groupBox_5)
+        self.pushButton_2.setObjectName(u"pushButton_2")
+
+        self.gridLayout_10.addWidget(self.pushButton_2, 1, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.groupBox_5, 0, 3, 2, 1)
+
+        self.Window_calib = MatplotlibWidget(self.tab_8)
+        self.Window_calib.setObjectName(u"Window_calib")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.listView_calibration_imgs.sizePolicy().hasHeightForWidth())
-        self.listView_calibration_imgs.setSizePolicy(sizePolicy)
+        sizePolicy.setHeightForWidth(self.Window_calib.sizePolicy().hasHeightForWidth())
+        self.Window_calib.setSizePolicy(sizePolicy)
+        self.Window_calib.setMinimumSize(QSize(741, 200))
 
-        self.gridLayout_4.addWidget(self.listView_calibration_imgs, 5, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.Window_calib, 0, 1, 6, 1)
 
-        self.verticalSpacer_9 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_4.addItem(self.verticalSpacer_9, 4, 2, 1, 1)
-
-        self.Window_view_img = MatplotlibWidget(self.tab_8)
-        self.Window_view_img.setObjectName(u"Window_view_img")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.listView_calibration_imgs = QListView(self.tab_8)
+        self.listView_calibration_imgs.setObjectName(u"listView_calibration_imgs")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.Window_view_img.sizePolicy().hasHeightForWidth())
-        self.Window_view_img.setSizePolicy(sizePolicy1)
-        self.Window_view_img.setMinimumSize(QSize(741, 200))
+        sizePolicy1.setHeightForWidth(self.listView_calibration_imgs.sizePolicy().hasHeightForWidth())
+        self.listView_calibration_imgs.setSizePolicy(sizePolicy1)
 
-        self.gridLayout_4.addWidget(self.Window_view_img, 0, 1, 5, 1)
+        self.gridLayout_4.addWidget(self.listView_calibration_imgs, 2, 3, 1, 1)
 
         self.textBrowser_calibration_values = QTextBrowser(self.tab_8)
         self.textBrowser_calibration_values.setObjectName(u"textBrowser_calibration_values")
+        self.textBrowser_calibration_values.setMaximumSize(QSize(16777215, 16777215))
 
-        self.gridLayout_4.addWidget(self.textBrowser_calibration_values, 5, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.textBrowser_calibration_values, 6, 0, 1, 2)
 
         self.groupBox_4 = QGroupBox(self.tab_8)
         self.groupBox_4.setObjectName(u"groupBox_4")
         self.groupBox_4.setMinimumSize(QSize(300, 0))
+        self.groupBox_4.setMaximumSize(QSize(350, 16777215))
         self.gridLayout_9 = QGridLayout(self.groupBox_4)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
         self.label_23 = QLabel(self.groupBox_4)
         self.label_23.setObjectName(u"label_23")
 
         self.gridLayout_9.addWidget(self.label_23, 4, 0, 1, 2)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_9.addItem(self.horizontalSpacer_2, 1, 5, 1, 1)
 
         self.spinBox_pattern_ny = QSpinBox(self.groupBox_4)
         self.spinBox_pattern_ny.setObjectName(u"spinBox_pattern_ny")
@@ -157,25 +173,12 @@ class Ui_MainWindow(object):
 
         self.gridLayout_9.addWidget(self.pushButton_save_calib, 6, 0, 1, 6)
 
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addWidget(self.groupBox_4, 3, 2, 1, 1)
-
-        self.groupBox_5 = QGroupBox(self.tab_8)
-        self.groupBox_5.setObjectName(u"groupBox_5")
-        self.gridLayout_10 = QGridLayout(self.groupBox_5)
-        self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.pushButton = QPushButton(self.groupBox_5)
-        self.pushButton.setObjectName(u"pushButton")
-
-        self.gridLayout_10.addWidget(self.pushButton, 0, 0, 1, 1)
-
-        self.pushButton_2 = QPushButton(self.groupBox_5)
-        self.pushButton_2.setObjectName(u"pushButton_2")
-
-        self.gridLayout_10.addWidget(self.pushButton_2, 1, 0, 1, 1)
+        self.gridLayout_9.addItem(self.horizontalSpacer_2, 1, 5, 1, 1)
 
 
-        self.gridLayout_4.addWidget(self.groupBox_5, 0, 2, 2, 1)
+        self.gridLayout_4.addWidget(self.groupBox_4, 6, 3, 1, 1)
 
         self.tabWidget.addTab(self.tab_8, "")
         self.tab = QWidget()
@@ -186,16 +189,16 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.Window0 = MatplotlibWidget(self.tab)
         self.Window0.setObjectName(u"Window0")
-        sizePolicy1.setHeightForWidth(self.Window0.sizePolicy().hasHeightForWidth())
-        self.Window0.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.Window0.sizePolicy().hasHeightForWidth())
+        self.Window0.setSizePolicy(sizePolicy)
         self.Window0.setMinimumSize(QSize(731, 451))
 
         self.verticalLayout.addWidget(self.Window0)
 
         self.Window3 = MatplotlibWidget(self.tab)
         self.Window3.setObjectName(u"Window3")
-        sizePolicy1.setHeightForWidth(self.Window3.sizePolicy().hasHeightForWidth())
-        self.Window3.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.Window3.sizePolicy().hasHeightForWidth())
+        self.Window3.setSizePolicy(sizePolicy)
         self.Window3.setMinimumSize(QSize(731, 100))
         self.Window3.setMaximumSize(QSize(16777215, 300))
 
@@ -297,8 +300,8 @@ class Ui_MainWindow(object):
 
         self.FilterTabs = QTabWidget(self.groupBox_2)
         self.FilterTabs.setObjectName(u"FilterTabs")
-        sizePolicy.setHeightForWidth(self.FilterTabs.sizePolicy().hasHeightForWidth())
-        self.FilterTabs.setSizePolicy(sizePolicy)
+        sizePolicy1.setHeightForWidth(self.FilterTabs.sizePolicy().hasHeightForWidth())
+        self.FilterTabs.setSizePolicy(sizePolicy1)
         self.tab_7 = QWidget()
         self.tab_7.setObjectName(u"tab_7")
         self.layoutWidget_2 = QWidget(self.tab_7)
@@ -562,8 +565,8 @@ class Ui_MainWindow(object):
 
         self.groupBox = QGroupBox(self.tab)
         self.groupBox.setObjectName(u"groupBox")
-        sizePolicy.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
-        self.groupBox.setSizePolicy(sizePolicy)
+        sizePolicy1.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
+        self.groupBox.setSizePolicy(sizePolicy1)
         self.verticalLayout_3 = QVBoxLayout(self.groupBox)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.gridLayout_5 = QGridLayout()
@@ -638,10 +641,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.groupBox)
 
-        self.horizontalSpacer_test = QSpacerItem(40, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-
-        self.verticalLayout_6.addItem(self.horizontalSpacer_test)
-
 
         self.horizontalLayout_8.addLayout(self.verticalLayout_6)
 
@@ -657,16 +656,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout_12.setSizeConstraint(QLayout.SetMaximumSize)
         self.Window1 = MatplotlibWidget(self.tab_2)
         self.Window1.setObjectName(u"Window1")
-        sizePolicy1.setHeightForWidth(self.Window1.sizePolicy().hasHeightForWidth())
-        self.Window1.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.Window1.sizePolicy().hasHeightForWidth())
+        self.Window1.setSizePolicy(sizePolicy)
         self.Window1.setMinimumSize(QSize(400, 350))
 
         self.horizontalLayout_12.addWidget(self.Window1)
 
         self.Window2 = MatplotlibWidget(self.tab_2)
         self.Window2.setObjectName(u"Window2")
-        sizePolicy1.setHeightForWidth(self.Window2.sizePolicy().hasHeightForWidth())
-        self.Window2.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.Window2.sizePolicy().hasHeightForWidth())
+        self.Window2.setSizePolicy(sizePolicy)
         self.Window2.setMinimumSize(QSize(400, 350))
 
         self.horizontalLayout_12.addWidget(self.Window2)
@@ -676,8 +675,8 @@ class Ui_MainWindow(object):
 
         self.textBrowser = QTextBrowser(self.tab_2)
         self.textBrowser.setObjectName(u"textBrowser")
-        sizePolicy1.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
-        self.textBrowser.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
+        self.textBrowser.setSizePolicy(sizePolicy)
         self.textBrowser.setMaximumSize(QSize(16777215, 250))
 
         self.verticalLayout_8.addWidget(self.textBrowser)
@@ -724,8 +723,8 @@ class Ui_MainWindow(object):
 
         self.tabWidget_2 = QTabWidget(self.tab_2)
         self.tabWidget_2.setObjectName(u"tabWidget_2")
-        sizePolicy.setHeightForWidth(self.tabWidget_2.sizePolicy().hasHeightForWidth())
-        self.tabWidget_2.setSizePolicy(sizePolicy)
+        sizePolicy1.setHeightForWidth(self.tabWidget_2.sizePolicy().hasHeightForWidth())
+        self.tabWidget_2.setSizePolicy(sizePolicy1)
         self.tab_5 = QWidget()
         self.tab_5.setObjectName(u"tab_5")
         self.gridLayout_2 = QGridLayout(self.tab_5)
@@ -980,6 +979,9 @@ class Ui_MainWindow(object):
         self.actionLoad_Filter_2.setText(QCoreApplication.translate("MainWindow", u"Load Filter", None))
         self.actionSave_Filter_2.setText(QCoreApplication.translate("MainWindow", u"Save Filter", None))
         self.actionExit_2.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
+        self.groupBox_5.setTitle(QCoreApplication.translate("MainWindow", u"Load images", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Load Calibration Images", None))
+        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Select Orientation Images", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("MainWindow", u"Calibration Pattern Parameters", None))
         self.label_23.setText(QCoreApplication.translate("MainWindow", u"Distance per pixel:", None))
         self.label_diag_len.setText(QCoreApplication.translate("MainWindow", u"Diagonal distance:", None))
@@ -995,9 +997,6 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(2, QCoreApplication.translate("MainWindow", u"[cm]", None))
 
         self.pushButton_save_calib.setText(QCoreApplication.translate("MainWindow", u"Save Calibration", None))
-        self.groupBox_5.setTitle(QCoreApplication.translate("MainWindow", u"Load images", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Load Calibration Images", None))
-        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Select Orientation Images", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_8), QCoreApplication.translate("MainWindow", u"Calibrate", None))
         self.pushButton_loadVideo.setText(QCoreApplication.translate("MainWindow", u"Load Video", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Input parameters", None))
