@@ -35,16 +35,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
-        self.label_img = MatplotlibWidget(self.tab)
+        self.Window0 = MatplotlibWidget(self.tab)
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
         )
-        self.label_img.setSizePolicy(sizePolicy)
-        self.label_img.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        # self.label_img.setMouseTracking(True)
-        self.label_img.setObjectName("label_img")
-        self.label_img.adjustSize()
-        self.verticalLayout.addWidget(self.label_img)
+        self.Window0.setSizePolicy(sizePolicy)
+        self.Window0.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        # self.Window0.setMouseTracking(True)
+        self.Window0.setObjectName("label_img")
+        self.Window0.adjustSize()
+        self.verticalLayout.addWidget(self.Window0)
         self.Window3 = MatplotlibWidget(self.tab)
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding

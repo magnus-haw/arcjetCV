@@ -96,7 +96,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_shock_center.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shockmodel.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
-        self.ui.applyCrop.clicked.connect(self.update_crop)
         self.ui.comboBox_units.setCurrentText("[mm]")
 
         # init_plot_brightness
@@ -122,7 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_img(self):
         if self._plot_ref is None:
             # Create a new plot reference and define the cursor data format
-            self._plot_ref = self.ui.label_img.canvas.axes.imshow(
+            self._plot_ref = self.ui.Window0.canvas.axes.imshow(
                 self.rgb_frame, aspect="equal"
             )
             self._plot_ref.axes.get_xaxis().set_visible(False)
@@ -159,7 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self._plot_ref.set_data(self.rgb_frame)
 
-        self.ui.label_img.canvas.draw()
+        self.ui.Window0.canvas.draw()
 
     def onselect(self, eclick, erelease):
         x1, y1 = eclick.xdata, eclick.ydata
@@ -292,18 +291,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_frame(self):
         frame_index = self.ui.spinBox_FrameIndex.value()
-        image =self.video.get_frame(frame_index)
+        frame =self.video.get_frame(frame_index)
+        # Convert from BGR to RGB
+        image = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
         file_dialog = QtWidgets.QFileDialog()
         file_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         file_dialog.setNameFilter("Images (*.png *.jpg *.bmp *.tif)")
-        if file_dialog.exec():
-            fpath = file_dialog.selectedFiles()[0]
-            cv.imwrite(fpath, image)
-            print("------SAVED FRAME %i-----"%frame_index)
-            return True
-        else:
-            return False
+        try:
+            if file_dialog.exec():
+                fpath = file_dialog.selectedFiles()[0]
+                cv.imwrite(fpath, image)
+                print("------SAVED FRAME %i-----"%frame_index)
+                self.ui.basebar.setText("------SAVED FRAME %i-----"%frame_index)
+        except:
+            self.arcjetcv_message_box("Warning", "Could not save frame")
         
 
     def connect_elements(self):
@@ -322,6 +324,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.maxIntensity_2.valueChanged.connect(self.update_frame_index)
         self.ui.minSaturation_2.valueChanged.connect(self.update_frame_index)
         self.ui.maxSaturation_2.valueChanged.connect(self.update_frame_index)
+        self.ui.applyCrop.clicked.connect(self.update_crop)
+        self.ui.pushButton_save_frame.clicked.connect(self.save_frame)
         self.ui.checkBox_crop.stateChanged.connect(self.update_frame_index)
         if (
             self.ui.spinBox_crop_xmin.value() < self.ui.spinBox_crop_xmax.value()
@@ -357,8 +361,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.FilterTabs.setDisabled(False)
             self.ui.comboBox_filterType.setDisabled(False)
             self.ui.comboBox_filterType.setDisabled(False)
-            self.ui.label_img.canvas.axes.clear()
-            self.ui.label_img.canvas.draw()
+            self.ui.Window0.canvas.axes.clear()
+            self.ui.Window0.canvas.draw()
 
             try:  # Create video object
                 self.video = Video(self.path)
@@ -425,12 +429,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("! Could not load video !:\n" + str(e))
                 else:
-                    msg = QMessageBox()
-                    msg.setWindowTitle("arcjetCV Warning")
-                    msg.setText("! Could not load video !:\n" + str(e))
-                    msg.setIcon(QMessageBox.Critical)
-                    msg.exec()
-
+                    self.arcjetcv_message_box("Warning", "! Could not load video !:\n" + str(e) )
+                    
     def plot_location(self, reset=False):
         n = self.ui.spinBox_FrameIndex.value()
         if self._tplot_ref is None or reset:
