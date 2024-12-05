@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1185, 786)
+        MainWindow.resize(1175, 824)
         self.actionLoad_video = QAction(MainWindow)
         self.actionLoad_video.setObjectName(u"actionLoad_video")
         self.actionExit = QAction(MainWindow)
@@ -197,20 +197,12 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.Window3.sizePolicy().hasHeightForWidth())
         self.Window3.setSizePolicy(sizePolicy1)
         self.Window3.setMinimumSize(QSize(731, 100))
-        self.Window3.setMaximumSize(QSize(16777215, 170))
+        self.Window3.setMaximumSize(QSize(16777215, 300))
 
         self.verticalLayout.addWidget(self.Window3)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout.addItem(self.verticalSpacer_3)
-
 
         self.horizontalLayout_8.addLayout(self.verticalLayout)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_8.addItem(self.horizontalSpacer)
 
         self.verticalLayout_6 = QVBoxLayout()
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
@@ -954,7 +946,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1185, 24))
+        self.menubar.setGeometry(QRect(0, 0, 1175, 24))
         self.menuMenu = QMenu(self.menubar)
         self.menuMenu.setObjectName(u"menuMenu")
         MainWindow.setMenuBar(self.menubar)
