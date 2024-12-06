@@ -29,7 +29,7 @@ check_linux_dependencies()
 # Define the setup configuration
 setup(
     name="arcjetCV",
-    version="0.0.6",  # Set the version directly here
+    version="0.0.6.dev1",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
@@ -50,6 +50,7 @@ setup(
     install_requires=[
         "pyside6>=6.5.0",  # Ensure compatibility with PySide6 versions
         "opencv-python",
+        "opencv-contrib-python",
         "matplotlib",
         "pandas",
         "pyarrow",
