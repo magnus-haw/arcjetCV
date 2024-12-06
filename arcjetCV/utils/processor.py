@@ -1,3 +1,4 @@
+import json
 import cv2 as cv
 import numpy as np
 import os, sys
@@ -10,7 +11,7 @@ from arcjetCV.segmentation.contour.contour import (
     getPoints,
 )
 from arcjetCV.segmentation.contour.cnn import CNN
-from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number
+from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number, splitfn
 from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
 
@@ -421,3 +422,232 @@ class ArcjetProcessor:
             video.close_writer()
 
         return out_json
+
+class CalibrationProcessor(dict):
+
+    def __init__(self, pattern_type="Asymmetric Dots", rows=4, cols=9, diag_length = 12, len_unit='mm'):
+        super(CalibrationProcessor, self).__init__()
+        self['pattern_type'] = pattern_type
+        self['rows'] = rows
+        self['cols'] = cols
+        self['diag_length'] = diag_length
+        self['len_unit'] = 'mm'
+        self['calib_image_paths'] = []
+        self['orientation_image_paths'] = []
+        self['folder'] = None
+        self['name'] = None
+        self['path'] = None
+        self['camera_matrix'] = None
+        self['distortion_coeff'] = None
+        self['rotation_vectors'] = None
+        self['translation_vectors'] = None
+        self.generate_object_points()
+
+        # Set up the parameters for the SimpleBlobDetector
+        params = cv.SimpleBlobDetector_Params()
+
+        # Filter by area
+        params.filterByArea = True
+        params.minArea = 200
+        params.maxArea = 4000
+
+        # Filter by circularity
+        params.filterByCircularity = True
+        params.minCircularity = 0.5
+
+        # Filter by convexity
+        params.filterByConvexity = True
+        params.minConvexity = 0.8
+
+        # Filter by inertia
+        params.filterByInertia = True
+        params.minInertiaRatio = 0.5
+
+        # Create the detector
+        self.detector = cv.SimpleBlobDetector_create(params)
+
+    def generate_object_points(self):
+        """
+        Generate object points for a pattern.
+        
+        Args:
+            pattern_type (str): Type of pattern ('checkerboard' or 'asymmetric_dot').
+            rows (int): Number of rows in the pattern.
+            cols (int): Number of columns in the pattern.
+            square_size (float): Size of each square or spacing between dots.
+        
+        Returns:
+            np.ndarray: Array of object points with shape (rows * cols, 3).
+        """
+        object_points = []
+        
+        
+        if self['pattern_type'] == 'Checkerboard':
+            square_size = self['diag_length']/np.sqrt(2)
+            # Regular grid points for a checkerboard pattern
+            object_points = np.zeros((self['rows'] * self['cols'], 3), np.float32)
+            object_points[:, :2] = np.mgrid[0:self['cols'], 0:self['rows']].T.reshape(-1, 2) * square_size
+            
+        elif self['pattern_type'] == 'Asymmetric Dots':
+            square_size = self['diag_length']*np.sqrt(2)
+            # Asymmetric dot grid points
+            for i in range(self['rows']):
+                for j in range(self['cols']):
+                    x = j * square_size
+                    y = i * square_size/2
+                    if i % 2 == 1:  # Offset alternate rows
+                        x += square_size / 2.
+                    object_points.append([x, y, 0])
+            object_points = np.array(object_points, dtype=np.float32)
+        
+        else:
+            raise ValueError("Invalid pattern_type. Use 'checkerboard' or 'asymmetric_dot'.")
+        self["square_size"] = square_size
+        self['pattern_points'] = object_points
+        return object_points
+
+    def draw_axes(self, img, corners, imgpts):
+        corner = tuple(corners[0].ravel())
+        corner = tuple(map(int, corner))
+        pt1 = tuple(map(int, imgpts[0].ravel()))
+        pt2 = tuple(map(int, imgpts[1].ravel()))
+        pt3 = tuple(map(int, imgpts[2].ravel()))
+        img = cv.line(img, corner, pt1, (255,0,0), 5)
+        img = cv.line(img, corner, pt2, (0,255,0), 5)
+        img = cv.line(img, corner, pt3, (0,0,255), 5)
+        return img
+    
+    def calibrate_intrinsics(self,image_paths, show_cal_points=False):
+        # termination criteria
+        criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+               
+        # Arrays to store object points and image points from all the images.
+        objpoints = [] # 3d point in real world space
+        imgpoints = [] # 2d points in image plane.
+        
+        for fname in image_paths:
+            img = cv.imread(fname)
+            gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        
+            # Find the chess board corners
+            if self['pattern_type'] == "Chessboard":
+                isFound, gridpoints = cv.findChessboardCorners(gray, (self['rows'],self['cols']), None)
+            elif self['pattern_type'] == "Asymmetric Dots":
+                isFound, gridpoints = cv.findCirclesGrid(gray, (self['cols'],self['rows']), blobDetector = self.detector,
+                                                         flags = cv.CALIB_CB_ASYMMETRIC_GRID + cv.CALIB_CB_CLUSTERING)
+            
+            # If found, add object points, image points (after refining them)
+            if isFound == True:
+                objpoints.append(self['pattern_points'])
+
+                if self['pattern_type'] == "Chessboard":
+                    gridpoints = cv.cornerSubPix(gray,gridpoints, (11,11), (-1,-1), criteria)
+                    imgpoints.append(gridpoints)
+                elif self['pattern_type'] == "Asymmetric Dots":
+                    imgpoints.append(gridpoints)
+                
+                img = self.get_calib_overlay(img,gridpoints)
+                if show_cal_points:
+                    # Draw and display the corners
+                    cv.imshow('img', img)
+                    k = cv.waitKey(0) & 0xFF
+        
+        isFound, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        self['camera_matrix'] = mtx
+        self['distortion_coeff'] = dist
+        self['image_points'] = imgpoints
+        self['objpoints'] = objpoints
+
+        return mtx, dist, img
+    
+    def get_orientation(self, img, show_axes = False):
+        if self['distortion_coeff'] is None or self['camera_matrix'] is None:
+            return None
+        gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    
+        # Find the chess board corners
+        if self['pattern_type'] == "Chessboard":
+            isFound, gridpoints = cv.findChessboardCorners(gray, (self['rows'],self['cols']), None)
+            if isFound:
+                criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+                gridpoints = cv.cornerSubPix(gray,isFound,(11,11),(-1,-1),criteria)
+        elif self['pattern_type'] == "Asymmetric Dots":
+            isFound, gridpoints = cv.findCirclesGrid(gray, (self['cols'],self['rows']), blobDetector = self.detector,
+                                                        flags = cv.CALIB_CB_ASYMMETRIC_GRID + cv.CALIB_CB_CLUSTERING)
+
+        if isFound:
+            # Find the rotation and translation vectors.
+            ret,rvecs, tvecs = cv.solvePnP(self['pattern_points'], gridpoints, 
+                                           self["camera_matrix"], self['distortion_coeff'])
+            self['rotation_vectors'] = rvecs
+            self['translation_vectors'] = tvecs
+            
+            # project 3D points to image plane
+            s = self["square_size"]
+            axis = np.float32([[s,0,0], [0,s,0], [0,0,-s]]).reshape(-1,3)
+            imgpts, jac = cv.projectPoints(axis, rvecs, tvecs, self["camera_matrix"], self['distortion_coeff'])
+
+            img = self.draw_axes(img,gridpoints,imgpts)
+            if show_axes:
+                cv.imshow('img',img)
+                k = cv.waitKey(0) & 0xFF
+        return rvecs, tvecs, img
+
+    def get_calib_overlay(self, image, points):
+        # Draw and display the corners
+        cv.drawChessboardCorners(image, (self['cols'],self['rows']), points, True)
+        return image
+    
+    def get_proj_error(self):
+        mean_error = 0
+        for i in range(len(self['objpoints'])):
+            imgpoints2, _ = cv.projectPoints(self['objpoints'][i], self['rotation_vectors'][i], 
+                                             self['translation_vectors'][i], self['camera_matrix'], self['distortion_coeff'])
+            error = cv.norm(self['imgpoints'][i], imgpoints2, cv.NORM_L2)/len(imgpoints2)
+            mean_error += error
+        print( "total error: {}".format(mean_error/len(self['objpoints'])) )
+        return mean_error
+    
+    def load_json(self, path):
+        """
+        Loads metadata from a JSON file.
+
+        :param path: path to the JSON file
+        """
+        fin = open(path, "r")
+        dload = json.load(fin)
+        self.update(dload)
+        fin.close()
+        print(f"Loaded {path}")
+
+        ### Ensure path vars are correct
+        folder, name, ext = splitfn(path)
+        self.folder = folder
+        self.name = name
+        self.path = path
+
+    def save_json(self, filepath):
+        """
+        Writes the metadata to a JSON file.
+        """
+        print(f"Writing {filepath} file ... ", end="")
+        fout = open(filepath, "w+")
+        json.dump(self, fout)
+        fout.close()
+        print("Done")
+
+
+
+if __name__ == "__main__":
+    fname = "/Users/mhaw/Desktop/MSR-EES/IHF-405_GP2803/test_data/05b Prelim Data to PI - IHF 405/CUI IHF405_Video Prelim/IHF405RunPRECal/IHF405_top_view_cal.png"
+    #fname = "/Users/mhaw/Desktop/MSR-EES/IHF-405_GP2803/test_data/05b Prelim Data to PI - IHF 405/CUI IHF405_Video Prelim/IHF405RunPRECal/IHF405_west_view_cal.png"
+    cp =CalibrationProcessor(rows=9, cols=4)
+    #cp.calibrate(["/Users/mhaw/Desktop/14755095693276705.png"])
+    cp.calibrate_intrinsics([fname], show_cal_points=True)
+    img = cv.imread(fname)
+    cp.get_orientation(img, show_axes=True)
+
+    print(cp['translation_vectors'])
+    print(cp['rotation_vectors'])
+    print(cp['camera_matrix'])
+    

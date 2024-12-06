@@ -263,6 +263,8 @@ class Ui_MainWindow(object):
         self.comboBox_flowDirection = QComboBox(self.groupBox_2)
         self.comboBox_flowDirection.addItem("")
         self.comboBox_flowDirection.addItem("")
+        self.comboBox_flowDirection.addItem("")
+        self.comboBox_flowDirection.addItem("")
         self.comboBox_flowDirection.setObjectName(u"comboBox_flowDirection")
         sizePolicy2.setHeightForWidth(self.comboBox_flowDirection.sizePolicy().hasHeightForWidth())
         self.comboBox_flowDirection.setSizePolicy(sizePolicy2)
@@ -1005,6 +1007,8 @@ class Ui_MainWindow(object):
         self.label_display_shock.setText(QCoreApplication.translate("MainWindow", u"Display Shock?", None))
         self.comboBox_flowDirection.setItemText(0, QCoreApplication.translate("MainWindow", u"right", None))
         self.comboBox_flowDirection.setItemText(1, QCoreApplication.translate("MainWindow", u"left", None))
+        self.comboBox_flowDirection.setItemText(2, QCoreApplication.translate("MainWindow", u"up", None))
+        self.comboBox_flowDirection.setItemText(3, QCoreApplication.translate("MainWindow", u"down", None))
 
         self.checkBox_display_shock.setText("")
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Frame Index:", None))
