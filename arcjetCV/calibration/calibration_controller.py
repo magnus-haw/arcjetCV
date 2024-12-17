@@ -2,6 +2,7 @@ from arcjetCV.calibration.calibration_model import CalibrationModel
 from arcjetCV.calibration.calibration_view import CalibrationView
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
+from matplotlib.backend_bases import cursors
 import numpy as np
 import cv2
 
@@ -16,13 +17,16 @@ class CalibrationController:
         self.view.calibrate_button.clicked.connect(self.calibrate_camera)
         self.view.print_button.clicked.connect(self.print_chessboard)
         self.view.load_image_button.clicked.connect(self.load_image)
+        self.view.load_image_button_pattern.clicked.connect(self.load_image_diagonal)
         self.view.calculate_button.clicked.connect(self.calculate_ppcm)
+        self.view.get_resolution_button.clicked.connect(self.calculate_ppcm)
 
         # Initialize variables
         self.image_paths = []
         self.image = None
         self.start_point = None
         self.line = None
+        self.line_artist = None
 
         # Connect Matplotlib canvas events
         self.cid_press = None
@@ -117,12 +121,16 @@ class CalibrationController:
             QMessageBox.warning(self.view, "Error", "No image selected.")
 
     def display_image(self):
-        """Display the loaded image and enable line drawing."""
+        """Display the loaded image and enable dynamic line drawing."""
         self.view.figure.clear()
         self.ax = self.view.figure.add_subplot(111)
         self.ax.imshow(self.image)
         self.ax.set_title("Click and drag to draw a line")
+        self.ax.figure.canvas.set_cursor(cursors.SELECT_REGION)
         self.view.canvas.draw()
+
+        # Initialize dynamic line variables
+        self.line_artist = None
 
         # Connect mouse events
         self.cid_press = self.view.canvas.mpl_connect(
@@ -131,48 +139,195 @@ class CalibrationController:
         self.cid_release = self.view.canvas.mpl_connect(
             "button_release_event", self.on_mouse_release
         )
+        self.cid_motion = self.view.canvas.mpl_connect(
+            "motion_notify_event", self.on_mouse_motion
+        )
 
     def on_mouse_press(self, event):
-        """Record the start point of a line."""
+        """Record the start point of the line."""
         if event.inaxes != self.ax:
             return
         self.start_point = (event.xdata, event.ydata)
 
-    def on_mouse_release(self, event):
-        """Record the end point and draw a line."""
+        # Clear previous line if it exists
+        if self.line_artist:
+            self.line_artist.remove()
+            self.line_artist = None
+        self.view.canvas.draw()
+
+    def on_mouse_motion(self, event):
+        """Update the line dynamically as the mouse moves."""
         if event.inaxes != self.ax or not self.start_point:
             return
 
-        end_point = (event.xdata, event.ydata)
-        self.line = (self.start_point, end_point)
+        # Clear the previous line
+        if self.line_artist:
+            self.line_artist.remove()
 
-        # Draw the line on the image
-        self.ax.plot(
+        # Draw a new line from the start point to the current mouse position
+        end_point = (event.xdata, event.ydata)
+        (self.line_artist,) = self.ax.plot(
             [self.start_point[0], end_point[0]],
             [self.start_point[1], end_point[1]],
             color="red",
+            linewidth=2,
         )
         self.view.canvas.draw()
 
+    def on_mouse_release(self, event):
+        """Finalize the line when the mouse button is released."""
+        if event.inaxes != self.ax or not self.start_point:
+            return
+
+        # Record the end point
+        end_point = (event.xdata, event.ydata)
+        self.line = (self.start_point, end_point)
+
+        # Draw the final line
+        if self.line_artist:
+            self.line_artist.remove()
+        (self.line_artist,) = self.ax.plot(
+            [self.start_point[0], end_point[0]],
+            [self.start_point[1], end_point[1]],
+            color="red",
+            linewidth=2,
+        )
+
+        self.view.canvas.draw()
+        self.start_point = None  # Reset the start point
+
+    def load_image_diagonal(self):
+        """Load an image, detect a chessboard or circular pattern, and plot its diagonal."""
+        # Open file dialog to load an image
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.view,
+            "Load Image for Pattern Detection",
+            "",
+            "Images (*.png *.jpg *.jpeg)",
+        )
+        if not file_path:
+            QMessageBox.warning(self.view, "Error", "No image selected.")
+            return
+
+        # Load and convert the image
+        self.image = cv2.imread(file_path)
+        if self.image is None:
+            QMessageBox.warning(self.view, "Error", "Unable to load the image.")
+            return
+        gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+
+        # Get user inputs: pattern type and grid size
+        pattern_type = self.view.pattern_type_combo.currentText().lower()
+        try:
+            grid_rows = int(self.view.grid_rows_input.text())
+            grid_cols = int(self.view.grid_cols_input.text())
+            grid_size = (grid_cols, grid_rows)  # OpenCV expects (cols, rows)
+        except ValueError:
+            QMessageBox.warning(self.view, "Error", "Invalid grid size inputs.")
+            return
+
+        # Detect pattern based on user input
+        if pattern_type == "chessboard":
+            ret, corners = cv2.findChessboardCorners(gray, grid_size, None)
+        elif pattern_type == "circles":
+            ret, corners = cv2.findCirclesGrid(
+                gray, grid_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
+            )
+        else:
+            QMessageBox.warning(self.view, "Error", "Invalid pattern type selected.")
+            return
+
+        if not ret:
+            QMessageBox.warning(
+                self.view, "Error", f"{pattern_type.capitalize()} pattern not detected."
+            )
+            return
+
+        # Draw detected pattern
+        cv2.drawChessboardCorners(self.image, grid_size, corners, ret)
+
+        # Calculate diagonal endpoints
+        top_left = corners[0][0]  # Top-left corner
+        bottom_right = corners[-1][0]  # Bottom-right corner
+
+        # Plot diagonal on Matplotlib canvas
+        self.view.figure.clear()
+        self.ax = self.view.figure.add_subplot(111)
+        self.ax.imshow(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
+        self.ax.plot(
+            [top_left[0], bottom_right[0]],
+            [top_left[1], bottom_right[1]],
+            color="red",
+            linewidth=2,
+            label="Diagonal",
+        )
+        self.ax.scatter(
+            [top_left[0], bottom_right[0]],
+            [top_left[1], bottom_right[1]],
+            color="yellow",
+            s=100,
+        )
+        self.ax.set_title(f"Detected {pattern_type.capitalize()} and Diagonal")
+        self.ax.legend()
+        self.view.canvas.draw()
+
+        # Calculate diagonal length
+        self.diagonal_distance = np.linalg.norm(top_left - bottom_right)
+        QMessageBox.information(
+            self.view,
+            "Diagonal Length",
+            f"Diagonal Distance: {self.diagonal_distance:.2f} pixels",
+        )
+
     def calculate_ppcm(self):
-        """Calculate pixels per mm based on the drawn line."""
+        """
+        Calculate pixels per mm based on the current tab:
+        - Pattern Resolution: Use diagonal distance.
+        - Ruler Resolution: Use manually drawn line.
+        """
         if self.image is None:
             QMessageBox.warning(self.view, "Error", "Please load an image first.")
             return
 
-        if not self.line:
-            QMessageBox.warning(self.view, "Error", "Please draw a line on the image.")
-            return
+        # Determine the selected tab
+        current_tab_index = self.view.resolution_tabs.currentIndex()
 
-        # Compute pixel length of the line
-        pixel_length = np.linalg.norm(np.array(self.line[1]) - np.array(self.line[0]))
+        if current_tab_index == 0:  # Pattern Resolution Tab
+            # Use diagonal distance
+            try:
+                real_length = float(self.view.diagonal_distance_value.text())
+                if not hasattr(self, "diagonal_distance"):
+                    QMessageBox.warning(
+                        self.view, "Error", "Diagonal distance not calculated yet."
+                    )
+                    return
 
-        # Get real-world length in cm
-        try:
-            real_length_cm = float(self.view.cm_input.text())
-            ppm = pixel_length / (real_length_cm * 10)  # Convert cm to mm
-            self.view.ppcm_label.setText(f"Pixels per mm: {ppm:.2f}")
-        except ValueError:
-            QMessageBox.warning(
-                self.view, "Error", "Invalid real-world length entered."
+                ppm = self.diagonal_distance / real_length
+                self.view.ppcm_label.setText(f"Pixels per mm: {ppm:.2f}")
+            except ValueError:
+                QMessageBox.warning(
+                    self.view, "Error", "Invalid real-world length entered."
+                )
+        elif current_tab_index == 1:  # Ruler Resolution Tab
+            # Use manually drawn line
+            if not self.line:
+                QMessageBox.warning(
+                    self.view, "Error", "Please draw a line on the image."
+                )
+                return
+
+            # Compute pixel length of the line
+            pixel_length = np.linalg.norm(
+                np.array(self.line[1]) - np.array(self.line[0])
             )
+
+            try:
+                real_length = float(self.view.distance_input.text())
+                ppm = pixel_length / real_length
+                self.view.ppcm_label.setText(f"Pixels per mm: {ppm:.2f}")
+            except ValueError:
+                QMessageBox.warning(
+                    self.view, "Error", "Invalid real-world length entered."
+                )
+        else:
+            QMessageBox.warning(self.view, "Error", "Unknown tab selected.")

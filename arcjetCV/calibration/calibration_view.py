@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QGroupBox,
     QTabWidget,
+    QComboBox,
+    QSizePolicy,
 )
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -61,13 +63,80 @@ class CalibrationView(QWidget):
         self.pattern_resolution_tab.setLayout(pattern_resolution_layout)
         self.resolution_tabs.addTab(self.pattern_resolution_tab, "Pattern Resolution")
 
-        # Diagonal Distance Line
+        # 1. Pattern Type Selection
+        pattern_type_layout = QHBoxLayout()
+        pattern_type_label_n = QLabel("1.")
+        pattern_type_label = QLabel("Pattern Type:")
+        self.pattern_type_combo = QComboBox()
+        self.pattern_type_combo.addItems(["Chessboard", "Circles"])  # Dropdown options
+
+        # Add widgets to the layout
+        pattern_type_layout.addWidget(pattern_type_label_n)
+        pattern_type_layout.addWidget(pattern_type_label)
+        pattern_type_layout.addWidget(
+            self.pattern_type_combo, stretch=1
+        )  # Allow ComboBox to expand
+        pattern_resolution_layout.addLayout(pattern_type_layout)
+
+        # 2. Grid Size Input
+        grid_size_layout = QHBoxLayout()
+        grid_size_label_n = QLabel("2.")
+        grid_size_label = QLabel("Grid Size:")
+        self.grid_rows_input = QLineEdit("9")  # Default rows
+        self.grid_cols_input = QLineEdit("6")  # Default columns
+        grid_size_layout.addWidget(grid_size_label_n)
+        grid_size_layout.addWidget(grid_size_label)
+        grid_size_layout.addWidget(QLabel("Rows:"))
+        grid_size_layout.addWidget(self.grid_rows_input)
+        grid_size_layout.addWidget(QLabel("Cols:"))
+        grid_size_layout.addWidget(self.grid_cols_input)
+        pattern_resolution_layout.addLayout(grid_size_layout)
+
+        # 3. Load Image for Resolution Measurement
+        load_image_layout_pattern = QHBoxLayout()
+        load_image_layout_pattern.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove default margins
+        load_image_label_pattern = QLabel("3.")
+        self.load_image_button_pattern = QPushButton(
+            "Load Image for Resolution Measurement"
+        )
+        self.load_image_button_pattern.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Preferred
+        )  # Expand button
+        load_image_layout_pattern.addWidget(load_image_label_pattern)
+        load_image_layout_pattern.addWidget(self.load_image_button_pattern, stretch=1)
+        pattern_resolution_layout.addLayout(load_image_layout_pattern)
+
+        # 4. Diagonal Distance Line
         diagonal_distance_layout = QHBoxLayout()
+        diagonal_distance_layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove default margins
+        diagonal_distance_label_n = QLabel("4.")
         diagonal_distance_label = QLabel("Diagonal Distance:")
         self.diagonal_distance_value = QLineEdit("0.00")
+        self.diagonal_distance_value.setPlaceholderText("Real-world length in mm")
+        self.diagonal_distance_value.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Preferred
+        )  # Expand QLineEdit
+        diagonal_distance_layout.addWidget(diagonal_distance_label_n)
         diagonal_distance_layout.addWidget(diagonal_distance_label)
-        diagonal_distance_layout.addWidget(self.diagonal_distance_value)
+        diagonal_distance_layout.addWidget(self.diagonal_distance_value, stretch=1)
         pattern_resolution_layout.addLayout(diagonal_distance_layout)
+
+        # 5. Get Resolution Button
+        get_resolution_layout = QHBoxLayout()
+        get_resolution_label = QLabel("5.")
+        self.get_resolution_button = QPushButton("Get Resolution")
+
+        # Add widgets to the layout
+        get_resolution_layout.addWidget(get_resolution_label)
+        get_resolution_layout.addWidget(
+            self.get_resolution_button, stretch=1
+        )  # Allow button to expand
+        pattern_resolution_layout.addLayout(get_resolution_layout)
+
         # Ruler Resolution Tab
         self.ruler_resolution_tab = QWidget()
         ruler_resolution_layout = QVBoxLayout()
@@ -91,11 +160,11 @@ class CalibrationView(QWidget):
         # 3. Enter Real-World Length and Calculate
         real_world_layout = QHBoxLayout()
         real_world_label = QLabel("3.")
-        self.cm_input = QLineEdit()
-        self.cm_input.setPlaceholderText("Enter real-world length in cm")
+        self.distance_input = QLineEdit()
+        self.distance_input.setPlaceholderText("Enter real-world length in mm")
         self.calculate_button = QPushButton("Get Resolutions")
         real_world_layout.addWidget(real_world_label)
-        real_world_layout.addWidget(self.cm_input)
+        real_world_layout.addWidget(self.distance_input)
         real_world_layout.addWidget(self.calculate_button)
         ruler_resolution_layout.addLayout(real_world_layout)
 
