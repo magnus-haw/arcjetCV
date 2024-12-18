@@ -5,6 +5,7 @@ from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from matplotlib.backend_bases import cursors
 import numpy as np
 import cv2
+import json
 
 
 class CalibrationController:
@@ -43,32 +44,139 @@ class CalibrationController:
         else:
             self.view.image_label.setText("No images loaded")
 
+    def detect_pattern(self, img, chessboard_size, circles_grid_size):
+        """
+        Detect whether the image contains a chessboard or a circles grid.
+
+        Args:
+            img (numpy.ndarray): The grayscale image to analyze.
+            chessboard_size (tuple): Chessboard pattern size (columns, rows).
+            circles_grid_size (tuple): Circles grid pattern size (columns, rows).
+
+        Returns:
+            tuple: (str, object_points, image_points)
+                str: "chessboard", "circles_grid", or None.
+                object_points: 3D points in real-world space.
+                image_points: 2D points in the image plane.
+        """
+        # Prepare 3D object points for chessboard and circles grid
+        chessboard_obj_points = np.zeros(
+            (chessboard_size[0] * chessboard_size[1], 3), np.float32
+        )
+        chessboard_obj_points[:, :2] = np.mgrid[
+            0 : chessboard_size[0], 0 : chessboard_size[1]
+        ].T.reshape(-1, 2)
+
+        circles_obj_points = np.zeros(
+            (circles_grid_size[0] * circles_grid_size[1], 3), np.float32
+        )
+        circles_obj_points[:, :2] = np.mgrid[
+            0 : circles_grid_size[0], 0 : circles_grid_size[1]
+        ].T.reshape(-1, 2)
+
+        # Try detecting chessboard pattern
+        ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
+            img, chessboard_size
+        )
+        if ret_chessboard:
+            return "chessboard", chessboard_obj_points, corners_chessboard
+
+        # Try detecting circles grid pattern
+        ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
+            img, circles_grid_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
+        )
+        if ret_circles_grid:
+            return "circles_grid", circles_obj_points, centers_circles_grid
+
+        # No pattern detected
+        return None, None, None
+
+    def save_to_json(self, calibration_data, file_path="calibration_results.json"):
+        """
+        Save calibration parameters to a JSON file.
+
+        Args:
+            calibration_data (dict): Calibration parameters.
+            file_path (str): Path to save the JSON file.
+
+        Returns:
+            tuple: (bool, str) Success status and error message.
+        """
+        try:
+            # Get the directory of the current script
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(script_dir, file_name)
+
+            # Write the JSON file
+            with open(file_path, "w") as json_file:
+                json.dump(calibration_data, json_file, indent=4)
+
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
     def calibrate_camera(self):
-        """Perform camera calibration using loaded chessboard images."""
+        """Automatically detect pattern type, perform camera calibration, and save to a JSON file."""
         if not self.image_paths:
             QMessageBox.warning(
-                self.view, "Error", "Please load chessboard images first."
+                self.view, "Error", "Please load images for calibration first."
             )
             return
 
-        ret, error = self.model.calibrate_camera(
-            self.image_paths, (9, 6), 1.0  # Chessboard size and square size
+        chessboard_size = (9, 6)  # Inner corners for chessboard
+        circles_grid_size = (4, 11)  # Circle pattern grid size
+        square_size = 1.0  # Real-world square/circle size
+
+        obj_points = []
+        img_points = []
+
+        for img_path in self.image_paths:
+            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            if img is None:
+                QMessageBox.warning(
+                    self.view, "Error", f"Failed to load image: {img_path}"
+                )
+                return
+
+            # Detect pattern
+            pattern_type, obj_p, img_p = self.detect_pattern(
+                img, chessboard_size, circles_grid_size
+            )
+            if pattern_type:
+                obj_points.append(obj_p)
+                img_points.append(img_p)
+            else:
+                QMessageBox.warning(
+                    self.view, "Error", f"No pattern detected in image: {img_path}"
+                )
+                return
+
+        # Perform calibration
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
+            obj_points, img_points, img.shape[::-1], None, None
         )
 
         if not ret:
-            QMessageBox.warning(self.view, "Error", error or "Calibration failed.")
+            QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
+            return
+
+        # Save calibration results
+        calibration_data = {
+            "camera_matrix": mtx.tolist(),
+            "dist_coeffs": dist.tolist(),
+            "rotation_vectors": [vec.tolist() for vec in rvecs],
+            "translation_vectors": [vec.tolist() for vec in tvecs],
+        }
+
+        success, save_error = self.save_to_json(calibration_data)
+        if success:
+            QMessageBox.information(
+                self.view, "Success", "Camera calibration successful and saved."
+            )
         else:
-            success, save_error = self.model.save_calibration()
-            if success:
-                QMessageBox.information(
-                    self.view, "Success", "Camera calibration successful and saved."
-                )
-            else:
-                QMessageBox.warning(
-                    self.view,
-                    "Error",
-                    f"Calibration saved but encountered: {save_error}",
-                )
+            QMessageBox.warning(
+                self.view, "Error", f"Failed to save calibration: {save_error}"
+            )
 
     def print_chessboard(self):
         """Generate and print a chessboard pattern."""
@@ -197,7 +305,7 @@ class CalibrationController:
         self.start_point = None  # Reset the start point
 
     def load_image_diagonal(self):
-        """Load an image, detect a chessboard or circular pattern, and plot its diagonal."""
+        """Load an image, autodetect a chessboard or circular pattern, and plot its diagonal."""
         # Open file dialog to load an image
         file_path, _ = QFileDialog.getOpenFileName(
             self.view,
@@ -216,35 +324,23 @@ class CalibrationController:
             return
         gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
-        # Get user inputs: pattern type and grid size
-        pattern_type = self.view.pattern_type_combo.currentText().lower()
-        try:
-            grid_rows = int(self.view.grid_rows_input.text())
-            grid_cols = int(self.view.grid_cols_input.text())
-            grid_size = (grid_cols, grid_rows)  # OpenCV expects (cols, rows)
-        except ValueError:
-            QMessageBox.warning(self.view, "Error", "Invalid grid size inputs.")
-            return
+        # Define grid sizes
+        chessboard_size = (9, 6)  # Example chessboard size
+        circles_grid_size = (4, 11)  # Example circle grid size
 
-        # Detect pattern based on user input
-        if pattern_type == "chessboard":
-            ret, corners = cv2.findChessboardCorners(gray, grid_size, None)
-        elif pattern_type == "circles":
-            ret, corners = cv2.findCirclesGrid(
-                gray, grid_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
-            )
-        else:
-            QMessageBox.warning(self.view, "Error", "Invalid pattern type selected.")
-            return
-
-        if not ret:
-            QMessageBox.warning(
-                self.view, "Error", f"{pattern_type.capitalize()} pattern not detected."
-            )
+        # Detect the pattern
+        pattern_type, obj_points, corners = self.detect_pattern(
+            gray, chessboard_size, circles_grid_size
+        )
+        if pattern_type is None:
+            QMessageBox.warning(self.view, "Error", "No valid pattern detected.")
             return
 
         # Draw detected pattern
-        cv2.drawChessboardCorners(self.image, grid_size, corners, ret)
+        if pattern_type == "chessboard":
+            cv2.drawChessboardCorners(self.image, chessboard_size, corners, True)
+        elif pattern_type == "circles_grid":
+            cv2.drawChessboardCorners(self.image, circles_grid_size, corners, True)
 
         # Calculate diagonal endpoints
         top_left = corners[0][0]  # Top-left corner
