@@ -8,7 +8,7 @@ from numbers import Number
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QIcon,QPixmap
+from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv
 from matplotlib.widgets import RectangleSelector
@@ -39,7 +39,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.logo_white_path = os.path.join(
             Path(__file__).parent.absolute(), "logo/arcjetCV_logo_white.png"
         )
-        self.logo_path = os.path.join(Path(__file__).parent.absolute(), "logo/arcjetCV_logo_.png")
+        self.logo_path = os.path.join(
+            Path(__file__).parent.absolute(), "logo/arcjetCV_logo_.png"
+        )
         self.setWindowIcon(QIcon(self.logo_path))
 
         # Load and process the application logo
@@ -291,7 +293,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_frame(self):
         frame_index = self.ui.spinBox_FrameIndex.value()
-        frame =self.video.get_frame(frame_index)
+        frame = self.video.get_frame(frame_index)
         # Convert from BGR to RGB
         image = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
@@ -302,11 +304,10 @@ class MainWindow(QtWidgets.QMainWindow):
             if file_dialog.exec():
                 fpath = file_dialog.selectedFiles()[0]
                 cv.imwrite(fpath, image)
-                print("------SAVED FRAME %i-----"%frame_index)
-                self.ui.basebar.setText("------SAVED FRAME %i-----"%frame_index)
+                print("------SAVED FRAME %i-----" % frame_index)
+                self.ui.basebar.setText("------SAVED FRAME %i-----" % frame_index)
         except:
             self.arcjetcv_message_box("Warning", "Could not save frame")
-        
 
     def connect_elements(self):
         self.ui.spinBox_FrameIndex.valueChanged.connect(self.update_frame_index)
@@ -429,8 +430,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("! Could not load video !:\n" + str(e))
                 else:
-                    self.arcjetcv_message_box("Warning", "! Could not load video !:\n" + str(e) )
-                    
+                    self.arcjetcv_message_box(
+                        "Warning", "! Could not load video !:\n" + str(e)
+                    )
+
     def plot_location(self, reset=False):
         n = self.ui.spinBox_FrameIndex.value()
         if self._tplot_ref is None or reset:
@@ -568,7 +571,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("! File loading failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! File loading failed !:\n" + str(e)
+                self.arcjetcv_message_box(
+                    "Warning", "! File loading failed !:\n" + str(e)
                 )
 
         self.plot_outputs()
@@ -831,7 +835,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.arcjetcv_message_box(
                         "Warning",
                         "! Not enough data to plot !: only %i points"
-                        % len(self.raw_outputs)
+                        % len(self.raw_outputs),
                     )
 
         except Exception as e:
@@ -839,8 +843,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("Warning", "! Plotting failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e)
-                )
+                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e))
 
         self.ui.Window1.repaint()
         self.ui.Window2.repaint()
@@ -890,7 +893,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("Warning", "! Plot saving failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! Plot saving failed !:\n" + str(e)
+                self.arcjetcv_message_box(
+                    "Warning", "! Plot saving failed !:\n" + str(e)
                 )
 
     def export_to_csv(self):
@@ -948,7 +952,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Warning", "! CSV export failed !:\n" + str(e))
                 else:
-                    self.arcjetcv_message_box("Warning", "! CSV export failed !:\n" + str(e)
+                    self.arcjetcv_message_box(
+                        "Warning", "! CSV export failed !:\n" + str(e)
                     )
 
     def fit_data(self):
@@ -1010,9 +1015,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Warning", "! Fitting failed !:\n" + str(e))
                 else:
-                    self.arcjetcv_message_box("Warning", "! Fitting failed !:\n" + str(e))
+                    self.arcjetcv_message_box(
+                        "Warning", "! Fitting failed !:\n" + str(e)
+                    )
 
-    def arcjetcv_message_box(self,title,message):
+    def arcjetcv_message_box(self, title, message):
 
         msg_box = QMessageBox()
         msg_box.setIconPixmap(QPixmap(self.logo_path))

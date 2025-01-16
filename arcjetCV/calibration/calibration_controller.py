@@ -6,6 +6,7 @@ from matplotlib.backend_bases import cursors
 import numpy as np
 import cv2
 import json
+import os
 
 
 class CalibrationController:
@@ -104,28 +105,75 @@ class CalibrationController:
         """
         try:
             # Get the directory of the current script
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            file_path = os.path.join(script_dir, file_name)
+            script_directory = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(script_directory, file_path)
 
-            # Write the JSON file
+            # Check if the file exists and load existing data
+            if os.path.exists(file_path):
+                with open(file_path, "r") as json_file:
+                    existing_data = json.load(json_file)
+            else:
+                existing_data = {}
+
+            # Update with new data
+            existing_data.update(calibration_data)
+
+            # Write the updated data back to the file
             with open(file_path, "w") as json_file:
-                json.dump(calibration_data, json_file, indent=4)
+                json.dump(existing_data, json_file, indent=4)
+
+            print(str(file_path))
 
             return True, None
         except Exception as e:
             return False, str(e)
 
+    def calculate_3d_orientation(
+        self, obj_points, img_points, camera_matrix, dist_coeffs
+    ):
+        """
+        Calculate the 3D orientation using the rotation and translation vectors.
+        Args:
+            obj_points (list): List of 3D object points.
+            img_points (list): List of 2D image points.
+            camera_matrix (numpy.ndarray): Camera intrinsic matrix.
+            dist_coeffs (numpy.ndarray): Distortion coefficients.
+        Returns:
+            tuple: Rotation matrix, translation vector, and Euler angles.
+        """
+        ret, rvec, tvec = cv2.solvePnP(
+            obj_points, img_points, camera_matrix, dist_coeffs
+        )
+        if not ret:
+            QMessageBox.warning(self.view, "Error", "3D Pose estimation failed.")
+            return None
+
+        # Convert rotation vector to rotation matrix
+        rotation_matrix, _ = cv2.Rodrigues(rvec)
+
+        # Convert rotation matrix to Euler angles
+        theta_x = np.degrees(np.arctan2(rotation_matrix[2, 1], rotation_matrix[2, 2]))
+        theta_y = np.degrees(
+            np.arctan2(
+                -rotation_matrix[2, 0],
+                np.sqrt(rotation_matrix[2, 1] ** 2 + rotation_matrix[2, 2] ** 2),
+            )
+        )
+        theta_z = np.degrees(np.arctan2(rotation_matrix[1, 0], rotation_matrix[0, 0]))
+
+        return rotation_matrix, tvec, (theta_x, theta_y, theta_z)
+
     def calibrate_camera(self):
-        """Automatically detect pattern type, perform camera calibration, and save to a JSON file."""
+        """Perform full 3D camera calibration and save results."""
         if not self.image_paths:
             QMessageBox.warning(
                 self.view, "Error", "Please load images for calibration first."
             )
             return
 
-        chessboard_size = (9, 6)  # Inner corners for chessboard
-        circles_grid_size = (4, 11)  # Circle pattern grid size
-        square_size = 1.0  # Real-world square/circle size
+        chessboard_size = (9, 6)
+        circles_grid_size = (4, 11)
+        square_size = 1.0
 
         obj_points = []
         img_points = []
@@ -147,31 +195,42 @@ class CalibrationController:
                 img_points.append(img_p)
             else:
                 QMessageBox.warning(
-                    self.view, "Error", f"No pattern detected in image: {img_path}"
+                    self.view, "Error", f"No pattern detected in {img_path}"
                 )
                 return
 
-        # Perform calibration
+        # Perform camera calibration
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             obj_points, img_points, img.shape[::-1], None, None
         )
-
         if not ret:
             QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
             return
 
-        # Save calibration results
+        # Calculate 3D orientation using the new method
+        rotation_matrix, tvec, euler_angles = self.calculate_3d_orientation(
+            obj_points[0], img_points[0], mtx, dist
+        )
+
+        # Save calibration data
         calibration_data = {
             "camera_matrix": mtx.tolist(),
             "dist_coeffs": dist.tolist(),
             "rotation_vectors": [vec.tolist() for vec in rvecs],
             "translation_vectors": [vec.tolist() for vec in tvecs],
+            "rotation_matrix": rotation_matrix.tolist(),
+            "translation_vector": tvec.tolist(),
+            "euler_angles": {
+                "x": euler_angles[0],
+                "y": euler_angles[1],
+                "z": euler_angles[2],
+            },
         }
 
         success, save_error = self.save_to_json(calibration_data)
         if success:
             QMessageBox.information(
-                self.view, "Success", "Camera calibration successful and saved."
+                self.view, "Success", "3D Camera calibration successful and saved."
             )
         else:
             QMessageBox.warning(
@@ -398,8 +457,8 @@ class CalibrationController:
                     )
                     return
 
-                ppm = self.diagonal_distance / real_length
-                self.view.ppcm_label.setText(f"Pixels per mm: {ppm:.2f}")
+                self.ppm = self.diagonal_distance / real_length
+                self.view.ppcm_label.setText(f"Pixels per mm: {self.ppm:.2f}")
             except ValueError:
                 QMessageBox.warning(
                     self.view, "Error", "Invalid real-world length entered."
@@ -419,11 +478,49 @@ class CalibrationController:
 
             try:
                 real_length = float(self.view.distance_input.text())
-                ppm = pixel_length / real_length
-                self.view.ppcm_label.setText(f"Pixels per mm: {ppm:.2f}")
+                self.ppm = pixel_length / real_length
+                self.view.ppcm_label.setText(f"Pixels per mm: {self.ppm:.2f}")
             except ValueError:
                 QMessageBox.warning(
                     self.view, "Error", "Invalid real-world length entered."
                 )
         else:
             QMessageBox.warning(self.view, "Error", "Unknown tab selected.")
+            return
+
+        # Save ppm to the JSON file
+        self.save_ppm_to_json()
+
+    def save_ppm_to_json(self, file_path="calibration_results.json"):
+        """
+        Save the calculated ppm value to the calibration JSON file.
+
+        Args:
+            file_path (str): Path to the JSON file.
+        """
+        if not hasattr(self, "ppm") or self.ppm is None:
+            QMessageBox.warning(self.view, "Error", "No valid ppm value to save.")
+            return
+
+        try:
+            # Check if the file exists and load existing data
+            if os.path.exists(file_path):
+                with open(file_path, "r") as json_file:
+                    existing_data = json.load(json_file)
+            else:
+                existing_data = {}
+
+            # Update the data with the new ppm value
+            existing_data["pixels_per_mm"] = self.ppm
+
+            # Write the updated data back to the file
+            with open(file_path, "w") as json_file:
+                json.dump(existing_data, json_file, indent=4)
+
+            QMessageBox.information(
+                self.view, "Success", "Pixels per mm saved successfully to JSON."
+            )
+        except Exception as e:
+            QMessageBox.warning(
+                self.view, "Error", f"Failed to save pixels per mm: {str(e)}"
+            )
