@@ -667,18 +667,6 @@ class Ui_MainWindow(object):
         self.tab_5.setObjectName("tab_5")
         self.gridLayout_2 = QGridLayout(self.tab_5)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.label = QLabel(self.tab_5)
-        self.label.setObjectName("label")
-
-        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
-
-        self.doubleSpinBox_diameter = QDoubleSpinBox(self.tab_5)
-        self.doubleSpinBox_diameter.setObjectName("doubleSpinBox_diameter")
-        self.doubleSpinBox_diameter.setMinimum(0.100000000000000)
-        self.doubleSpinBox_diameter.setMaximum(1000.000000000000000)
-        self.doubleSpinBox_diameter.setValue(101.599999999999994)
-
-        self.gridLayout_2.addWidget(self.doubleSpinBox_diameter, 0, 1, 1, 1)
 
         self.label_11 = QLabel(self.tab_5)
         self.label_11.setObjectName("label_11")
@@ -1054,12 +1042,7 @@ class Ui_MainWindow(object):
         self.pushButton_fitData.setText(
             QCoreApplication.translate("MainWindow", "Fit Data", None)
         )
-        self.label.setText(
-            QCoreApplication.translate("MainWindow", "Model diameter: ", None)
-        )
-        self.label_11.setText(
-            QCoreApplication.translate("MainWindow", "Length units:", None)
-        )
+        self.label_11.setText(QCoreApplication.translate("MainWindow", "Units:", None))
         self.comboBox_units.setItemText(
             0, QCoreApplication.translate("MainWindow", "[in]", None)
         )
