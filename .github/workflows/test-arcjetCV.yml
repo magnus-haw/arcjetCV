@@ -44,8 +44,9 @@ jobs:
           conda install -c conda-forge pytest pytest-qt pytest-mock qt-main pytest-xvfb
           python -m  pip install -e .
           python -c "import arcjetCV"
-
-      - name: Run Tests
+      - name: Test with pytest
         run: |
+          conda init bash
+          source ~/.bashrc
           conda activate arcjetCV
-          pytest -s 
+          pytest -s
