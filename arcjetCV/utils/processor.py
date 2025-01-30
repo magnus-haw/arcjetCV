@@ -34,6 +34,9 @@ class ArcjetProcessor:
         self.w = videometa["WIDTH"]
         self.crop = videometa.crop_range()
         self.cnn = CNN()
+        self.pixels_per_mm = videometa.get(
+            "PIXELS_PER_MM", 1.0
+        )  # ✅ Default to 1.0 if missing
 
     def update_video_meta(self, videometa):
         """
@@ -376,6 +379,9 @@ class ArcjetProcessor:
 
                 # Process the current frame, obtaining contours and updated argdict
                 contour_dict, argdict = self.process(frame, options)
+
+                # Add pixels_per_mm to the output dictionary
+                argdict["PIXELS_PER_MM"] = self.pixels_per_mm
 
                 # Draw model and shock contours on the frame for visualization
                 color_map = {

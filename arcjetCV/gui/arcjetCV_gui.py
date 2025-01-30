@@ -157,6 +157,21 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.pushButton_loadVideo)
 
+        self.pushButton_loadCalibration = QPushButton(self.tab)
+        self.pushButton_loadCalibration.setObjectName("pushButton_loadCalibration")
+        self.pushButton_loadCalibration.setText("Load Calibration")
+
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(
+            self.pushButton_loadCalibration.sizePolicy().hasHeightForWidth()
+        )
+        self.pushButton_loadCalibration.setSizePolicy(sizePolicy1)
+
+        # Add the button to the layout
+        self.verticalLayout_6.addWidget(self.pushButton_loadCalibration)
+
         self.verticalSpacer_4 = QSpacerItem(
             20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
         )

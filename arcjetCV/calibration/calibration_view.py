@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.image as mpimg
+import os
+from pathlib import Path
 
 
 class CalibrationView(QWidget):
@@ -216,8 +218,8 @@ class CalibrationView(QWidget):
             ax = self.figure.add_subplot(111)
 
             # Load the logo
-            logo_path = (
-                "gui/logo/arcjetCV_logo_white.png"  # Replace with the actual path
+            logo_path = os.path.join(
+                Path(__file__).parent.absolute(), "../gui/logo/arcjetCV_logo_white.png"
             )
             logo_image = mpimg.imread(logo_path)
 

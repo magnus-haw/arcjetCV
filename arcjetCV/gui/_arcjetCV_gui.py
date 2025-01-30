@@ -751,6 +751,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "arcjetCV"))
         self.pushButton_loadVideo.setText(_translate("MainWindow", "Load Video"))
+        self.pushButton_loadCalibration.setText(_translate("MainWindow", "Load Calibration"))
         self.groupBox_2.setTitle(_translate("MainWindow", "Input parameters"))
         self.label_7.setText(_translate("MainWindow", "Frame Index:"))
         self.label_3.setText(_translate("MainWindow", "Flow direction:"))

@@ -21,6 +21,7 @@ from arcjetCV.utils.utils import (
     annotateImage,
     annotate_image_with_frame_number,
 )
+from arcjetCV.calibration.calibration_controller import CalibrationController
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -49,6 +50,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rgb_frame = cv.cvtColor(self.rgb_frame, cv.COLOR_BGR2RGB)
 
         # Initialize frame and plotting windows
+        self.calibrated = None
         self._plot_ref = None
         self._tplot_ref = None
         self._brightness_ref = None
@@ -83,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect interface buttons to their respective functions
         self.ui.pushButton_process.clicked.connect(self.process_all)
         self.ui.pushButton_loadVideo.clicked.connect(self.load_video)
+        self.ui.pushButton_loadCalibration.clicked.connect(self.load_calibration)
         self.ui.pushButton_export_csv.clicked.connect(self.export_to_csv)
         self.ui.pushButton_fitData.clicked.connect(self.fit_data)
         self.ui.pushButton_LoadFiles.clicked.connect(self.load_outputs)
@@ -121,6 +124,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show()
 
     def show_img(self):
+        if self.calibrated == True:
+            self.rgb_frame = CalibrationController.apply_calibration(
+                self.rgb_frame, self.calibration_data
+            )
         if self._plot_ref is None:
             # Create a new plot reference and define the cursor data format
             self._plot_ref = self.ui.Window0.canvas.axes.imshow(
@@ -370,6 +377,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.videometa = VideoMeta(
                     self.video, os.path.join(self.folder, self.filename + ".meta")
                 )
+
+                if hasattr(self, "pixels_per_mm"):  # Ensure it's defined
+                    self.videometa["PIXELS_PER_MM"] = self.pixels_per_mm
+                    print(f"DEBUG: Stored pixels_per_mm in videometa: {self.videometa['PIXELS_PER_MM']}")  # Debugging
+                else:
+                    print("WARNING: pixels_per_mm not set before loading video.")
                 print("Number of Frames: ", self.video.nframes)
                 print(
                     f"First-Last Good Frame: {self.videometa['FIRST_GOOD_FRAME']}-{self.videometa['LAST_GOOD_FRAME']}"
@@ -412,7 +425,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.plot_start_stop
                 )
                 self.ui.spinBox_LastGoodFrame.valueChanged.connect(self.plot_start_stop)
-
                 if self.processor is None:
                     self.processor = ArcjetProcessor(self.videometa)
                 else:  # avoid reimporting CNN model each time
@@ -433,6 +445,80 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.arcjetcv_message_box(
                         "Warning", "! Could not load video !:\n" + str(e)
                     )
+
+    def load_calibration(self):
+        """Method to load a .json calibration file and prepare calibration data."""
+        from PySide6.QtWidgets import QFileDialog
+        import json
+        import numpy as np  # Ensure numpy is imported
+
+        # Open a file dialog to select a JSON file
+        file_path, _ = QFileDialog.getOpenFileName(
+            None, "Select Calibration File", "", "JSON Files (*.json)"
+        )
+
+        if file_path:
+            try:
+                # Load calibration data from the JSON file
+                with open(file_path, "r") as file:
+                    raw_data = json.load(file)
+
+                # Validate and organize calibration data
+                camera_matrix = np.array(
+                    raw_data.get("camera_matrix", [[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+                    dtype=np.float32,
+                )
+                dist_coeffs = np.array(
+                    raw_data.get("dist_coeffs", [0, 0, 0, 0, 0]), dtype=np.float32
+                )
+                rvec = (
+                    np.array(raw_data["rvec"], dtype=np.float32)
+                    if "rvec" in raw_data
+                    else None
+                )
+                tvec = (
+                    np.array(raw_data["tvec"], dtype=np.float32)
+                    if "tvec" in raw_data
+                    else None
+                )
+
+                # ✅ Ensure pixels_per_mm is always defined
+                pixels_per_mm = raw_data.get(
+                    "pixels_per_mm", 1.0
+                )  # Default to 1.0 if missing
+
+                # ✅ Store calibration data in an accessible attribute
+                self.calibration_data = {
+                    "camera_matrix": camera_matrix,
+                    "dist_coeffs": dist_coeffs,
+                    "rvec": rvec,
+                    "tvec": tvec,
+                    "pixels_per_mm": pixels_per_mm,
+                }
+
+                # ✅ Define self.pixels_per_mm for later use
+                self.pixels_per_mm = pixels_per_mm
+
+                # ✅ Now it's safe to print it
+                print(f"Extracted pixels_per_mm: {self.pixels_per_mm}")
+
+                self.calibrated = True
+                success_message = (
+                    f"Calibration data loaded successfully from {file_path}."
+                )
+                success_message += f"\nPixels per mm: {self.pixels_per_mm:.4f}"
+                self.arcjetcv_message_box("Success", success_message)
+
+            except KeyError as e:
+                self.arcjetcv_message_box(
+                    "Error", f"Missing required calibration key: {str(e)}"
+                )
+                self.calibration_data = None
+            except Exception as e:
+                self.arcjetcv_message_box(
+                    "Error", f"Failed to load calibration file: {str(e)}"
+                )
+                self.calibration_data = None
 
     def plot_location(self, reset=False):
         n = self.ui.spinBox_FrameIndex.value()
@@ -601,7 +687,6 @@ class MainWindow(QtWidgets.QMainWindow):
         index, m95, m50, mc, p50, p95, radius = [], [], [], [], [], [], []
         time, sarea, marea, sc, sm, ypos = [], [], [], [], [], []
 
-        diameter = self.ui.doubleSpinBox_diameter.value()
         units = self.ui.comboBox_units.currentText()
         fps = self.ui.doubleSpinBox_fps.value()
         maskn = self.ui.spinBox_mask_frames.value()
@@ -702,7 +787,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 # Infer px length
                 radius_masked = np.ma.masked_where(mask < 0, radius)
-                pixel_length = diameter / (2 * np.nanmax(radius_masked))
+                if hasattr(self, "calibration_data") and self.calibration_data.get(
+                    "pixels_per_mm"
+                ):
+                    pixel_length = 1 / self.calibration_data["pixels_per_mm"]
+                else:
+                    self.arcjetcv_message_box(
+                        "Warning",
+                        "Pixels per mm not available in calibration data. Defaulting pixel length to 1.",
+                    )
+                    pixel_length = 1  # Default value if calibration data is missing
                 self.pixel_length = pixel_length
 
                 # Plot XT series
@@ -795,7 +889,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 output_dict["CONFIG"] = [
                     "UNITS: %s" % units,
-                    "MODEL_DIAMETER: %.2f" % diameter,
                     "FPS: %.2f" % fps,
                     "MASK_NFRAMES: %i" % maskn,
                 ]

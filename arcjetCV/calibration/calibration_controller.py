@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 import json
 import os
+from pathlib import Path
 
 
 class CalibrationController:
@@ -173,7 +174,6 @@ class CalibrationController:
 
         chessboard_size = (9, 6)
         circles_grid_size = (4, 11)
-        square_size = 1.0
 
         obj_points = []
         img_points = []
@@ -207,32 +207,47 @@ class CalibrationController:
             QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
             return
 
-        # Calculate 3D orientation using the new method
+        # Calculate 3D orientation
         rotation_matrix, tvec, euler_angles = self.calculate_3d_orientation(
             obj_points[0], img_points[0], mtx, dist
         )
 
-        # Save calibration data
+        # Store calibration data in a format compatible with load_calibration
         calibration_data = {
             "camera_matrix": mtx.tolist(),
             "dist_coeffs": dist.tolist(),
-            "rotation_vectors": [vec.tolist() for vec in rvecs],
-            "translation_vectors": [vec.tolist() for vec in tvecs],
-            "rotation_matrix": rotation_matrix.tolist(),
-            "translation_vector": tvec.tolist(),
-            "euler_angles": {
-                "x": euler_angles[0],
-                "y": euler_angles[1],
-                "z": euler_angles[2],
-            },
+            "rvec": rvecs[0].tolist() if rvecs else None,
+            "tvec": tvecs[0].tolist() if tvecs else None,
         }
 
+        # Save calibration data to file
         success, save_error = self.save_to_json(calibration_data)
         if success:
+            self.calibration_data = {
+                "camera_matrix": np.array(
+                    calibration_data["camera_matrix"], dtype=np.float32
+                ),
+                "dist_coeffs": np.array(
+                    calibration_data["dist_coeffs"], dtype=np.float32
+                ),
+                "rvec": (
+                    np.array(calibration_data["rvec"], dtype=np.float32)
+                    if calibration_data["rvec"]
+                    else None
+                ),
+                "tvec": (
+                    np.array(calibration_data["tvec"], dtype=np.float32)
+                    if calibration_data["tvec"]
+                    else None
+                ),
+            }
+            self.calibrated = True
             QMessageBox.information(
                 self.view, "Success", "3D Camera calibration successful and saved."
             )
         else:
+            self.calibration_data = None
+            self.calibrated = False
             QMessageBox.warning(
                 self.view, "Error", f"Failed to save calibration: {save_error}"
             )
@@ -491,7 +506,12 @@ class CalibrationController:
         # Save ppm to the JSON file
         self.save_ppm_to_json()
 
-    def save_ppm_to_json(self, file_path="calibration_results.json"):
+    def save_ppm_to_json(
+        self,
+        file_path=os.path.join(
+            Path(__file__).parent.absolute(), "calibration_results.json"
+        ),
+    ):
         """
         Save the calculated ppm value to the calibration JSON file.
 
@@ -503,15 +523,22 @@ class CalibrationController:
             return
 
         try:
+            # Convert self.ppm to a standard Python float
+            ppm_value = float(self.ppm)
+
             # Check if the file exists and load existing data
             if os.path.exists(file_path):
                 with open(file_path, "r") as json_file:
-                    existing_data = json.load(json_file)
+                    try:
+                        existing_data = json.load(json_file)
+                    except json.JSONDecodeError:
+                        # Handle invalid or empty JSON file
+                        existing_data = {}
             else:
                 existing_data = {}
 
-            # Update the data with the new ppm value
-            existing_data["pixels_per_mm"] = self.ppm
+            # Update or create the "pixels_per_mm" key
+            existing_data["pixels_per_mm"] = ppm_value
 
             # Write the updated data back to the file
             with open(file_path, "w") as json_file:
@@ -524,3 +551,63 @@ class CalibrationController:
             QMessageBox.warning(
                 self.view, "Error", f"Failed to save pixels per mm: {str(e)}"
             )
+
+    def apply_calibration(frame, calibration_data):
+        """
+        Apply calibration to a single frame using provided calibration data.
+
+        Args:
+            frame (numpy.ndarray): The input frame (image) to calibrate.
+            calibration_data (dict): A dictionary containing calibration data with keys:
+                - "camera_matrix": The intrinsic camera matrix.
+                - "dist_coeffs": The distortion coefficients.
+                - "rvec" (optional): The rotation vector for 3D transformations.
+                - "tvec" (optional): The translation vector for 3D transformations.
+
+        Returns:
+            numpy.ndarray: The calibrated frame (image).
+        """
+        # Extract calibration data
+        camera_matrix = np.array(calibration_data["camera_matrix"])
+        dist_coeffs = np.array(calibration_data["dist_coeffs"])
+
+        # Undistort the frame
+        h, w = frame.shape[:2]
+        new_camera_matrix, _ = cv2.getOptimalNewCameraMatrix(
+            camera_matrix, dist_coeffs, (w, h), 1, (w, h)
+        )
+        undistorted_frame = cv2.undistort(
+            frame, camera_matrix, dist_coeffs, None, new_camera_matrix
+        )
+
+        # Apply 3D transformations if rvec and tvec are available
+        if "rvec" in calibration_data and "tvec" in calibration_data:
+            rvec = np.array(calibration_data["rvec"])
+            tvec = np.array(calibration_data["tvec"])
+
+            # Define points on the image plane
+            height, width = undistorted_frame.shape[:2]
+            object_points = np.array(
+                [[0, 0, 0], [width, 0, 0], [width, height, 0], [0, height, 0]],
+                dtype=np.float32,
+            )
+
+            # Project 3D points to the image plane
+            image_points, _ = cv2.projectPoints(
+                object_points, rvec, tvec, new_camera_matrix, None
+            )
+
+            # Compute the perspective transform
+            src_points = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+            dst_points = np.float32(image_points[:, 0, :])
+            perspective_transform = cv2.getPerspectiveTransform(src_points, dst_points)
+
+            # Apply the perspective transformation
+            calibrated_frame = cv2.warpPerspective(
+                undistorted_frame, perspective_transform, (w, h)
+            )
+        else:
+            # If no 3D transformation data, return the undistorted frame
+            calibrated_frame = undistorted_frame
+
+        return calibrated_frame
