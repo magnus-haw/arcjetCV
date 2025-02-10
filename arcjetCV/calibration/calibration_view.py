@@ -202,12 +202,15 @@ class CalibrationView(QWidget):
         # Add tabs to the resolution group
         self.image_resolution_group.setLayout(self.image_resolution_layout)
         button_layout.addWidget(self.image_resolution_group)
-        button_layout.addStretch()
+
+        # Save Calibration Button
+        self.save_calibration_button = QPushButton("Save Calibration")
+        button_layout.addWidget(self.save_calibration_button)
 
         # Add button layout to main layout
         main_layout.addLayout(button_layout, stretch=1)
-
         self.setLayout(main_layout)
+        button_layout.addStretch()
 
         self.plot_logo()
 

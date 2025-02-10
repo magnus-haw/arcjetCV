@@ -8,6 +8,7 @@ import cv2
 import json
 import os
 from pathlib import Path
+import shutil
 
 
 class CalibrationController:
@@ -23,6 +24,7 @@ class CalibrationController:
         self.view.load_image_button_pattern.clicked.connect(self.load_image_diagonal)
         self.view.calculate_button.clicked.connect(self.calculate_ppcm)
         self.view.get_resolution_button.clicked.connect(self.calculate_ppcm)
+        self.view.save_calibration_button.clicked.connect(self.save_calibration)
 
         # Initialize variables
         self.image_paths = []
@@ -552,6 +554,28 @@ class CalibrationController:
                 self.view, "Error", f"Failed to save pixels per mm: {str(e)}"
             )
 
+    def save_calibration(self):
+        """Prompts the user to select a filename and duplicates calibration.json to that file."""
+        default_filename = "calibration_copy.json"
+
+        # Open file dialog for user to choose where to save the file
+        file_path, _ = QFileDialog.getSaveFileName(
+            None, "Save Calibration", "", "JSON Files (*.json);;All Files (*)"
+        )
+
+        if file_path:  # If user selected a file
+            source_file = os.path.join(
+                Path(__file__).parent.absolute(), "calibration_results.json"
+            )
+            try:
+                # Copy content from calibration.json
+                shutil.copy(source_file, file_path)
+                QMessageBox.information(
+                    self, "Success", f"Calibration saved as {file_path}"
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to save calibration: {e}")
+
     def apply_calibration(frame, calibration_data):
         """
         Apply calibration to a single frame using provided calibration data.
@@ -579,35 +603,50 @@ class CalibrationController:
         undistorted_frame = cv2.undistort(
             frame, camera_matrix, dist_coeffs, None, new_camera_matrix
         )
+        return undistorted_frame
+        # if "rvec" in calibration_data and "tvec" in calibration_data:
+        #     rvec = np.array(calibration_data["rvec"], dtype=np.float32).reshape(3, 1)
+        #     tvec = np.array(calibration_data["tvec"], dtype=np.float32).reshape(3, 1)
 
-        # Apply 3D transformations if rvec and tvec are available
-        if "rvec" in calibration_data and "tvec" in calibration_data:
-            rvec = np.array(calibration_data["rvec"])
-            tvec = np.array(calibration_data["tvec"])
+        #     # Define object points (assuming a flat image plane)
+        #     height, width = undistorted_frame.shape[:2]
+        #     object_points = np.array(
+        #         [[0, 0, 0], [width, 0, 0], [width, height, 0], [0, height, 0]],
+        #         dtype=np.float32,
+        #     )
 
-            # Define points on the image plane
-            height, width = undistorted_frame.shape[:2]
-            object_points = np.array(
-                [[0, 0, 0], [width, 0, 0], [width, height, 0], [0, height, 0]],
-                dtype=np.float32,
-            )
+        #     # Project 3D points to 2D image coordinates
+        #     success, image_points = cv2.projectPoints(
+        #         object_points, rvec, tvec, new_camera_matrix, None
+        #     )
 
-            # Project 3D points to the image plane
-            image_points, _ = cv2.projectPoints(
-                object_points, rvec, tvec, new_camera_matrix, None
-            )
+        #     if not success or image_points is None or np.isnan(image_points).any():
+        #         print(
+        #             "❌ ERROR: Invalid projected points. Skipping perspective transform."
+        #         )
+        #         return undistorted_frame
 
-            # Compute the perspective transform
-            src_points = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
-            dst_points = np.float32(image_points[:, 0, :])
-            perspective_transform = cv2.getPerspectiveTransform(src_points, dst_points)
+        #     # Compute perspective transform
+        #     src_points = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+        #     dst_points = np.float32(image_points[:, 0, :])  # Ensure correct shape
+        #     perspective_transform = cv2.getPerspectiveTransform(src_points, dst_points)
 
-            # Apply the perspective transformation
-            calibrated_frame = cv2.warpPerspective(
-                undistorted_frame, perspective_transform, (w, h)
-            )
-        else:
-            # If no 3D transformation data, return the undistorted frame
-            calibrated_frame = undistorted_frame
+        #     if np.isnan(perspective_transform).any():
+        #         print("❌ ERROR: Perspective transform contains NaN values.")
+        #         return undistorted_frame
 
-        return calibrated_frame
+        #     # Apply the transformation
+        #     calibrated_frame = cv2.warpPerspective(
+        #         undistorted_frame, perspective_transform, (width, height)
+        #     )
+
+        #     if np.all(calibrated_frame == 0):
+        #         print(
+        #             "❌ ERROR: Warping failed, resulting in a black image. Returning undistorted frame."
+        #         )
+        #         return undistorted_frame
+
+        #     return calibrated_frame
+        # else:
+        #     print("ℹ️ INFO: No 3D transformation applied, returning undistorted frame.")
+        #     return undistorted_frame
