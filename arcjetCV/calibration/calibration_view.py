@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QComboBox,
     QSizePolicy,
+    QSpinBox,
 )
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -85,8 +86,15 @@ class CalibrationView(QWidget):
         grid_size_layout = QHBoxLayout()
         grid_size_label_n = QLabel("1.")
         grid_size_label = QLabel("Grid Size:")
-        self.grid_rows_input = QLineEdit("9")  # Default rows
-        self.grid_cols_input = QLineEdit("6")  # Default columns
+        self.grid_rows_input = QSpinBox()
+        self.grid_cols_input = QSpinBox()
+        # Configuration des valeurs par défaut et des limites
+        self.grid_rows_input.setMinimum(1)  # Valeur minimale
+        self.grid_rows_input.setMaximum(100)  # Valeur maximale
+        self.grid_rows_input.setValue(9)  # Valeur par défaut
+        self.grid_cols_input.setMinimum(1)
+        self.grid_cols_input.setMaximum(100)
+        self.grid_cols_input.setValue(6)
         grid_size_layout.addWidget(grid_size_label_n)
         grid_size_layout.addWidget(grid_size_label)
         grid_size_layout.addWidget(QLabel("Rows:"))

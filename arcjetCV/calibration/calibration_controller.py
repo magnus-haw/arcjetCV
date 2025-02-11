@@ -48,14 +48,14 @@ class CalibrationController:
         else:
             self.view.image_label.setText("No images loaded")
 
-    def detect_pattern(self, img, chessboard_size, circles_grid_size):
+    def detect_pattern(self, img, pattern_size):
         """
         Detect whether the image contains a chessboard or a circles grid.
 
         Args:
             img (numpy.ndarray): The grayscale image to analyze.
-            chessboard_size (tuple): Chessboard pattern size (columns, rows).
-            circles_grid_size (tuple): Circles grid pattern size (columns, rows).
+            pattern_size (tuple): Chessboard pattern size (columns, rows).
+            pattern_size (tuple): Circles grid pattern size (columns, rows).
 
         Returns:
             tuple: (str, object_points, image_points)
@@ -65,34 +65,74 @@ class CalibrationController:
         """
         # Prepare 3D object points for chessboard and circles grid
         chessboard_obj_points = np.zeros(
-            (chessboard_size[0] * chessboard_size[1], 3), np.float32
+            (pattern_size[0] * pattern_size[1], 3), np.float32
         )
         chessboard_obj_points[:, :2] = np.mgrid[
-            0 : chessboard_size[0], 0 : chessboard_size[1]
+            0 : pattern_size[0], 0 : pattern_size[1]
         ].T.reshape(-1, 2)
 
         circles_obj_points = np.zeros(
-            (circles_grid_size[0] * circles_grid_size[1], 3), np.float32
+            (pattern_size[0] * pattern_size[1], 3), np.float32
         )
         circles_obj_points[:, :2] = np.mgrid[
-            0 : circles_grid_size[0], 0 : circles_grid_size[1]
+            0 : pattern_size[0], 0 : pattern_size[1]
         ].T.reshape(-1, 2)
 
         # Try detecting chessboard pattern
         ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
-            img, chessboard_size
+            img, pattern_size
         )
         if ret_chessboard:
             return "chessboard", chessboard_obj_points, corners_chessboard
 
         # Try detecting circles grid pattern
         ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
-            img, circles_grid_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
+            img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
         )
         if ret_circles_grid:
             return "circles_grid", circles_obj_points, centers_circles_grid
 
         # No pattern detected
+        return None, None, None
+    
+    def detect_pattern(self, img, pattern_size):
+        """
+        Detects whether the image contains a chessboard or a circle grid (symmetric or asymmetric).
+
+        Args:
+            img (numpy.ndarray): Grayscale image.
+            pattern_size (tuple): The pattern size (columns, rows).
+
+        Returns:
+            tuple: (str, object_points, image_points)
+                str: "chessboard", "circles_grid", "asymmetric_circles_grid", or None.
+                object_points: 3D real-world points.
+                image_points: 2D image points.
+        """
+
+        # Enhance contrast for better detection
+        img = cv2.equalizeHist(img)
+
+        # 1️⃣ Detect Chessboard Pattern
+        found_chessboard, corners_chessboard = cv2.findChessboardCorners(img, pattern_size)
+        if found_chessboard:
+            return "chessboard", self._generate_object_points(pattern_size, "chessboard"), corners_chessboard
+
+        # 2️⃣ Detect Symmetric Circles Grid
+        found_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
+            img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
+        )
+        if found_circles_grid:
+            return "circles_grid", self._generate_object_points(pattern_size, "circles_grid"), centers_circles_grid
+
+        # 3️⃣ Detect Asymmetric Circles Grid
+        found_asymmetric_grid, centers_asymmetric_grid = cv2.findCirclesGrid(
+            img, pattern_size, flags=cv2.CALIB_CB_ASYMMETRIC_GRID
+        )
+        if found_asymmetric_grid:
+            return "asymmetric_circles_grid", self._generate_object_points(pattern_size, "asymmetric_circles_grid"), centers_asymmetric_grid
+
+        # ❌ No pattern detected
         return None, None, None
 
     def save_to_json(self, calibration_data, file_path="calibration_results.json"):
@@ -174,9 +214,7 @@ class CalibrationController:
             )
             return
 
-        chessboard_size = (9, 6)
-        circles_grid_size = (4, 11)
-
+        pattern_size = (self.view.grid_cols_input.value(), self.view.grid_rows_input.value())
         obj_points = []
         img_points = []
 
@@ -190,7 +228,7 @@ class CalibrationController:
 
             # Detect pattern
             pattern_type, obj_p, img_p = self.detect_pattern(
-                img, chessboard_size, circles_grid_size
+                img, pattern_size, pattern_size
             )
             if pattern_type:
                 obj_points.append(obj_p)
@@ -401,12 +439,11 @@ class CalibrationController:
         gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
         # Define grid sizes
-        chessboard_size = (9, 6)  # Example chessboard size
-        circles_grid_size = (4, 11)  # Example circle grid size
+        pattern_size = (self.view.grid_cols_input.value(), self.view.grid_rows_input.value())
 
         # Detect the pattern
         pattern_type, obj_points, corners = self.detect_pattern(
-            gray, chessboard_size, circles_grid_size
+            gray, pattern_size
         )
         if pattern_type is None:
             QMessageBox.warning(self.view, "Error", "No valid pattern detected.")
@@ -414,9 +451,9 @@ class CalibrationController:
 
         # Draw detected pattern
         if pattern_type == "chessboard":
-            cv2.drawChessboardCorners(self.image, chessboard_size, corners, True)
+            cv2.drawChessboardCorners(self.image, pattern_size, corners, True)
         elif pattern_type == "circles_grid":
-            cv2.drawChessboardCorners(self.image, circles_grid_size, corners, True)
+            cv2.drawChessboardCorners(self.image, pattern_size, corners, True)
 
         # Calculate diagonal endpoints
         top_left = corners[0][0]  # Top-left corner
