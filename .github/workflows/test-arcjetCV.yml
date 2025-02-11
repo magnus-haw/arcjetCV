@@ -34,7 +34,11 @@ jobs:
             libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0 \
             x11-utils libxcb-cursor0 libopengl0 libegl1-mesa libgl1-mesa-glx \
             libxrender1 libxtst6 libxi6 || sudo apt-get install -y libegl-mesa0
-          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+
+      - name: Install Xvfb for GUI Tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
 
       - name: Install conda dependencies
         run: |
@@ -52,4 +56,4 @@ jobs:
           source ~/.bashrc
           conda activate arcjetCV
           export QT_QPA_PLATFORM=offscreen
-          pytest -s --maxfail=1 --disable-warnings
+          xvfb-run -a pytest -s --maxfail=1 --disable-warnings
