@@ -95,6 +95,31 @@ class CalibrationController:
         # No pattern detected
         return None, None, None
     
+        
+    def _generate_object_points(self, pattern_size, pattern_type):
+        """
+        Generates 3D object points for a given pattern.
+
+        Args:
+            pattern_size (tuple): The pattern size (columns, rows).
+            pattern_type (str): Type of pattern ("chessboard", "circles_grid", "asymmetric_circles_grid").
+
+        Returns:
+            numpy.ndarray: 3D object points.
+        """
+        obj_points = np.zeros((pattern_size[0] * pattern_size[1], 3), np.float32)
+
+        if pattern_type == "chessboard" or pattern_type == "circles_grid":
+            obj_points[:, :2] = np.mgrid[0:pattern_size[0], 0:pattern_size[1]].T.reshape(-1, 2)
+
+        elif pattern_type == "asymmetric_circles_grid":
+            obj_points[:, :2] = np.array([
+                [(x, y + 0.5 * (x % 2)) for x in range(pattern_size[0])]
+                for y in range(pattern_size[1])
+            ]).reshape(-1, 2)
+
+        return obj_points
+    
     def detect_pattern(self, img, pattern_size):
         """
         Detects whether the image contains a chessboard or a circle grid (symmetric or asymmetric).
@@ -504,7 +529,7 @@ class CalibrationController:
         if current_tab_index == 0:  # Pattern Resolution Tab
             # Use diagonal distance
             try:
-                real_length = float(self.view.diagonal_distance_value.text())
+                real_length = self.view.diagonal_distance_value.value()  # Get value from QDoubleSpinBox
                 if not hasattr(self, "diagonal_distance"):
                     QMessageBox.warning(
                         self.view, "Error", "Diagonal distance not calculated yet."

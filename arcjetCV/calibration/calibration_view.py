@@ -10,7 +10,9 @@ from PySide6.QtWidgets import (
     QComboBox,
     QSizePolicy,
     QSpinBox,
+    QDoubleSpinBox,
 )
+from PySide6.QtCore import Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.image as mpimg
@@ -67,77 +69,95 @@ class CalibrationView(QWidget):
         self.pattern_resolution_tab.setLayout(pattern_resolution_layout)
         self.resolution_tabs.addTab(self.pattern_resolution_tab, "Pattern Resolution")
 
-        # # 1. Pattern Type Selection
-        # pattern_type_layout = QHBoxLayout()
-        # pattern_type_label_n = QLabel("1.")
-        # pattern_type_label = QLabel("Pattern Type:")
-        # self.pattern_type_combo = QComboBox()
-        # self.pattern_type_combo.addItems(["Chessboard", "Circles"])  # Dropdown options
-
-        # # Add widgets to the layout
-        # pattern_type_layout.addWidget(pattern_type_label_n)
-        # pattern_type_layout.addWidget(pattern_type_label)
-        # pattern_type_layout.addWidget(
-        #     self.pattern_type_combo, stretch=1
-        # )  # Allow ComboBox to expand
-        # pattern_resolution_layout.addLayout(pattern_type_layout)
-
+       
         # 1. Grid Size Input
         grid_size_layout = QHBoxLayout()
+        label_layout = QHBoxLayout()  # Layout for aligning labels on the left
+
         grid_size_label_n = QLabel("1.")
         grid_size_label = QLabel("Grid Size:")
+
+        # Ensure labels stay on the left
+        label_layout.addWidget(grid_size_label_n)
+        label_layout.addWidget(grid_size_label)
+        label_layout.addStretch()  # Push elements to the left
+
+        # Spinboxes for grid size input
         self.grid_rows_input = QSpinBox()
         self.grid_cols_input = QSpinBox()
-        # Configuration des valeurs par défaut et des limites
-        self.grid_rows_input.setMinimum(1)  # Valeur minimale
-        self.grid_rows_input.setMaximum(100)  # Valeur maximale
-        self.grid_rows_input.setValue(9)  # Valeur par défaut
+
+        # Configure QSpinBox properties
+        self.grid_rows_input.setMinimum(1)
+        self.grid_rows_input.setMaximum(100)
+        self.grid_rows_input.setValue(9)
+
         self.grid_cols_input.setMinimum(1)
         self.grid_cols_input.setMaximum(100)
         self.grid_cols_input.setValue(6)
-        grid_size_layout.addWidget(grid_size_label_n)
-        grid_size_layout.addWidget(grid_size_label)
-        grid_size_layout.addWidget(QLabel("Rows:"))
-        grid_size_layout.addWidget(self.grid_rows_input)
-        grid_size_layout.addWidget(QLabel("Cols:"))
-        grid_size_layout.addWidget(self.grid_cols_input)
+
+        # Ensure QSpinBox fields expand properly
+        self.grid_rows_input.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        self.grid_cols_input.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+
+        # Add elements to the grid size layout
+        grid_size_layout.addLayout(label_layout)
+        grid_size_layout.addWidget(QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight)
+        grid_size_layout.addWidget(self.grid_rows_input, stretch=1)
+        grid_size_layout.addWidget(QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight)
+        grid_size_layout.addWidget(self.grid_cols_input, stretch=1)
+
         pattern_resolution_layout.addLayout(grid_size_layout)
+
 
         # 2. Load Image for Resolution Measurement
         load_image_layout_pattern = QHBoxLayout()
         load_image_layout_pattern.setContentsMargins(0, 0, 0, 0)
         load_image_label_pattern = QLabel("2.")
-        self.load_image_button_pattern = QPushButton(
-            "Load Image for Resolution Measurement"
-        )
-        self.load_image_button_pattern.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Preferred
-        )
+        self.load_image_button_pattern = QPushButton("Load Image for Resolution Measurement")
+        self.load_image_button_pattern.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+
         load_image_layout_pattern.addWidget(load_image_label_pattern)
         load_image_layout_pattern.addWidget(self.load_image_button_pattern, stretch=1)
         pattern_resolution_layout.addLayout(load_image_layout_pattern)
 
-        # 4. Diagonal Distance Line
+
+        # 3. Diagonal Distance Line
         diagonal_distance_layout = QHBoxLayout()
-        diagonal_distance_layout.setContentsMargins(
-            0, 0, 0, 0
-        )  # Remove default margins
+        diagonal_distance_layout.setContentsMargins(0, 0, 0, 0)  # Remove default margins
+
+        # Left-aligned labels
+        label_layout = QHBoxLayout()
         diagonal_distance_label_n = QLabel("3.")
         diagonal_distance_label = QLabel("Diagonal Distance:")
-        self.diagonal_distance_value = QLineEdit("0.00")
-        self.diagonal_distance_value.setPlaceholderText("Real-world length in mm")
-        self.diagonal_distance_value.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Preferred
-        )  # Expand QLineEdit
-        diagonal_distance_layout.addWidget(diagonal_distance_label_n)
-        diagonal_distance_layout.addWidget(diagonal_distance_label)
+
+        label_layout.addWidget(diagonal_distance_label_n)
+        label_layout.addWidget(diagonal_distance_label)
+        label_layout.addStretch()  # Push labels to the left
+
+        # QDoubleSpinBox for diagonal distance input
+        self.diagonal_distance_value = QDoubleSpinBox()
+        self.diagonal_distance_value.setDecimals(2)  # Allow two decimal places
+        self.diagonal_distance_value.setMinimum(0.00)  # Minimum value
+        self.diagonal_distance_value.setMaximum(10000.00)  # Maximum value
+        self.diagonal_distance_value.setValue(0.00)  # Default value
+        self.diagonal_distance_value.setSuffix(" mm")  # Display unit in mm
+        self.diagonal_distance_value.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)  # Allow expansion
+
+        # Add elements to the layout
+        diagonal_distance_layout.addLayout(label_layout)
         diagonal_distance_layout.addWidget(self.diagonal_distance_value, stretch=1)
+
         pattern_resolution_layout.addLayout(diagonal_distance_layout)
+
 
         # 4. Get Resolution Button
         get_resolution_layout = QHBoxLayout()
         get_resolution_label = QLabel("4.")
         self.get_resolution_button = QPushButton("Calculate Resolution")
+
+        # Ensure button is not too wide and is properly spaced
+        self.get_resolution_button.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+
         get_resolution_layout.addWidget(get_resolution_label)
         get_resolution_layout.addWidget(self.get_resolution_button, stretch=1)
         pattern_resolution_layout.addLayout(get_resolution_layout)
