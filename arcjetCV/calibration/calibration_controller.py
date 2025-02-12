@@ -94,8 +94,7 @@ class CalibrationController:
 
         # No pattern detected
         return None, None, None
-    
-        
+
     def _generate_object_points(self, pattern_size, pattern_type):
         """
         Generates 3D object points for a given pattern.
@@ -110,16 +109,20 @@ class CalibrationController:
         obj_points = np.zeros((pattern_size[0] * pattern_size[1], 3), np.float32)
 
         if pattern_type == "chessboard" or pattern_type == "circles_grid":
-            obj_points[:, :2] = np.mgrid[0:pattern_size[0], 0:pattern_size[1]].T.reshape(-1, 2)
+            obj_points[:, :2] = np.mgrid[
+                0 : pattern_size[0], 0 : pattern_size[1]
+            ].T.reshape(-1, 2)
 
         elif pattern_type == "asymmetric_circles_grid":
-            obj_points[:, :2] = np.array([
-                [(x, y + 0.5 * (x % 2)) for x in range(pattern_size[0])]
-                for y in range(pattern_size[1])
-            ]).reshape(-1, 2)
+            obj_points[:, :2] = np.array(
+                [
+                    [(x, y + 0.5 * (x % 2)) for x in range(pattern_size[0])]
+                    for y in range(pattern_size[1])
+                ]
+            ).reshape(-1, 2)
 
         return obj_points
-    
+
     def detect_pattern(self, img, pattern_size):
         """
         Detects whether the image contains a chessboard or a circle grid (symmetric or asymmetric).
@@ -139,23 +142,37 @@ class CalibrationController:
         img = cv2.equalizeHist(img)
 
         # 1️⃣ Detect Chessboard Pattern
-        found_chessboard, corners_chessboard = cv2.findChessboardCorners(img, pattern_size)
+        found_chessboard, corners_chessboard = cv2.findChessboardCorners(
+            img, pattern_size
+        )
         if found_chessboard:
-            return "chessboard", self._generate_object_points(pattern_size, "chessboard"), corners_chessboard
+            return (
+                "chessboard",
+                self._generate_object_points(pattern_size, "chessboard"),
+                corners_chessboard,
+            )
 
         # 2️⃣ Detect Symmetric Circles Grid
         found_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
             img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
         )
         if found_circles_grid:
-            return "circles_grid", self._generate_object_points(pattern_size, "circles_grid"), centers_circles_grid
+            return (
+                "circles_grid",
+                self._generate_object_points(pattern_size, "circles_grid"),
+                centers_circles_grid,
+            )
 
         # 3️⃣ Detect Asymmetric Circles Grid
         found_asymmetric_grid, centers_asymmetric_grid = cv2.findCirclesGrid(
             img, pattern_size, flags=cv2.CALIB_CB_ASYMMETRIC_GRID
         )
         if found_asymmetric_grid:
-            return "asymmetric_circles_grid", self._generate_object_points(pattern_size, "asymmetric_circles_grid"), centers_asymmetric_grid
+            return (
+                "asymmetric_circles_grid",
+                self._generate_object_points(pattern_size, "asymmetric_circles_grid"),
+                centers_asymmetric_grid,
+            )
 
         # ❌ No pattern detected
         return None, None, None
@@ -231,6 +248,28 @@ class CalibrationController:
 
         return rotation_matrix, tvec, (theta_x, theta_y, theta_z)
 
+    def calculate_2d_affine_matrix(self, obj_points, img_points):
+        """
+        Computes an affine transformation matrix for 2D correction.
+
+        Args:
+            obj_points (numpy.ndarray): 2D object points in reference frame.
+            img_points (numpy.ndarray): 2D detected points in the image.
+
+        Returns:
+            numpy.ndarray: 2D affine transformation matrix (if successful).
+        """
+        if len(obj_points) < 3 or len(img_points) < 3:
+            print("❌ ERROR: At least 3 points are required for affine transformation.")
+            return None
+
+        # Compute affine transformation
+        affine_matrix, _ = cv2.estimateAffinePartial2D(obj_points, img_points)
+
+        if affine_matrix is None:
+            print("❌ ERROR: Affine transformation failed.")
+        return affine_matrix
+
     def calibrate_camera(self):
         """Perform full 3D camera calibration and save results."""
         if not self.image_paths:
@@ -239,7 +278,10 @@ class CalibrationController:
             )
             return
 
-        pattern_size = (self.view.grid_cols_input.value(), self.view.grid_rows_input.value())
+        pattern_size = (
+            self.view.grid_cols_input.value(),
+            self.view.grid_rows_input.value(),
+        )
         obj_points = []
         img_points = []
 
@@ -277,12 +319,20 @@ class CalibrationController:
             obj_points[0], img_points[0], mtx, dist
         )
 
-        # Store calibration data in a format compatible with load_calibration
+        # Calculate 2D affine transformation
+        affine_matrix = self.calculate_2d_affine_matrix(
+            obj_points[0][:, :2], img_points[0][:, 0, :]
+        )  # Convert 3D to 2D points
+
+        # Store calibration data
         calibration_data = {
             "camera_matrix": mtx.tolist(),
             "dist_coeffs": dist.tolist(),
             "rvec": rvecs[0].tolist() if rvecs else None,
             "tvec": tvecs[0].tolist() if tvecs else None,
+            "affine_matrix": (
+                affine_matrix.tolist() if affine_matrix is not None else None
+            ),
         }
 
         # Save calibration data to file
@@ -305,10 +355,17 @@ class CalibrationController:
                     if calibration_data["tvec"]
                     else None
                 ),
+                "affine_matrix": (
+                    np.array(calibration_data["affine_matrix"], dtype=np.float32)
+                    if calibration_data["affine_matrix"]
+                    else None
+                ),
             }
             self.calibrated = True
             QMessageBox.information(
-                self.view, "Success", "3D Camera calibration successful and saved."
+                self.view,
+                "Success",
+                "3D and 2D Camera calibration successful and saved.",
             )
         else:
             self.calibration_data = None
@@ -464,12 +521,13 @@ class CalibrationController:
         gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
         # Define grid sizes
-        pattern_size = (self.view.grid_cols_input.value(), self.view.grid_rows_input.value())
+        pattern_size = (
+            self.view.grid_cols_input.value(),
+            self.view.grid_rows_input.value(),
+        )
 
         # Detect the pattern
-        pattern_type, obj_points, corners = self.detect_pattern(
-            gray, pattern_size
-        )
+        pattern_type, obj_points, corners = self.detect_pattern(gray, pattern_size)
         if pattern_type is None:
             QMessageBox.warning(self.view, "Error", "No valid pattern detected.")
             return
@@ -529,7 +587,9 @@ class CalibrationController:
         if current_tab_index == 0:  # Pattern Resolution Tab
             # Use diagonal distance
             try:
-                real_length = self.view.diagonal_distance_value.value()  # Get value from QDoubleSpinBox
+                real_length = (
+                    self.view.diagonal_distance_value.value()
+                )  # Get value from QDoubleSpinBox
                 if not hasattr(self, "diagonal_distance"):
                     QMessageBox.warning(
                         self.view, "Error", "Diagonal distance not calculated yet."
@@ -647,8 +707,7 @@ class CalibrationController:
             calibration_data (dict): A dictionary containing calibration data with keys:
                 - "camera_matrix": The intrinsic camera matrix.
                 - "dist_coeffs": The distortion coefficients.
-                - "rvec" (optional): The rotation vector for 3D transformations.
-                - "tvec" (optional): The translation vector for 3D transformations.
+                - "affine_matrix" (optional): A 2D affine transformation matrix.
 
         Returns:
             numpy.ndarray: The calibrated frame (image).
@@ -665,7 +724,30 @@ class CalibrationController:
         undistorted_frame = cv2.undistort(
             frame, camera_matrix, dist_coeffs, None, new_camera_matrix
         )
+
+        # Check if affine transformation is available
+        if "affine_matrix" in calibration_data:
+            affine_matrix = np.array(calibration_data["affine_matrix"])
+
+            # Extract rotation angle from affine transformation
+            angle_rad = np.arctan2(affine_matrix[1, 0], affine_matrix[0, 0])
+            angle_deg = np.degrees(angle_rad)  # Convert to degrees
+
+            # Show warning if angle correction is greater than 8 degrees
+            if abs(angle_deg) > 8:
+                QMessageBox.warning(
+                    None,
+                    "Warning",
+                    f"⚠️ High rotation correction detected: {angle_deg:.2f}°.\n"
+                    "Please verify the calibration data.",
+                )
+
+            # Apply the affine transformation
+            return cv2.warpAffine(undistorted_frame, affine_matrix, (w, h))
+
+        # Return undistorted frame if no affine transformation is applied
         return undistorted_frame
+
         # if "rvec" in calibration_data and "tvec" in calibration_data:
         #     rvec = np.array(calibration_data["rvec"], dtype=np.float32).reshape(3, 1)
         #     tvec = np.array(calibration_data["tvec"], dtype=np.float32).reshape(3, 1)
