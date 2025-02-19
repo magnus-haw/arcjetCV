@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install apt dependencies
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libegl1 libdbus-1-3 libxkbcommon-x11-0 \
@@ -37,23 +37,24 @@ jobs:
 
       - name: Install Xvfb for GUI Tests
         run: |
-          sudo apt-get update
           sudo apt-get install -y xvfb
 
-      - name: Install conda dependencies
+      - name: Create and Set Up Conda Environment
         run: |
           conda env create -f env/arcjetCV_env_cpu.yml
           conda init bash
           source ~/.bashrc
           conda activate arcjetCV
-          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main pytest-xvfb
+          conda install -c conda-forge pyside6=6.8.0 qt6-main=6.8.0 pytest pytest-qt pytest-mock pytest-xvfb --yes
           python -m pip install -e .
           python -c "import arcjetCV"
 
-      - name: Test with pytest
+      - name: Set QT Plugin Path
         run: |
-          conda init bash
-          source ~/.bashrc
+          echo "QT_PLUGIN_PATH=$(python -c 'from PySide6.QtCore import QLibraryInfo; print(QLibraryInfo.path(QLibraryInfo.PluginsPath))')" >> $GITHUB_ENV
+
+      - name: Run Tests with Pytest
+        run: |
           conda activate arcjetCV
           export QT_QPA_PLATFORM=offscreen
           xvfb-run -a pytest -s --maxfail=1 --disable-warnings
