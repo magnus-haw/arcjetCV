@@ -43,11 +43,54 @@ class CalibrationView(QWidget):
 
         # Adding Pattern Calibration Buttons
         self.print_button = QPushButton("Print Chessboard")
+
+        grid_size_layout_1 = QHBoxLayout()
+        label_layout_1 = QHBoxLayout()  # Layout for aligning labels on the left
+
+        grid_size_label_1 = QLabel("Pattern Size:")
+
+        # Ensure labels stay on the left
+        label_layout_1.addWidget(grid_size_label_1)
+        label_layout_1.addStretch()  # Push elements to the left
+
+        # Spinboxes for grid size input
+        self.grid_rows_input_1 = QSpinBox()
+        self.grid_cols_input_1 = QSpinBox()
+
+        # Configure QSpinBox properties
+        self.grid_rows_input_1.setMinimum(1)
+        self.grid_rows_input_1.setMaximum(100)
+        self.grid_rows_input_1.setValue(9)
+
+        self.grid_cols_input_1.setMinimum(1)
+        self.grid_cols_input_1.setMaximum(100)
+        self.grid_cols_input_1.setValue(6)
+
+        # Ensure QSpinBox fields expand properly
+        self.grid_rows_input_1.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
+        self.grid_cols_input_1.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
+
+        # Add elements to the grid size layout
+        grid_size_layout_1.addLayout(label_layout_1)
+        grid_size_layout_1.addWidget(
+            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
+        )
+        grid_size_layout_1.addWidget(self.grid_rows_input_1, stretch=1)
+        grid_size_layout_1.addWidget(
+            QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight
+        )
+        grid_size_layout_1.addWidget(self.grid_cols_input_1, stretch=1)
+
         self.load_button = QPushButton("Load Calibration Images")
         self.calibrate_button = QPushButton("Calibrate Camera")
         self.image_label = QLabel("No images loaded")
 
         self.pattern_calibration_layout.addWidget(self.print_button)
+        self.pattern_calibration_layout.addLayout(grid_size_layout_1)
         self.pattern_calibration_layout.addWidget(self.load_button)
         self.pattern_calibration_layout.addWidget(self.calibrate_button)
         self.pattern_calibration_layout.addWidget(self.image_label)
@@ -69,13 +112,12 @@ class CalibrationView(QWidget):
         self.pattern_resolution_tab.setLayout(pattern_resolution_layout)
         self.resolution_tabs.addTab(self.pattern_resolution_tab, "Pattern Resolution")
 
-       
         # 1. Grid Size Input
         grid_size_layout = QHBoxLayout()
         label_layout = QHBoxLayout()  # Layout for aligning labels on the left
 
         grid_size_label_n = QLabel("1.")
-        grid_size_label = QLabel("Grid Size:")
+        grid_size_label = QLabel("Pattern Size:")
 
         # Ensure labels stay on the left
         label_layout.addWidget(grid_size_label_n)
@@ -96,34 +138,46 @@ class CalibrationView(QWidget):
         self.grid_cols_input.setValue(6)
 
         # Ensure QSpinBox fields expand properly
-        self.grid_rows_input.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
-        self.grid_cols_input.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        self.grid_rows_input.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
+        self.grid_cols_input.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
 
         # Add elements to the grid size layout
         grid_size_layout.addLayout(label_layout)
-        grid_size_layout.addWidget(QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight)
+        grid_size_layout.addWidget(
+            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
+        )
         grid_size_layout.addWidget(self.grid_rows_input, stretch=1)
-        grid_size_layout.addWidget(QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight)
+        grid_size_layout.addWidget(
+            QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight
+        )
         grid_size_layout.addWidget(self.grid_cols_input, stretch=1)
 
         pattern_resolution_layout.addLayout(grid_size_layout)
-
 
         # 2. Load Image for Resolution Measurement
         load_image_layout_pattern = QHBoxLayout()
         load_image_layout_pattern.setContentsMargins(0, 0, 0, 0)
         load_image_label_pattern = QLabel("2.")
-        self.load_image_button_pattern = QPushButton("Load Image for Resolution Measurement")
-        self.load_image_button_pattern.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        self.load_image_button_pattern = QPushButton(
+            "Load Image for Resolution Measurement"
+        )
+        self.load_image_button_pattern.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
 
         load_image_layout_pattern.addWidget(load_image_label_pattern)
         load_image_layout_pattern.addWidget(self.load_image_button_pattern, stretch=1)
         pattern_resolution_layout.addLayout(load_image_layout_pattern)
 
-
         # 3. Diagonal Distance Line
         diagonal_distance_layout = QHBoxLayout()
-        diagonal_distance_layout.setContentsMargins(0, 0, 0, 0)  # Remove default margins
+        diagonal_distance_layout.setContentsMargins(
+            0, 0, 0, 0
+        )  # Remove default margins
 
         # Left-aligned labels
         label_layout = QHBoxLayout()
@@ -141,7 +195,9 @@ class CalibrationView(QWidget):
         self.diagonal_distance_value.setMaximum(10000.00)  # Maximum value
         self.diagonal_distance_value.setValue(0.00)  # Default value
         self.diagonal_distance_value.setSuffix(" mm")  # Display unit in mm
-        self.diagonal_distance_value.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)  # Allow expansion
+        self.diagonal_distance_value.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )  # Allow expansion
 
         # Add elements to the layout
         diagonal_distance_layout.addLayout(label_layout)
@@ -149,14 +205,15 @@ class CalibrationView(QWidget):
 
         pattern_resolution_layout.addLayout(diagonal_distance_layout)
 
-
         # 4. Get Resolution Button
         get_resolution_layout = QHBoxLayout()
         get_resolution_label = QLabel("4.")
         self.get_resolution_button = QPushButton("Calculate Resolution")
 
         # Ensure button is not too wide and is properly spaced
-        self.get_resolution_button.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        self.get_resolution_button.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
 
         get_resolution_layout.addWidget(get_resolution_label)
         get_resolution_layout.addWidget(self.get_resolution_button, stretch=1)

@@ -48,53 +48,6 @@ class CalibrationController:
         else:
             self.view.image_label.setText("No images loaded")
 
-    def detect_pattern(self, img, pattern_size):
-        """
-        Detect whether the image contains a chessboard or a circles grid.
-
-        Args:
-            img (numpy.ndarray): The grayscale image to analyze.
-            pattern_size (tuple): Chessboard pattern size (columns, rows).
-            pattern_size (tuple): Circles grid pattern size (columns, rows).
-
-        Returns:
-            tuple: (str, object_points, image_points)
-                str: "chessboard", "circles_grid", or None.
-                object_points: 3D points in real-world space.
-                image_points: 2D points in the image plane.
-        """
-        # Prepare 3D object points for chessboard and circles grid
-        chessboard_obj_points = np.zeros(
-            (pattern_size[0] * pattern_size[1], 3), np.float32
-        )
-        chessboard_obj_points[:, :2] = np.mgrid[
-            0 : pattern_size[0], 0 : pattern_size[1]
-        ].T.reshape(-1, 2)
-
-        circles_obj_points = np.zeros(
-            (pattern_size[0] * pattern_size[1], 3), np.float32
-        )
-        circles_obj_points[:, :2] = np.mgrid[
-            0 : pattern_size[0], 0 : pattern_size[1]
-        ].T.reshape(-1, 2)
-
-        # Try detecting chessboard pattern
-        ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
-            img, pattern_size
-        )
-        if ret_chessboard:
-            return "chessboard", chessboard_obj_points, corners_chessboard
-
-        # Try detecting circles grid pattern
-        ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
-            img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
-        )
-        if ret_circles_grid:
-            return "circles_grid", circles_obj_points, centers_circles_grid
-
-        # No pattern detected
-        return None, None, None
-
     def _generate_object_points(self, pattern_size, pattern_type):
         """
         Generates 3D object points for a given pattern.
@@ -259,6 +212,33 @@ class CalibrationController:
         Returns:
             numpy.ndarray: 2D affine transformation matrix (if successful).
         """
+        print("🔍 Debugging Affine Transformation")
+        print(
+            "obj_points shape:", obj_points.shape if obj_points is not None else "None"
+        )
+        print(
+            "img_points shape:", img_points.shape if img_points is not None else "None"
+        )
+        print(
+            "obj_points dtype:", obj_points.dtype if obj_points is not None else "None"
+        )
+        print(
+            "img_points dtype:", img_points.dtype if img_points is not None else "None"
+        )
+
+        # Ensure correct format
+        obj_points = np.array(obj_points, dtype=np.float32).reshape(-1, 2)
+        img_points = np.array(img_points, dtype=np.float32).reshape(-1, 2)
+
+        # Handle invalid points
+        if np.isnan(obj_points).any() or np.isnan(img_points).any():
+            print("❌ ERROR: obj_points or img_points contain NaN values")
+            return None
+
+        if np.isinf(obj_points).any() or np.isinf(img_points).any():
+            print("❌ ERROR: obj_points or img_points contain infinite values")
+            return None
+
         if len(obj_points) < 3 or len(img_points) < 3:
             print("❌ ERROR: At least 3 points are required for affine transformation.")
             return None
@@ -268,6 +248,7 @@ class CalibrationController:
 
         if affine_matrix is None:
             print("❌ ERROR: Affine transformation failed.")
+
         return affine_matrix
 
     def calibrate_camera(self):
@@ -279,8 +260,8 @@ class CalibrationController:
             return
 
         pattern_size = (
-            self.view.grid_cols_input.value(),
-            self.view.grid_rows_input.value(),
+            self.view.grid_cols_input_1.value(),
+            self.view.grid_rows_input1.value(),
         )
         obj_points = []
         img_points = []
@@ -294,9 +275,7 @@ class CalibrationController:
                 return
 
             # Detect pattern
-            pattern_type, obj_p, img_p = self.detect_pattern(
-                img, pattern_size, pattern_size
-            )
+            pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
             if pattern_type:
                 obj_points.append(obj_p)
                 img_points.append(img_p)
@@ -365,7 +344,7 @@ class CalibrationController:
             QMessageBox.information(
                 self.view,
                 "Success",
-                "3D and 2D Camera calibration successful and saved.",
+                "Camera calibration successful and saved.",
             )
         else:
             self.calibration_data = None
