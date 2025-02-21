@@ -47,7 +47,7 @@ jobs:
           conda activate arcjetCV
           conda install -c conda-forge pyside6=6.8.0 qt6-main=6.8.0 pytest pytest-qt pytest-mock pytest-xvfb --yes
           python -m pip install -e .
-          python -c "import ar                                                      cjetCV"
+          python -c "import arcjetCV"
 
       - name: Set QT Plugin Path
         run: |
