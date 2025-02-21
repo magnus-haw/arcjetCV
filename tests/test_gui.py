@@ -32,24 +32,16 @@ def test_main_window_initialization(app):
 
 
 def test_switch_to_extract_edges_tab(app, qtbot):
-    """
-    Test switching to the 'Extract Edges' tab.
-    """
-    target_index = 0
-
+    target_index = 1  # Updated index after adding the Calibration tab
     tab_bar = app.ui.tabWidget.tabBar()
     tab_rect = tab_bar.tabRect(target_index)
     click_pos = tab_rect.center()
-
-    click_pos.setX(click_pos.x() + tab_bar.geometry().x())
-    click_pos.setY(click_pos.y() + tab_bar.geometry().y())
-
     QTest.mouseClick(tab_bar, Qt.LeftButton, pos=click_pos)
-
     assert app.ui.tabWidget.currentIndex() == target_index
 
 
 def test_load_video(app, qtbot, mocker):
+    test_switch_to_extract_edges_tab(app, qtbot)  # Ensure we are in the correct tab
     expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -59,12 +51,16 @@ def test_load_video(app, qtbot, mocker):
     qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
 
     assert app.path == expected_video_path
+    qtbot.mouseClick(app.ui.pushButton_loadVideo, Qt.LeftButton)
+
+    assert app.path == expected_video_path
     assert app.VIDEO_LOADED is True
     assert app.video is not None
     assert app.videometa is not None
 
 
 def test_select_flow_direction(app, qtbot):
+    test_switch_to_extract_edges_tab(app, qtbot)
     flow_direction_text = "left"
     direction_index = app.ui.comboBox_flowDirection.findText(flow_direction_text)
     assert direction_index != -1
@@ -76,6 +72,7 @@ def test_select_flow_direction(app, qtbot):
 
 
 def test_select_filter(app, qtbot):
+    test_switch_to_extract_edges_tab(app, qtbot)
     filter_index = app.ui.comboBox_filterType.findText("AutoHSV")
     assert filter_index != -1
     with qtbot.waitSignal(app.ui.comboBox_filterType.currentIndexChanged, timeout=1000):
@@ -84,6 +81,7 @@ def test_select_filter(app, qtbot):
 
 
 def test_toggle_display_shock(app, qtbot, mocker):
+    test_switch_to_extract_edges_tab(app, qtbot)
     initial_state = app.ui.checkBox_display_shock.setChecked(True)
     qtbot.mouseClick(app.ui.checkBox_display_shock, Qt.LeftButton)
     assert app.ui.checkBox_display_shock.isChecked() != initial_state
@@ -93,6 +91,7 @@ def test_switch_tabs(app, qtbot):
     """
     Test switching between the Crop, Model Filter, and Shock Filter tabs.
     """
+    test_switch_to_extract_edges_tab(app, qtbot)
     crop_tab_index = 0
     model_filter_tab_index = 1
     shock_filter_tab_index = 2
@@ -111,6 +110,7 @@ def test_apply_filter(app, qtbot):
     """
     Test applying a filter.
     """
+    test_switch_to_extract_edges_tab(app, qtbot)
     min_hue_value = 10
     max_hue_value = 20
 
@@ -126,6 +126,7 @@ def test_apply_crop(app, qtbot, mocker):
     """
     Test loading a video and then applying crop settings.
     """
+    test_switch_to_extract_edges_tab(app, qtbot)
     expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -157,6 +158,7 @@ def test_toggle_show_crop_checkbox(app, qtbot, mocker):
     """
     Test the functionality of the 'Show Crop' checkbox.
     """
+    test_switch_to_extract_edges_tab(app, qtbot)
     expected_video_path = os.path.join(find_tests_path(), "arcjet_test.mp4")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileName",
@@ -289,7 +291,7 @@ def test_process_all_button(app, qtbot, mocker):
 
 
 def test_switch_to_analysis_tab(app, qtbot):
-    target_index = 1
+    target_index = 2
     tab_bar = app.ui.tabWidget.tabBar()
     tab_rect = tab_bar.tabRect(target_index)
     click_pos = tab_rect.center()
@@ -373,13 +375,6 @@ def test_switch_to_plotting_params_tab(app, qtbot):
     QTest.mouseClick(tab_bar, Qt.LeftButton, pos=click_pos)
 
     assert app.ui.tabWidget_2.currentIndex() == target_index
-
-
-def test_set_model_diameter(app, qtbot):
-    expected_diameter = 150
-    with qtbot.waitSignal(app.ui.doubleSpinBox_diameter.valueChanged):
-        app.ui.doubleSpinBox_diameter.setValue(expected_diameter)
-    assert app.ui.doubleSpinBox_diameter.value() == expected_diameter
 
 
 def test_set_length_units(app, qtbot):

@@ -261,7 +261,7 @@ class CalibrationController:
 
         pattern_size = (
             self.view.grid_cols_input_1.value(),
-            self.view.grid_rows_input1.value(),
+            self.view.grid_rows_input_1.value(),
         )
         obj_points = []
         img_points = []
@@ -677,7 +677,7 @@ class CalibrationController:
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save calibration: {e}")
 
-    def apply_calibration(frame, calibration_data):
+    def apply_calibration(self, frame, calibration_data):
         """
         Apply calibration to a single frame using provided calibration data.
 

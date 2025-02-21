@@ -64,7 +64,7 @@ class CalibrationView(QWidget):
 
         self.grid_cols_input_1.setMinimum(1)
         self.grid_cols_input_1.setMaximum(100)
-        self.grid_cols_input_1.setValue(6)
+        self.grid_cols_input_1.setValue(4)
 
         # Ensure QSpinBox fields expand properly
         self.grid_rows_input_1.setSizePolicy(
@@ -135,7 +135,7 @@ class CalibrationView(QWidget):
 
         self.grid_cols_input.setMinimum(1)
         self.grid_cols_input.setMaximum(100)
-        self.grid_cols_input.setValue(6)
+        self.grid_cols_input.setValue(4)
 
         # Ensure QSpinBox fields expand properly
         self.grid_rows_input.setSizePolicy(
