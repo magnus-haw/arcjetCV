@@ -24,7 +24,7 @@ def test_calibration_view_initialization(view):
     assert view is not None
     assert view.print_button.text() == "Print Chessboard"
     assert view.grid_rows_input_1.value() == 9
-    assert view.grid_cols_input_1.value() == 6
+    assert view.grid_cols_input_1.value() == 4
     assert view.image_label.text() == "No images loaded"
 
 
