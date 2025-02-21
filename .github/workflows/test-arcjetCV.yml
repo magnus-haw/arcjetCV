@@ -11,14 +11,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest]  # macos-latest, windows-latest
         python-version: ['3.10']
     env:
       DISPLAY: ':99.0'
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
@@ -26,35 +25,29 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge,defaults
-          auto-update-conda: true
 
-      - name: Install System Dependencies
+      - name: Install apt dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libegl1 libdbus-1-3 libxkbcommon-x11-0 \
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
             libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0 \
-            x11-utils libxcb-cursor0 libopengl0 libegl1-mesa
-          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid \
-          --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+            x11-utils libxcb-cursor0 libopengl0 libegl1
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
 
-      - name: Create Conda Environment
+      - name: Install conda dependencies
         run: |
-          conda env create -f env/arcjetCV_env_cpu.yml || conda env update -f env/arcjetCV_env_cpu.yml --prune
+          conda env create -f env/arcjetCV_env_cpu.yml
           conda init bash
           source ~/.bashrc
-
-      - name: Install Python Dependencies
-        shell: bash -l {0}
-        run: |
           conda activate arcjetCV
-          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main=5.15.6 pytest-xvfb
+          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main=6.8.0 pyside6=6.8.0 pytest-xvfb
           python -m pip install -e .
           python -c "import arcjetCV"
 
-      - name: Test with Pytest
-        shell: bash -l {0}
+      - name: Test with pytest
         run: |
+          conda init bash
+          source ~/.bashrc
           conda activate arcjetCV
           pytest -s
