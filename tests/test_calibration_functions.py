@@ -77,22 +77,25 @@ def auto_dismiss_popup():
     QTimer.singleShot(1000, close_popup)  # Auto-close after 1 second
 
 
-def find_tests_path():
-    """Find the path to the tests directory."""
-    project_root = Path(__file__).resolve().parent
-    while (
-        not (project_root / "setup.py").exists() and project_root.parent != project_root
-    ):
-        project_root = project_root.parent
-    return str(project_root / "tests")
+def find_project_root():
+    """Find the root directory of the project."""
+    current_path = Path(__file__).resolve().parent
+    while current_path != current_path.root:
+        if (current_path / "setup.py").exists() or (
+            current_path / "pyproject.toml"
+        ).exists():
+            return current_path
+        current_path = current_path.parent
+    return Path(__file__).resolve().parent
 
 
 def get_calibration_image():
     """Load a specific calibration pattern image for testing."""
-    image_path = os.path.join(find_tests_path(), "arcjetcv_calibration.jpg")
+    project_root = find_project_root()
+    image_path = project_root / "tests" / "arcjetcv_calibration.jpg"
 
-    assert os.path.exists(image_path), f"Test image not found: {image_path}"
-    img = cv2.imread(image_path)
+    assert image_path.exists(), f"Test image not found: {image_path}"
+    img = cv2.imread(str(image_path))
     assert img is not None, "Failed to load calibration image."
     return img
 
@@ -119,7 +122,9 @@ def test_detect_pattern(calibration_controller, qtbot):
 def test_calibrate_camera(calibration_controller, qtbot):
     """Test the full camera calibration process using the calibration image."""
     controller = calibration_controller
-    controller.image_paths = [os.path.abspath("arcjetcv_calibration.jpg")]
+    project_root = find_project_root()
+    image_path = project_root / "tests" / "arcjetcv_calibration.jpg"
+    controller.image_paths = [str(image_path)]
 
     assert len(controller.image_paths) > 0, "No test images loaded for calibration."
 
@@ -128,9 +133,14 @@ def test_calibrate_camera(calibration_controller, qtbot):
 
     try:
         controller.calibrate_camera()
-        assert controller.calibrated, "Camera calibration failed."
-        assert controller.calibration_data is not None, "Calibration data not stored."
+
+        # Ensure calibration data exists
+        assert controller.calibration_data, "Calibration data not stored."
         assert "camera_matrix" in controller.calibration_data, "Camera matrix missing."
+        assert (
+            "dist_coeffs" in controller.calibration_data
+        ), "Distortion coefficients missing."
+
         print("✅ Camera calibration completed successfully!")
     except Exception as e:
         pytest.fail(f"❌ Calibration raised an exception: {e}")
@@ -185,14 +195,17 @@ def test_calculate_3d_orientation(calibration_controller):
 def test_apply_calibration(calibration_controller):
     """Test applying calibration to the calibration image."""
     controller = calibration_controller
-    controller.image_paths = [os.path.abspath("arcjetcv_calibration.jpg")]
+    project_root = find_project_root()
+    image_path = project_root / "tests" / "arcjetcv_calibration.jpg"
+    controller.image_paths = [str(image_path)]
 
     # Auto-dismiss any popup during calibration
     auto_dismiss_popup()
 
     controller.calibrate_camera()
 
-    assert controller.calibrated, "Camera calibration failed."
+    # Ensure calibration data exists
+    assert controller.calibration_data, "Calibration data not stored."
 
     test_img = get_calibration_image()
     calibrated_img = controller.apply_calibration(test_img, controller.calibration_data)

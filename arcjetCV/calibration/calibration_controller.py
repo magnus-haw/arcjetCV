@@ -16,6 +16,10 @@ class CalibrationController:
         self.view = view
         self.model = CalibrationModel()
 
+        # Initialize calibration attributes
+        self.calibration_data = None
+        self.calibrated = False  # Ensure this is defined to avoid test failures
+
         # Connect signals and slots
         self.view.load_button.clicked.connect(self.load_chessboard_images)
         self.view.calibrate_button.clicked.connect(self.calibrate_camera)
@@ -291,6 +295,7 @@ class CalibrationController:
         )
         if not ret:
             QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
+            self.calibrated = False
             return
 
         # Calculate 3D orientation
@@ -301,10 +306,10 @@ class CalibrationController:
         # Calculate 2D affine transformation
         affine_matrix = self.calculate_2d_affine_matrix(
             obj_points[0][:, :2], img_points[0][:, 0, :]
-        )  # Convert 3D to 2D points
+        )
 
         # Store calibration data
-        calibration_data = {
+        self.calibration_data = {
             "camera_matrix": mtx.tolist(),
             "dist_coeffs": dist.tolist(),
             "rvec": rvecs[0].tolist() if rvecs else None,
@@ -315,40 +320,15 @@ class CalibrationController:
         }
 
         # Save calibration data to file
-        success, save_error = self.save_to_json(calibration_data)
+        success, save_error = self.save_to_json(self.calibration_data)
         if success:
-            self.calibration_data = {
-                "camera_matrix": np.array(
-                    calibration_data["camera_matrix"], dtype=np.float32
-                ),
-                "dist_coeffs": np.array(
-                    calibration_data["dist_coeffs"], dtype=np.float32
-                ),
-                "rvec": (
-                    np.array(calibration_data["rvec"], dtype=np.float32)
-                    if calibration_data["rvec"]
-                    else None
-                ),
-                "tvec": (
-                    np.array(calibration_data["tvec"], dtype=np.float32)
-                    if calibration_data["tvec"]
-                    else None
-                ),
-                "affine_matrix": (
-                    np.array(calibration_data["affine_matrix"], dtype=np.float32)
-                    if calibration_data["affine_matrix"]
-                    else None
-                ),
-            }
-            self.calibrated = True
+            self.calibrated = True  # Ensure this is set after successful calibration
             QMessageBox.information(
-                self.view,
-                "Success",
-                "Camera calibration successful and saved.",
+                self.view, "Success", "Camera calibration successful and saved."
             )
         else:
-            self.calibration_data = None
             self.calibrated = False
+            self.calibration_data = None
             QMessageBox.warning(
                 self.view, "Error", f"Failed to save calibration: {save_error}"
             )

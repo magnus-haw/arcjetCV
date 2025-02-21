@@ -785,19 +785,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 mask = getOutlierMask(metrics)
                 self.XT_MASK = mask
 
-                # Infer px length
+                # Infer pixel length from raw outputs
                 radius_masked = np.ma.masked_where(mask < 0, radius)
-                if hasattr(self, "calibration_data") and self.calibration_data.get(
-                    "pixels_per_mm"
-                ):
-                    pixel_length = 1 / self.calibration_data["pixels_per_mm"]
+                if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
+                    pixel_length = 1 / self.raw_outputs[0]["PIXELS_PER_MM"]
                 else:
                     self.arcjetcv_message_box(
                         "Warning",
-                        "Pixels per mm not available in calibration data. Defaulting pixel length to 1.",
+                        "Pixels per mm not available in raw outputs. Defaulting pixel length to 1.",
                     )
                     pixel_length = 1  # Default value if calibration data is missing
                 self.pixel_length = pixel_length
+
 
                 # Plot XT series
                 ym95 = np.ma.masked_where(mask < 0, m95) * pixel_length
