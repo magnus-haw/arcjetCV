@@ -8,53 +8,42 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest]  # macos-latest, windows-latest,
         python-version: ['3.10']
     env:
       DISPLAY: ':99.0'
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           lfs: true
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install System Dependencies
+      - name: Install apt dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libegl1 libdbus-1-3 libxkbcommon-x11-0 \
             libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
             libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0 \
-            x11-utils libxcb-cursor0 libopengl0 libegl1-mesa libgl1-mesa-glx \
-            libxrender1 libxtst6 libxi6 || sudo apt-get install -y libegl-mesa0
-
-      - name: Install Xvfb for GUI Tests
-        run: |
-          sudo apt-get install -y xvfb
-
-      - name: Create and Set Up Conda Environment
+            x11-utils libxcb-cursor0 libopengl0 libegl1-mesa
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+      - name: Install conda dependencies
         run: |
           conda env create -f env/arcjetCV_env_cpu.yml
           conda init bash
           source ~/.bashrc
           conda activate arcjetCV
-          conda install -c conda-forge pyside6=6.8.0 qt6-main=6.8.0 pytest pytest-qt pytest-mock pytest-xvfb --yes
-          python -m pip install -e .
+          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main pytest-xvfb
+          python -m  pip install -e .
           python -c "import arcjetCV"
-
-      - name: Set QT Plugin Path
+      - name: Test with pytest
         run: |
-          echo "QT_PLUGIN_PATH=$(python -c 'from PySide6.QtCore import QLibraryInfo; print(QLibraryInfo.path(QLibraryInfo.PluginsPath))')" >> $GITHUB_ENV
-
-      - name: Run Tests with Pytest
-        run: |
+          conda init bash
+          source ~/.bashrc
           conda activate arcjetCV
-          export QT_QPA_PLATFORM=offscreen
-          xvfb-run -a pytest -s --maxfail=1 --disable-warnings
+          pytest -s
