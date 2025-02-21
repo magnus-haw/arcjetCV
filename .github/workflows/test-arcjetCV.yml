@@ -38,8 +38,10 @@ jobs:
           conda init bash
           source ~/.bashrc
           conda activate arcjetCV
-          conda install -c conda-forge pytest pytest-qt pytest-mock qt-main pytest-xvfb
+          conda install -c conda-forge pyside6=6.4.2 qt-main=6.4.2 pytest pytest-qt pytest-mock qt-main pytest-xvfb
           python -m  pip install -e .
+          echo "QT_PLUGIN_PATH=$(python -c 'from PySide6.QtCore import QLibraryInfo; print(QLibraryInfo.path(QLibraryInfo.PluginsPath))')" >> $GITHUB_ENV
+          echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
           python -c "import arcjetCV"
       - name: Test with pytest
         run: |
