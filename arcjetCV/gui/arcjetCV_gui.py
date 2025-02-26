@@ -905,7 +905,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         self.FilterTabs.setCurrentIndex(1)
         self.tabWidget_2.setCurrentIndex(0)
         self.comboBox_units.setCurrentIndex(2)
