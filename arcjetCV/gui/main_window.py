@@ -380,7 +380,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 if hasattr(self, "pixels_per_mm"):  # Ensure it's defined
                     self.videometa["PIXELS_PER_MM"] = self.pixels_per_mm
-                    print(f"DEBUG: Stored pixels_per_mm in videometa: {self.videometa['PIXELS_PER_MM']}")  # Debugging
+                    print(
+                        f"DEBUG: Stored pixels_per_mm in videometa: {self.videometa['PIXELS_PER_MM']}"
+                    )  # Debugging
                 else:
                     print("WARNING: pixels_per_mm not set before loading video.")
                 print("Number of Frames: ", self.video.nframes)
@@ -797,7 +799,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     pixel_length = 1  # Default value if calibration data is missing
                 self.pixel_length = pixel_length
 
-
                 # Plot XT series
                 ym95 = np.ma.masked_where(mask < 0, m95) * pixel_length
                 ym50 = np.ma.masked_where(mask < 0, m50) * pixel_length
@@ -904,15 +905,24 @@ class MainWindow(QtWidgets.QMainWindow):
                 # Update data summary with pixel length
                 summary = self.ui.label_data_summary.text()
                 lines = summary.strip().split("\n")
-                if lines[-1][0:5] == "Pixel":
-                    lines[-1] = "Pixel length %s: %.4f" % (
+                px_per_mm = (
+                    1 / pixel_length if pixel_length != 0 else float("inf")
+                )  # Avoid division by zero
+
+                if lines[-1].startswith("Pixel length"):
+                    lines[-1] = "Pixel length %s: %.4f mm/px | %.4f px/mm" % (
                         self.ui.comboBox_units.currentText(),
                         pixel_length,
+                        px_per_mm,
                     )
                 else:
                     lines.append(
-                        "Pixel length %s: %.4f"
-                        % (self.ui.comboBox_units.currentText(), pixel_length)
+                        "Pixel length %s: %.4f mm/px | %.4f px/mm"
+                        % (
+                            self.ui.comboBox_units.currentText(),
+                            pixel_length,
+                            px_per_mm,
+                        )
                     )
                 newsummary = ""
                 for line in lines:
