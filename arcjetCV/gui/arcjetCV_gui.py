@@ -173,6 +173,21 @@ class Ui_MainWindow(object):
         # Add the button to the layout
         self.verticalLayout_6.addWidget(self.pushButton_loadCalibration)
 
+
+        # Add a QLabel below the button to display the loaded file path
+        self.label_calibrationPath = QLabel(self.tab)
+        self.label_calibrationPath.setObjectName("label_calibrationPath")
+        self.label_calibrationPath.setText("Calibration Path: None")  # Default text
+
+        # Set a smaller font and style for better display
+        font = self.label_calibrationPath.font()
+        font.setPointSize(9)
+        self.label_calibrationPath.setFont(font)
+        self.label_calibrationPath.setStyleSheet("color: gray;")  # Optional styling
+
+        # Add the label to the layout
+        self.verticalLayout_6.addWidget(self.label_calibrationPath)
+
         self.verticalSpacer_4 = QSpacerItem(
             20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
         )

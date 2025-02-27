@@ -503,15 +503,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 # ✅ Define self.pixels_per_mm for later use
                 self.pixels_per_mm = pixels_per_mm
 
-                # ✅ Now it's safe to print it
-                print(f"Extracted pixels_per_mm: {self.pixels_per_mm}")
-
-                self.calibrated = True
-                success_message = (
-                    f"Calibration data loaded successfully from {file_path}."
-                )
-                success_message += f"\nPixels per mm: {self.pixels_per_mm:.4f}"
-                self.arcjetcv_message_box("Success", success_message)
+                shortpath = self.shorten_path(file_path, 60)
+                self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
 
             except KeyError as e:
                 self.arcjetcv_message_box(
