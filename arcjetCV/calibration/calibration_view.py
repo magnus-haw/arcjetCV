@@ -280,7 +280,7 @@ class CalibrationView(QWidget):
 
         # Display PPCM Result
         # Inside image_resolution_layout
-        self.ppcm_label = QLabel("Pixels per mm: N/A")
+        self.ppcm_label = QLabel("Calibration Scale: N/A")
         self.image_resolution_layout.addWidget(self.ppcm_label)
         self.ruler_resolution_tab.setLayout(ruler_resolution_layout)
 

@@ -428,7 +428,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
                 self.ui.spinBox_LastGoodFrame.valueChanged.connect(self.plot_start_stop)
                 if self.processor is None:
-                    self.processor = ArcjetProcessor(self.videometa)
+                    self.processor = ArcjetProcessor(
+                        self.videometa, progress_bar=self.ui.progressBar
+                    )
                 else:  # avoid reimporting CNN model each time
                     self.processor.update_video_meta(self.videometa)
 

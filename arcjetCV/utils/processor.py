@@ -9,10 +9,56 @@ from arcjetCV.segmentation.contour.contour import (
     contoursAutoHSV,
     getPoints,
 )
+from PySide6.QtCore import QMetaObject, Qt, QTimer, QThread, Signal, QObject
 from arcjetCV.segmentation.contour.cnn import CNN
 from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number
 from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
+
+
+class ProcessorWorker(QObject):
+    progress_updated = Signal(int)  # ✅ Signal to update progress bar
+    finished = Signal()  # ✅ Signal when processing is done
+
+    def __init__(
+        self,
+        processor,
+        video,
+        options,
+        first_frame,
+        last_frame,
+        frame_stride,
+        output_prefix,
+        write_json,
+        write_video,
+        display_shock,
+    ):
+        super().__init__()
+        self.processor = processor
+        self.video = video
+        self.options = options
+        self.first_frame = first_frame
+        self.last_frame = last_frame
+        self.frame_stride = frame_stride
+        self.output_prefix = output_prefix
+        self.write_json = write_json
+        self.write_video = write_video
+        self.display_shock = display_shock
+
+    def run(self):
+        """Run process_all in a separate thread."""
+        self.processor.process_all(
+            self.video,
+            self.options,
+            self.first_frame,
+            self.last_frame,
+            self.frame_stride,
+            self.output_prefix,
+            self.write_json,
+            self.write_video,
+            self.display_shock,
+        )
+        self.finished.emit()  # ✅ Notify main thread when done
 
 
 class ArcjetProcessor:
@@ -23,7 +69,7 @@ class ArcjetProcessor:
     hold processed arrays, and output processed data to file.
     """
 
-    def __init__(self, videometa):
+    def __init__(self, videometa, progress_bar=None):
         """
         Initializes the ArcjetProcessor object.
 
@@ -37,6 +83,7 @@ class ArcjetProcessor:
         self.pixels_per_mm = videometa.get(
             "PIXELS_PER_MM", 1.0
         )  # ✅ Default to 1.0 if missing
+        self.progress_bar = progress_bar
 
     def update_video_meta(self, videometa):
         """
@@ -411,14 +458,41 @@ class ArcjetProcessor:
                 if write_video:
                     frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                     video.writer.write(frame)
-
-                # Print processing progress
-                sys.stdout.write(
-                    f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
-                    + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
+                    # ✅ Calculate progress
+                progress_percentage = int(
+                    min(
+                        (
+                            (((frame_index - first_frame) / frame_stride) + 1)
+                            / np.ceil((last_frame - first_frame + 1) / frame_stride)
+                        )
+                        * 100,
+                        100,
+                    )
                 )
+
+                # ✅ Update Progress Bar if it exists
+                if self.progress_bar:
+                    QTimer.singleShot(
+                        0, lambda: self.progress_bar.setValue(progress_percentage)
+                    )
+
+                # ✅ Print progress in the terminal (for debugging)
+                sys.stdout.write(
+                    f"\rProcessing video using {options['SEGMENT_METHOD']} ... {progress_percentage}%"
+                )
+
+                # # Print processing progress
+                # sys.stdout.write(
+                #     f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
+                #     + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
+                # )
             except Exception as e:
                 print(f"Failed at frame {frame_index} with error:\n" + str(e))
+        # ✅ Ensure progress reaches 100% at the end
+        if self.progress_bar:
+            QMetaObject.invokeMethod(
+                self.progress_bar, "setValue", Qt.QueuedConnection, 100
+            )
 
         if write_json:
             out_json.write()

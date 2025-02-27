@@ -556,7 +556,11 @@ class CalibrationController:
                     return
 
                 self.ppm = self.diagonal_distance / real_length
-                self.view.ppcm_label.setText(f"Pixels per mm: {self.ppm:.2f}")
+                self.mpp = 1 / self.ppm  # mm per pixel
+                # Update label to show both values
+                self.view.ppcm_label.setText(
+                    f"Calibration Scale: {self.ppm:.2f} px/mm | {self.mpp:.4f} mm/px"
+                )
             except ValueError:
                 QMessageBox.warning(
                     self.view, "Error", "Invalid real-world length entered."
@@ -577,7 +581,10 @@ class CalibrationController:
             try:
                 real_length = float(self.view.distance_input.text())
                 self.ppm = pixel_length / real_length
-                self.view.ppcm_label.setText(f"Pixels per mm: {self.ppm:.2f}")
+                self.mpp = 1 / self.ppm  # mm per pixel
+                self.view.ppcm_label.setText(
+                    f"Calibration Scale: {self.ppm:.2f} px/mm | {self.mpp:.4f} mm/px"
+                )
             except ValueError:
                 QMessageBox.warning(
                     self.view, "Error", "Invalid real-world length entered."

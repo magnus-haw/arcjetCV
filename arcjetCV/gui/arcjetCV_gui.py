@@ -56,6 +56,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMenuBar,
+    QProgressBar,
     QPushButton,
     QSizePolicy,
     QSpacerItem,
@@ -596,6 +597,17 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addLayout(self.horizontalLayout)
 
         self.verticalLayout_6.addWidget(self.groupBox)
+
+        # Add the progress bar below the "Process All" button (inside groupBox)
+        self.progressBar = QProgressBar(self.centralwidget)  # Attach to central widget
+        self.progressBar.setObjectName("progressBar")
+        self.progressBar.setMinimum(0)
+        self.progressBar.setMaximum(100)
+        self.progressBar.setValue(0)
+        self.progressBar.setTextVisible(True)
+
+        # Add progress bar below groupBox
+        self.verticalLayout_6.addWidget(self.progressBar)
 
         self.horizontalLayout_8.addLayout(self.verticalLayout_6)
 
