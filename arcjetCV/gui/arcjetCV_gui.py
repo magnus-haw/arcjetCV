@@ -173,7 +173,6 @@ class Ui_MainWindow(object):
         # Add the button to the layout
         self.verticalLayout_6.addWidget(self.pushButton_loadCalibration)
 
-
         # Add a QLabel below the button to display the loaded file path
         self.label_calibrationPath = QLabel(self.tab)
         self.label_calibrationPath.setObjectName("label_calibrationPath")

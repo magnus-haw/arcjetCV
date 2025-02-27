@@ -16,51 +16,6 @@ from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
 
 
-class ProcessorWorker(QObject):
-    progress_updated = Signal(int)  # ✅ Signal to update progress bar
-    finished = Signal()  # ✅ Signal when processing is done
-
-    def __init__(
-        self,
-        processor,
-        video,
-        options,
-        first_frame,
-        last_frame,
-        frame_stride,
-        output_prefix,
-        write_json,
-        write_video,
-        display_shock,
-    ):
-        super().__init__()
-        self.processor = processor
-        self.video = video
-        self.options = options
-        self.first_frame = first_frame
-        self.last_frame = last_frame
-        self.frame_stride = frame_stride
-        self.output_prefix = output_prefix
-        self.write_json = write_json
-        self.write_video = write_video
-        self.display_shock = display_shock
-
-    def run(self):
-        """Run process_all in a separate thread."""
-        self.processor.process_all(
-            self.video,
-            self.options,
-            self.first_frame,
-            self.last_frame,
-            self.frame_stride,
-            self.output_prefix,
-            self.write_json,
-            self.write_video,
-            self.display_shock,
-        )
-        self.finished.emit()  # ✅ Notify main thread when done
-
-
 class ArcjetProcessor:
     """
     Video frame processor
