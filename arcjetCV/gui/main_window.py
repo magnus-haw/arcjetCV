@@ -7,14 +7,14 @@ import json
 from numbers import Number
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QThread
 from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv
 from matplotlib.widgets import RectangleSelector
 from arcjetCV.gui.arcjetCV_gui import Ui_MainWindow
 from arcjetCV.utils.video import Video, VideoMeta
-from arcjetCV.utils.processor import ArcjetProcessor
+from arcjetCV.utils.processor import ArcjetProcessor, ProcessorWorker
 from arcjetCV.utils.utils import (
     splitfn,
     getOutlierMask,
@@ -548,42 +548,55 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.Window3.canvas.draw()
 
     def process_all(self):
+        """Starts video processing in a separate QThread."""
         if not self.VIDEO_LOADED:
             return
 
-        # Create OutputListJSON object to store results
+        # Get UI values
         ilow, ihigh = (
             self.ui.spinBox_FirstGoodFrame.value(),
             self.ui.spinBox_LastGoodFrame.value(),
         )
+        frame_stride = self.ui.spinBox_frame_skips.value()
 
+        # Update metadata
         self.videometa["FIRST_GOOD_FRAME"] = ilow
         self.videometa["LAST_GOOD_FRAME"] = ihigh
         self.videometa.write()
 
-        # Process all frames
-        self.processor.process_all(
+        # ✅ Create Worker Thread
+        self.worker = ProcessorWorker(
+            self.processor,
             self.video,
             self.grab_ui_values(),
             ilow,
             ihigh,
-            self.ui.spinBox_frame_skips.value(),
-            output_prefix=self.ui.lineEdit_filename.text(),
+            frame_stride,
+            self.ui.lineEdit_filename.text(),
             write_json=True,
             write_video=self.ui.checkBox_writeVideo.isChecked(),
             display_shock=self.ui.checkBox_display_shock.isChecked(),
         )
 
-        # Create a message box
-        if self.testing:
-            print("The video has been processed.")
-        else:
-            self.msg_box = QMessageBox()
-            self.msg_box.setWindowTitle("Video Processed")
-            self.msg_box.setText("The video has been processed.")
-            self.msg_box.setIcon(QMessageBox.Information)
-            self.msg_box.exec()  # Display the message box
-        return True
+        self.thread = QThread()
+        self.worker.moveToThread(self.thread)
+
+        # ✅ Connect Signals
+        self.worker.progress_updated.connect(
+            self.ui.progressBar.setValue
+        )  # Update progress bar
+        self.worker.finished.connect(self.on_processing_complete)  # Handle completion
+
+        self.thread.started.connect(self.worker.run)  # Start worker when thread starts
+        self.thread.start()  # Start thread
+
+    def on_processing_complete(self):
+        """Handles UI updates when processing is completed."""
+        self.thread.quit()
+        self.thread.wait()
+        self.ui.progressBar.setValue(0)
+
+        self.arcjetcv_message_box("Video Processed", "The video has been processed.")
 
     def grab_ui_values(self):
         inputdict = {"SEGMENT_METHOD": str(self.ui.comboBox_filterType.currentText())}
@@ -655,7 +668,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("! File loading failed !:\n" + str(e))
             else:
                 self.arcjetcv_message_box(
-                    "Warning", "! File loading failed !:\n" + str(e)
+                    "Warning", "File loading failed:\n" + str(e)
                 )
 
         self.plot_outputs()

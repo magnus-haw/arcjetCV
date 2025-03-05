@@ -82,7 +82,8 @@ class CalibrationController:
 
     def detect_pattern(self, img, pattern_size):
         """
-        Detects whether the image contains a chessboard or a circle grid (symmetric or asymmetric).
+        Detects whether the image contains a chessboard or a circle grid (symmetric or asymmetric),
+        with preprocessing improvements for better reliability. Tries both (x,y) and (y,x) pattern sizes.
 
         Args:
             img (numpy.ndarray): Grayscale image.
@@ -94,42 +95,54 @@ class CalibrationController:
                 object_points: 3D real-world points.
                 image_points: 2D image points.
         """
-
-        # Enhance contrast for better detection
+        # Apply histogram equalization to enhance contrast
         img = cv2.equalizeHist(img)
 
-        # 1️⃣ Detect Chessboard Pattern
-        found_chessboard, corners_chessboard = cv2.findChessboardCorners(
-            img, pattern_size
-        )
-        if found_chessboard:
-            return (
-                "chessboard",
-                self._generate_object_points(pattern_size, "chessboard"),
-                corners_chessboard,
-            )
+        # Apply Gaussian blur to reduce noise
+        img = cv2.GaussianBlur(img, (5, 5), 0)
 
-        # 2️⃣ Detect Symmetric Circles Grid
-        found_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
-            img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
-        )
-        if found_circles_grid:
-            return (
-                "circles_grid",
-                self._generate_object_points(pattern_size, "circles_grid"),
-                centers_circles_grid,
+        pattern_sizes = [
+            pattern_size,
+            (pattern_size[1], pattern_size[0]),
+        ]  # Try both (x,y) and (y,x)
+        for size in pattern_sizes:
+            # 1️⃣ Detect Chessboard Pattern
+            found_chessboard, corners_chessboard = cv2.findChessboardCorners(
+                img, size, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE
             )
+            if found_chessboard:
+                print("chessboard")
+                return (
+                    "chessboard",
+                    self._generate_object_points(size, "chessboard"),
+                    corners_chessboard,
+                )
 
-        # 3️⃣ Detect Asymmetric Circles Grid
-        found_asymmetric_grid, centers_asymmetric_grid = cv2.findCirclesGrid(
-            img, pattern_size, flags=cv2.CALIB_CB_ASYMMETRIC_GRID
-        )
-        if found_asymmetric_grid:
-            return (
-                "asymmetric_circles_grid",
-                self._generate_object_points(pattern_size, "asymmetric_circles_grid"),
-                centers_asymmetric_grid,
+            # 2️⃣ Detect Symmetric Circles Grid
+            found_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
+                img, size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
             )
+            if found_circles_grid:
+                print("circles_grid")
+                return (
+                    "circles_grid",
+                    self._generate_object_points(size, "circles_grid"),
+                    centers_circles_grid,
+                )
+
+            # 3️⃣ Detect Asymmetric Circles Grid
+            found_asymmetric_grid, centers_asymmetric_grid = cv2.findCirclesGrid(
+                img,
+                size,
+                flags=cv2.CALIB_CB_ASYMMETRIC_GRID | cv2.CALIB_CB_CLUSTERING,
+            )
+            if found_asymmetric_grid:
+                print("asymmetric_circles_grid")
+                return (
+                    "asymmetric_circles_grid",
+                    self._generate_object_points(size, "asymmetric_circles_grid"),
+                    centers_asymmetric_grid,
+                )
 
         # ❌ No pattern detected
         return None, None, None
