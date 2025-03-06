@@ -46,6 +46,7 @@ class ProcessorWorker(QObject):
         self.write_json = write_json
         self.write_video = write_video
         self.display_shock = display_shock
+        self.processing_done = False
 
     def run(self):
         """Run video processing in a separate thread, consistent with ArcjetProcessor.process_all()."""
@@ -138,6 +139,7 @@ class ArcjetProcessor:
             "PIXELS_PER_MM", 1.0
         )  # ✅ Default to 1.0 if missing
         self.progress_bar = progress_bar
+        self.filename = None
 
     def update_video_meta(self, videometa):
         """

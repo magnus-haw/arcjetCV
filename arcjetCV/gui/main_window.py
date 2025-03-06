@@ -594,6 +594,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Handles UI updates when processing is completed."""
         self.thread.quit()
         self.thread.wait()
+        self.processing_done = True
         self.ui.progressBar.setValue(0)
 
         self.arcjetcv_message_box("Video Processed", "The video has been processed.")
@@ -667,9 +668,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("! File loading failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box(
-                    "Warning", "File loading failed:\n" + str(e)
-                )
+                self.arcjetcv_message_box("Warning", "File loading failed:\n" + str(e))
 
         self.plot_outputs()
 
