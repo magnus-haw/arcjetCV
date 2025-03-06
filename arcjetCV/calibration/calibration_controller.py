@@ -173,9 +173,98 @@ class CalibrationController:
                 self._generate_object_points(pattern_size, "asymmetric_circles_grid"),
                 centers_asymmetric_grid,
             )
-
+        return self.found_asym_pattern_2(img, pattern_size)
         # ❌ No pattern detected
-        return None, None, None
+        # return None, None, None
+
+    def asym_obj_points(self, rows, cols):
+        circles_obj_points = np.zeros((rows * cols, 3), np.float32)
+        circles_obj_points[:, :2] = np.mgrid[0:rows, 0:cols].T.reshape(-1, 2)
+
+        for col in range(1, cols, 2):
+            col_arr = np.arange(0, rows)
+            inds = col * rows + col_arr
+            for j in inds:
+                circles_obj_points[j, 0] += 0.5
+        return circles_obj_points
+
+    def found_asym_pattern_2(self, img, pattern_size):
+        """
+        Custom asymmetric circle grid detection using a blob detector.
+        Used as a fallback when `cv2.findCirclesGrid` fails.
+
+        Args:
+            img (numpy.ndarray): Grayscale image.
+            pattern_size (tuple): The pattern size (columns, rows).
+
+        Returns:
+            tuple: (str, object_points, image_points) or (None, None, None) if detection fails.
+        """
+
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+        # Configure the SimpleBlobDetector for better circle detection
+        blobParams = cv2.SimpleBlobDetector_Params()
+        blobParams.minThreshold = 35
+        blobParams.maxThreshold = 185
+        blobParams.filterByArea = True
+        blobParams.minArea = 3000
+        blobParams.maxArea = 15000
+        blobParams.filterByCircularity = True
+        blobParams.minCircularity = 0.25
+        blobParams.filterByConvexity = True
+        blobParams.minConvexity = 0.75
+        blobParams.filterByInertia = True
+        blobParams.minInertiaRatio = 0.01
+        blobDetector = cv2.SimpleBlobDetector_create(blobParams)
+
+        # Generate expected object points
+        objp = self.asym_obj_points(
+            pattern_size[1], pattern_size[0]
+        )  # Ensure (rows, cols) order
+
+        # Preprocess the image for better blob detection
+        blurred = cv2.GaussianBlur(img, (15, 15), 0)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        clahe_img = clahe.apply(blurred)
+        kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+        sharpened = cv2.filter2D(clahe_img, -1, kernel)
+
+        # Detect keypoints using the blob detector
+        keypoints = blobDetector.detect(sharpened)
+
+        if not keypoints:
+            print("❌ No keypoints found, asymmetric grid detection failed.")
+            return None, None, None
+
+        # Convert keypoints to a usable format for cv2.findCirclesGrid
+        im_with_keypoints = cv2.drawKeypoints(
+            img,
+            keypoints,
+            np.array([]),
+            (0, 255, 0),
+            cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS,
+        )
+        im_with_keypoints_gray = cv2.cvtColor(im_with_keypoints, cv2.COLOR_BGR2GRAY)
+
+        # Try detecting circles again after preprocessing
+        ret, corners = cv2.findCirclesGrid(
+            img,
+            pattern_size,
+            flags=(cv2.CALIB_CB_ASYMMETRIC_GRID + cv2.CALIB_CB_CLUSTERING),
+            blobDetector=blobDetector,
+        )
+
+        if not ret:
+            print("❌ Custom asymmetric detection failed.")
+            return None, None, None
+
+        # Refine detected corners
+        corners2 = cv2.cornerSubPix(
+            im_with_keypoints_gray, corners, (11, 11), (-1, -1), criteria
+        )
+
+        return "asymmetric_circles_grid", objp, corners2
 
     def save_to_json(self, calibration_data, file_path="calibration_results.json"):
         """
