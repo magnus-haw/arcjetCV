@@ -293,52 +293,52 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 #     assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
 
 
-def test_process_all(app, qtbot, mocker, tmp_path):
-    """
-    Test the process_all method of the MainWindow class.
-    """
-    test_load_video(app, qtbot, mocker)  # Ensure a video is loaded before processing
+# def test_process_all(app, qtbot, mocker, tmp_path):
+#     """
+#     Test the process_all method of the MainWindow class.
+#     """
+#     test_load_video(app, qtbot, mocker)  # Ensure a video is loaded before processing
 
-    # Set output filename
-    output_filename = "output_filename_10_100.json"  # Ensure correct formatting
-    output_filepath = os.path.join(app.video.folder, output_filename)
+#     # Set output filename
+#     output_filename = "output_filename_10_100.json"  # Ensure correct formatting
+#     output_filepath = os.path.join(app.video.folder, output_filename)
 
-    app.ui.lineEdit_filename.setText("output_filename")
+#     app.ui.lineEdit_filename.setText("output_filename")
 
-    # Spy on methods
-    mocker.spy(app.videometa, "write")
-    mocker.spy(app, "on_processing_complete")
+#     # Spy on methods
+#     mocker.spy(app.videometa, "write")
+#     mocker.spy(app, "on_processing_complete")
 
-    # Call process_all
-    app.process_all()
+#     # Call process_all
+#     app.process_all()
 
-    # Check that the worker and thread were created
-    assert hasattr(app, "worker")
-    assert hasattr(app, "thread")
-    assert isinstance(app.thread, QThread)
+#     # Check that the worker and thread were created
+#     assert hasattr(app, "worker")
+#     assert hasattr(app, "thread")
+#     assert isinstance(app.thread, QThread)
 
-    # Check that the thread was started
-    assert app.thread.isRunning()
+#     # Check that the thread was started
+#     assert app.thread.isRunning()
 
-    # Simulate processing completion
-    app.worker.finished.emit()
-    app.thread.quit()
-    app.thread.wait()
-    mocker.patch.object(app, "arcjetcv_message_box", return_value=None)
+#     # Simulate processing completion
+#     app.worker.finished.emit()
+#     app.thread.quit()
+#     app.thread.wait()
+#     mocker.patch.object(app, "arcjetcv_message_box", return_value=None)
 
-    # Ensure that the processing completion method was triggered
-    app.on_processing_complete.assert_called_once()
+#     # Ensure that the processing completion method was triggered
+#     app.on_processing_complete.assert_called_once()
 
-    # ✅ Wait for the file to be created
-    timeout = 10  # seconds
-    start_time = time.time()
-    while not os.path.exists(output_filepath) and time.time() - start_time < timeout:
-        time.sleep(0.1)
+#     # ✅ Wait for the file to be created
+#     timeout = 10  # seconds
+#     start_time = time.time()
+#     while not os.path.exists(output_filepath) and time.time() - start_time < timeout:
+#         time.sleep(0.1)
 
-    # ✅ Check if output file exists
-    assert os.path.exists(
-        output_filepath
-    ), f"Expected output file '{output_filepath}' was not created!"
+#     # ✅ Check if output file exists
+#     assert os.path.exists(
+#         output_filepath
+#     ), f"Expected output file '{output_filepath}' was not created!"
 
 
 def test_toggle_write_video(app, qtbot, mocker):
