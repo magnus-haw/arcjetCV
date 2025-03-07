@@ -295,47 +295,53 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 
 # def test_process_all(app, qtbot, mocker, tmp_path):
 #     """
-#     Test the process_all method of the MainWindow class.
+#     Test the process_all method of the MainWindow class, ensuring that video processing
+#     runs correctly and outputs the expected file.
 #     """
-#     test_load_video(app, qtbot, mocker)  # Ensure a video is loaded before processing
+#     # Charger une vidéo pour s'assurer que le test est dans le bon contexte
+#     test_load_video(app, qtbot, mocker)
 
-#     # Set output filename
-#     output_filename = "output_filename_10_100.json"  # Ensure correct formatting
+#     # Définir un nom de fichier de sortie
+#     output_filename = "output_filename_150_400.json"
 #     output_filepath = os.path.join(app.video.folder, output_filename)
 
 #     app.ui.lineEdit_filename.setText("output_filename")
 
-#     # Spy on methods
+#     # Mock de `arcjetcv_message_box` pour éviter un crash lié aux boîtes de dialogue Qt
+#     mocker.patch.object(app, "arcjetcv_message_box", return_value=None)
+
+#     # Espionner les fonctions critiques pour le test
 #     mocker.spy(app.videometa, "write")
 #     mocker.spy(app, "on_processing_complete")
 
-#     # Call process_all
+#     # Lancer le traitement
 #     app.process_all()
 
-#     # Check that the worker and thread were created
-#     assert hasattr(app, "worker")
-#     assert hasattr(app, "thread")
-#     assert isinstance(app.thread, QThread)
+#     # Vérifier que le thread et le worker sont bien créés
+#     assert hasattr(app, "worker"), "Worker object was not initialized!"
+#     assert hasattr(app, "thread"), "Thread object was not initialized!"
+#     assert isinstance(app.thread, QThread), "Thread is not an instance of QThread!"
 
-#     # Check that the thread was started
-#     assert app.thread.isRunning()
+#     # Vérifier que le thread démarre bien
+#     assert app.thread.isRunning(), "Thread was not started!"
 
-#     # Simulate processing completion
-#     app.worker.finished.emit()
+#     # Attendre la fin du traitement proprement
+#     with qtbot.waitSignal(app.worker.finished, timeout=60000):
+#         app.worker.finished.emit()
+
+#     # Forcer l'arrêt du thread proprement
 #     app.thread.quit()
 #     app.thread.wait()
-#     mocker.patch.object(app, "arcjetcv_message_box", return_value=None)
 
-#     # Ensure that the processing completion method was triggered
+#     # Vérifier que `on_processing_complete` a bien été appelé
 #     app.on_processing_complete.assert_called_once()
 
-#     # ✅ Wait for the file to be created
-#     timeout = 10  # seconds
+#     # Vérifier que le fichier de sortie a bien été créé
+#     timeout = 10  # secondes
 #     start_time = time.time()
 #     while not os.path.exists(output_filepath) and time.time() - start_time < timeout:
 #         time.sleep(0.1)
 
-#     # ✅ Check if output file exists
 #     assert os.path.exists(
 #         output_filepath
 #     ), f"Expected output file '{output_filepath}' was not created!"
