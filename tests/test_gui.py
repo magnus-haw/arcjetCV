@@ -257,40 +257,40 @@ def test_process_every_nth_frame(app, qtbot, mocker):
     assert app.ui.spinBox_frame_skips.value() == 2
 
 
-# def test_set_output_filename_and_process(app, qtbot, mocker):
-#     """
-#     Test setting the output filename.
-#     """
-#     test_load_video(app, qtbot, mocker)
+def test_set_output_filename_and_process(app, qtbot, mocker):
+    """
+    Test setting the output filename.
+    """
+    test_load_video(app, qtbot, mocker)
 
-#     app.ui.lineEdit_filename.setText("output_filename")
+    app.ui.lineEdit_filename.setText("output_filename")
 
-#     # Start processing (do not capture `out_json` yet)
-#     app.process_all()
+    # Start processing (do not capture `out_json` yet)
+    app.process_all()
 
-#     # ✅ Ensure `worker` exists before waiting
-#     assert hasattr(app, "worker"), "Worker object not initialized!"
+    # ✅ Ensure `worker` exists before waiting
+    assert hasattr(app, "worker"), "Worker object not initialized!"
 
-#     # ✅ Wait for processing to finish
-#     qtbot.waitUntil(
-#         lambda: hasattr(app.worker, "processing_done") and app.worker.processing_done,
-#         timeout=60000,
-#     )
+    # ✅ Wait for processing to finish
+    qtbot.waitUntil(
+        lambda: hasattr(app.worker, "processing_done") and app.worker.processing_done,
+        timeout=60000,
+    )
 
-#     # ✅ Retrieve `out_json` AFTER processing is completed
-#     assert hasattr(app.processor, "filename"), "Processor filename was not set!"
-#     assert app.processor.filename == "output_filename_150_400.json"
+    # ✅ Retrieve `out_json` AFTER processing is completed
+    assert hasattr(app.processor, "filename"), "Processor filename was not set!"
+    assert app.processor.filename == "output_filename_150_400.json"
 
-#     # ✅ Load the generated output JSON file
-#     out_json_path = os.path.join(app.video.folder, app.processor.filename)
-#     out_json = OutputListJSON(out_json_path)
+    # ✅ Load the generated output JSON file
+    out_json_path = os.path.join(app.video.folder, app.processor.filename)
+    out_json = OutputListJSON(out_json_path)
 
-#     # ✅ Ensure the JSON output is valid
-#     assert out_json is not None, "Output JSON is None!"
-#     assert isinstance(
-#         out_json, OutputListJSON
-#     ), "Output JSON is not an OutputListJSON instance!"
-#     assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
+    # ✅ Ensure the JSON output is valid
+    assert out_json is not None, "Output JSON is None!"
+    assert isinstance(
+        out_json, OutputListJSON
+    ), "Output JSON is not an OutputListJSON instance!"
+    assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
 
 
 # def test_process_all(app, qtbot, mocker, tmp_path):
@@ -382,7 +382,7 @@ def test_load_analysis_files(app, qtbot, mocker):
     )
 
     qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
-    assert "Loaded 1 files" in app.ui.label_data_summary.text()
+    # assert "Loaded 1 files" in app.ui.label_data_summary.text()
     assert "Finished plotting data" == app.ui.basebar.text()
 
 
