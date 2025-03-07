@@ -231,8 +231,8 @@ class CalibrationView(QWidget):
         load_image_label = QLabel("1.")
         self.load_image_button = QPushButton("Load Image for Resolution Measurement")
         self.load_image_button.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Preferred
-        )  # Expand button
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
         load_image_layout.addWidget(load_image_label)
         load_image_layout.addWidget(self.load_image_button, stretch=1)
         ruler_resolution_layout.addLayout(load_image_layout)
@@ -243,7 +243,7 @@ class CalibrationView(QWidget):
         draw_line_label = QLabel("2.")
         self.instruction_label = QLabel("Draw a line of a known distance on the image")
         self.instruction_label.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Preferred
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
         )
         draw_line_layout.addWidget(draw_line_label)
         draw_line_layout.addWidget(self.instruction_label, stretch=1)
@@ -258,7 +258,9 @@ class CalibrationView(QWidget):
         real_world_length_label = QLabel("Real-World Length:")
         self.distance_input = QLineEdit()
         self.distance_input.setPlaceholderText("Enter real-world length in mm")
-        self.distance_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.distance_input.setSizePolicy(
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        )
         real_world_length_layout.addWidget(real_world_length_label_n)
         real_world_length_layout.addWidget(real_world_length_label)
         real_world_length_layout.addWidget(self.distance_input, stretch=1)
@@ -272,7 +274,7 @@ class CalibrationView(QWidget):
         calculate_resolution_label_n = QLabel("4.")
         self.calculate_button = QPushButton("Calculate Resolution")
         self.calculate_button.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Preferred
+            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
         )
         calculate_resolution_layout.addWidget(calculate_resolution_label_n)
         calculate_resolution_layout.addWidget(self.calculate_button)
