@@ -259,38 +259,75 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 
 # def test_set_output_filename_and_process(app, qtbot, mocker):
 #     """
-#     Test setting the output filename.
+#     Test setting the output filename and ensure proper thread cleanup.
 #     """
 #     test_load_video(app, qtbot, mocker)
 
 #     app.ui.lineEdit_filename.setText("output_filename")
 
-#     # Start processing (do not capture `out_json` yet)
+#     # Mock UI message box to avoid popups
+#     mocker.patch.object(app, "arcjetcv_message_box", return_value=None)
+
+#     # Start processing
 #     app.process_all()
 
-#     # ✅ Ensure `worker` exists before waiting
-#     assert hasattr(app, "worker"), "Worker object not initialized!"
+#     # Wait until the processor filename is set
+#     qtbot.waitUntil(lambda: app.processor.filename is not None, timeout=5000)
 
-#     # ✅ Wait for processing to finish
-#     qtbot.waitUntil(
-#         lambda: hasattr(app.worker, "processing_done") and app.worker.processing_done,
-#         timeout=60000,
-#     )
-
-#     # ✅ Retrieve `out_json` AFTER processing is completed
-#     assert hasattr(app.processor, "filename"), "Processor filename was not set!"
+#     # Ensure the processor filename was set correctly
 #     assert app.processor.filename == "output_filename_150_400.json"
 
-#     # ✅ Load the generated output JSON file
-#     out_json_path = os.path.join(app.video.folder, app.processor.filename)
-#     out_json = OutputListJSON(out_json_path)
+#     # Stop the thread after testing
+#     if hasattr(app, "thread") and app.thread.isRunning():
+#         app.thread.quit()
+#         app.thread.wait(5000)
+    # # ✅ Ensure `worker` exists before waiting
+    # assert hasattr(app, "worker"), "Worker object not initialized!"
+    # assert hasattr(app, "thread"), "Thread object not initialized!"
+    # assert isinstance(app.thread, QThread), "Thread is not an instance of QThread!"
 
-#     # ✅ Ensure the JSON output is valid
-#     assert out_json is not None, "Output JSON is None!"
-#     assert isinstance(
-#         out_json, OutputListJSON
-#     ), "Output JSON is not an OutputListJSON instance!"
-#     assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
+    # # ✅ Ensure thread has started
+    # assert app.thread.isRunning(), "Thread was not started!"
+
+    # # ✅ Wait for the worker thread to finish processing
+    # with qtbot.waitSignal(app.worker.finished, timeout=60000):
+    #     app.worker.finished.emit()
+
+    # # ✅ Ensure `on_processing_complete` was called
+    # app.on_processing_complete.assert_called_once()
+
+    # # ✅ Retrieve `out_json` AFTER processing is completed
+    # assert hasattr(app.processor, "filename"), "Processor filename was not set!"
+    # assert app.processor.filename == "output_filename_150_400.json"
+
+    # # ✅ Ensure the file was actually created
+    # out_json_path = os.path.join(app.video.folder, app.processor.filename)
+    # timeout = 10  # seconds
+    # start_time = time.time()
+    # while not os.path.exists(out_json_path) and time.time() - start_time < timeout:
+    #     time.sleep(0.1)
+
+    # assert os.path.exists(
+    #     out_json_path
+    # ), f"Expected output file '{out_json_path}' was not created!"
+
+    # # ✅ Load the generated output JSON file
+    # out_json = OutputListJSON(out_json_path)
+
+    # # ✅ Ensure the JSON output is valid
+    # assert out_json is not None, "Output JSON is None!"
+    # assert isinstance(
+    #     out_json, OutputListJSON
+    # ), "Output JSON is not an OutputListJSON instance!"
+    # assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
+
+    # # ✅ **Forcefully stop the thread after testing**
+    # if hasattr(app, "thread") and app.thread.isRunning():
+    #     app.thread.quit()  # Gracefully request the thread to stop
+    #     app.thread.wait(5000)  # Wait for up to 5 seconds to ensure it stops
+
+    # # ✅ Ensure the thread is no longer running
+    # assert not app.thread.isRunning(), "Thread did not stop properly after test!"
 
 
 # def test_process_all(app, qtbot, mocker, tmp_path):
