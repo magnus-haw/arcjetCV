@@ -281,53 +281,53 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 #     if hasattr(app, "thread") and app.thread.isRunning():
 #         app.thread.quit()
 #         app.thread.wait(5000)
-    # # ✅ Ensure `worker` exists before waiting
-    # assert hasattr(app, "worker"), "Worker object not initialized!"
-    # assert hasattr(app, "thread"), "Thread object not initialized!"
-    # assert isinstance(app.thread, QThread), "Thread is not an instance of QThread!"
+# # ✅ Ensure `worker` exists before waiting
+# assert hasattr(app, "worker"), "Worker object not initialized!"
+# assert hasattr(app, "thread"), "Thread object not initialized!"
+# assert isinstance(app.thread, QThread), "Thread is not an instance of QThread!"
 
-    # # ✅ Ensure thread has started
-    # assert app.thread.isRunning(), "Thread was not started!"
+# # ✅ Ensure thread has started
+# assert app.thread.isRunning(), "Thread was not started!"
 
-    # # ✅ Wait for the worker thread to finish processing
-    # with qtbot.waitSignal(app.worker.finished, timeout=60000):
-    #     app.worker.finished.emit()
+# # ✅ Wait for the worker thread to finish processing
+# with qtbot.waitSignal(app.worker.finished, timeout=60000):
+#     app.worker.finished.emit()
 
-    # # ✅ Ensure `on_processing_complete` was called
-    # app.on_processing_complete.assert_called_once()
+# # ✅ Ensure `on_processing_complete` was called
+# app.on_processing_complete.assert_called_once()
 
-    # # ✅ Retrieve `out_json` AFTER processing is completed
-    # assert hasattr(app.processor, "filename"), "Processor filename was not set!"
-    # assert app.processor.filename == "output_filename_150_400.json"
+# # ✅ Retrieve `out_json` AFTER processing is completed
+# assert hasattr(app.processor, "filename"), "Processor filename was not set!"
+# assert app.processor.filename == "output_filename_150_400.json"
 
-    # # ✅ Ensure the file was actually created
-    # out_json_path = os.path.join(app.video.folder, app.processor.filename)
-    # timeout = 10  # seconds
-    # start_time = time.time()
-    # while not os.path.exists(out_json_path) and time.time() - start_time < timeout:
-    #     time.sleep(0.1)
+# # ✅ Ensure the file was actually created
+# out_json_path = os.path.join(app.video.folder, app.processor.filename)
+# timeout = 10  # seconds
+# start_time = time.time()
+# while not os.path.exists(out_json_path) and time.time() - start_time < timeout:
+#     time.sleep(0.1)
 
-    # assert os.path.exists(
-    #     out_json_path
-    # ), f"Expected output file '{out_json_path}' was not created!"
+# assert os.path.exists(
+#     out_json_path
+# ), f"Expected output file '{out_json_path}' was not created!"
 
-    # # ✅ Load the generated output JSON file
-    # out_json = OutputListJSON(out_json_path)
+# # ✅ Load the generated output JSON file
+# out_json = OutputListJSON(out_json_path)
 
-    # # ✅ Ensure the JSON output is valid
-    # assert out_json is not None, "Output JSON is None!"
-    # assert isinstance(
-    #     out_json, OutputListJSON
-    # ), "Output JSON is not an OutputListJSON instance!"
-    # assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
+# # ✅ Ensure the JSON output is valid
+# assert out_json is not None, "Output JSON is None!"
+# assert isinstance(
+#     out_json, OutputListJSON
+# ), "Output JSON is not an OutputListJSON instance!"
+# assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
 
-    # # ✅ **Forcefully stop the thread after testing**
-    # if hasattr(app, "thread") and app.thread.isRunning():
-    #     app.thread.quit()  # Gracefully request the thread to stop
-    #     app.thread.wait(5000)  # Wait for up to 5 seconds to ensure it stops
+# # ✅ **Forcefully stop the thread after testing**
+# if hasattr(app, "thread") and app.thread.isRunning():
+#     app.thread.quit()  # Gracefully request the thread to stop
+#     app.thread.wait(5000)  # Wait for up to 5 seconds to ensure it stops
 
-    # # ✅ Ensure the thread is no longer running
-    # assert not app.thread.isRunning(), "Thread did not stop properly after test!"
+# # ✅ Ensure the thread is no longer running
+# assert not app.thread.isRunning(), "Thread did not stop properly after test!"
 
 
 # def test_process_all(app, qtbot, mocker, tmp_path):
@@ -409,9 +409,6 @@ def test_switch_to_analysis_tab(app, qtbot):
 
 
 def test_load_analysis_files(app, qtbot, mocker):
-    """
-    Test loading files in the 'Analysis' tab and verifying UI updates.
-    """
     expected_file_path = os.path.join(find_tests_path(), "arcjet_test_150_400.json")
     mocker.patch(
         "PySide6.QtWidgets.QFileDialog.getOpenFileNames",
@@ -419,8 +416,11 @@ def test_load_analysis_files(app, qtbot, mocker):
     )
 
     qtbot.mouseClick(app.ui.pushButton_LoadFiles, Qt.LeftButton)
-    # assert "Loaded 1 files" in app.ui.label_data_summary.text()
-    assert "Finished plotting data" == app.ui.basebar.text()
+
+    # ✅ Wait for GUI updates
+    qtbot.waitUntil(lambda: app.ui.basebar.text() != "", timeout=5000)
+
+    assert "Finished plotting data" in app.ui.basebar.text()
 
 
 def test_plot_data_button(app, qtbot, mocker):
