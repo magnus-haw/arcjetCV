@@ -21,12 +21,20 @@ def find_tests_path():
 
 @pytest.fixture
 def app(qtbot):
+    """Create the main application window and ensure proper cleanup."""
     test_app = QApplication.instance() if QApplication.instance() else QApplication([])
     window = MainWindow()
     window.testing = True
     qtbot.addWidget(window)
     window.hide()
-    return window
+
+    yield window  # Let the test use the app
+
+    # ✅ Ensure worker thread is stopped after test
+    if hasattr(window, "thread") and isinstance(window.thread, QThread):
+        if window.thread.isRunning():
+            window.thread.quit()
+            window.thread.wait(5000)  # Wait for up to 5 seconds to clean up
 
 
 def test_main_window_initialization(app):
