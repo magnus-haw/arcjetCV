@@ -16,10 +16,6 @@ class CalibrationController:
         self.view = view
         self.model = CalibrationModel()
 
-        # Initialize calibration attributes
-        self.calibration_data = None
-        self.calibrated = False  # Ensure this is defined to avoid test failures
-
         # Connect signals and slots
         self.view.load_button.clicked.connect(self.load_chessboard_images)
         self.view.calibrate_button.clicked.connect(self.calibrate_camera)
@@ -51,6 +47,53 @@ class CalibrationController:
             self.view.image_label.setText(f"{len(file_paths)} images loaded")
         else:
             self.view.image_label.setText("No images loaded")
+
+    def detect_pattern(self, img, pattern_size):
+        """
+        Detect whether the image contains a chessboard or a circles grid.
+
+        Args:
+            img (numpy.ndarray): The grayscale image to analyze.
+            pattern_size (tuple): Chessboard pattern size (columns, rows).
+            pattern_size (tuple): Circles grid pattern size (columns, rows).
+
+        Returns:
+            tuple: (str, object_points, image_points)
+                str: "chessboard", "circles_grid", or None.
+                object_points: 3D points in real-world space.
+                image_points: 2D points in the image plane.
+        """
+        # Prepare 3D object points for chessboard and circles grid
+        chessboard_obj_points = np.zeros(
+            (pattern_size[0] * pattern_size[1], 3), np.float32
+        )
+        chessboard_obj_points[:, :2] = np.mgrid[
+            0 : pattern_size[0], 0 : pattern_size[1]
+        ].T.reshape(-1, 2)
+
+        circles_obj_points = np.zeros(
+            (pattern_size[0] * pattern_size[1], 3), np.float32
+        )
+        circles_obj_points[:, :2] = np.mgrid[
+            0 : pattern_size[0], 0 : pattern_size[1]
+        ].T.reshape(-1, 2)
+
+        # Try detecting chessboard pattern
+        ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
+            img, pattern_size
+        )
+        if ret_chessboard:
+            return "chessboard", chessboard_obj_points, corners_chessboard
+
+        # Try detecting circles grid pattern
+        ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
+            img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
+        )
+        if ret_circles_grid:
+            return "circles_grid", circles_obj_points, centers_circles_grid
+
+        # No pattern detected
+        return None, None, None
 
     def _generate_object_points(self, pattern_size, pattern_type):
         """
@@ -305,33 +348,6 @@ class CalibrationController:
         Returns:
             numpy.ndarray: 2D affine transformation matrix (if successful).
         """
-        print("🔍 Debugging Affine Transformation")
-        print(
-            "obj_points shape:", obj_points.shape if obj_points is not None else "None"
-        )
-        print(
-            "img_points shape:", img_points.shape if img_points is not None else "None"
-        )
-        print(
-            "obj_points dtype:", obj_points.dtype if obj_points is not None else "None"
-        )
-        print(
-            "img_points dtype:", img_points.dtype if img_points is not None else "None"
-        )
-
-        # Ensure correct format
-        obj_points = np.array(obj_points, dtype=np.float32).reshape(-1, 2)
-        img_points = np.array(img_points, dtype=np.float32).reshape(-1, 2)
-
-        # Handle invalid points
-        if np.isnan(obj_points).any() or np.isnan(img_points).any():
-            print("❌ ERROR: obj_points or img_points contain NaN values")
-            return None
-
-        if np.isinf(obj_points).any() or np.isinf(img_points).any():
-            print("❌ ERROR: obj_points or img_points contain infinite values")
-            return None
-
         if len(obj_points) < 3 or len(img_points) < 3:
             print("❌ ERROR: At least 3 points are required for affine transformation.")
             return None
@@ -341,7 +357,6 @@ class CalibrationController:
 
         if affine_matrix is None:
             print("❌ ERROR: Affine transformation failed.")
-
         return affine_matrix
 
     def calibrate_camera(self):
@@ -353,8 +368,8 @@ class CalibrationController:
             return
 
         pattern_size = (
-            self.view.grid_cols_input_1.value(),
-            self.view.grid_rows_input_1.value(),
+            self.view.grid_cols_input.value(),
+            self.view.grid_rows_input.value(),
         )
         obj_points = []
         img_points = []
@@ -368,7 +383,9 @@ class CalibrationController:
                 return
 
             # Detect pattern
-            pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
+            pattern_type, obj_p, img_p = self.detect_pattern(
+                img, pattern_size, pattern_size
+            )
             if pattern_type:
                 obj_points.append(obj_p)
                 img_points.append(img_p)
@@ -384,7 +401,6 @@ class CalibrationController:
         )
         if not ret:
             QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
-            self.calibrated = False
             return
 
         # Calculate 3D orientation
@@ -395,10 +411,10 @@ class CalibrationController:
         # Calculate 2D affine transformation
         affine_matrix = self.calculate_2d_affine_matrix(
             obj_points[0][:, :2], img_points[0][:, 0, :]
-        )
+        )  # Convert 3D to 2D points
 
         # Store calibration data
-        self.calibration_data = {
+        calibration_data = {
             "camera_matrix": mtx.tolist(),
             "dist_coeffs": dist.tolist(),
             "rvec": rvecs[0].tolist() if rvecs else None,
@@ -409,15 +425,40 @@ class CalibrationController:
         }
 
         # Save calibration data to file
-        success, save_error = self.save_to_json(self.calibration_data)
+        success, save_error = self.save_to_json(calibration_data)
         if success:
-            self.calibrated = True  # Ensure this is set after successful calibration
+            self.calibration_data = {
+                "camera_matrix": np.array(
+                    calibration_data["camera_matrix"], dtype=np.float32
+                ),
+                "dist_coeffs": np.array(
+                    calibration_data["dist_coeffs"], dtype=np.float32
+                ),
+                "rvec": (
+                    np.array(calibration_data["rvec"], dtype=np.float32)
+                    if calibration_data["rvec"]
+                    else None
+                ),
+                "tvec": (
+                    np.array(calibration_data["tvec"], dtype=np.float32)
+                    if calibration_data["tvec"]
+                    else None
+                ),
+                "affine_matrix": (
+                    np.array(calibration_data["affine_matrix"], dtype=np.float32)
+                    if calibration_data["affine_matrix"]
+                    else None
+                ),
+            }
+            self.calibrated = True
             QMessageBox.information(
-                self.view, "Success", "Camera calibration successful and saved."
+                self.view,
+                "Success",
+                "3D and 2D Camera calibration successful and saved.",
             )
         else:
-            self.calibrated = False
             self.calibration_data = None
+            self.calibrated = False
             QMessageBox.warning(
                 self.view, "Error", f"Failed to save calibration: {save_error}"
             )
@@ -570,8 +611,8 @@ class CalibrationController:
 
         # Define grid sizes
         pattern_size = (
-            self.view.grid_rows_input.value(),
             self.view.grid_cols_input.value(),
+            self.view.grid_rows_input.value(),
         )
 
         # Detect the pattern
@@ -645,11 +686,7 @@ class CalibrationController:
                     return
 
                 self.ppm = self.diagonal_distance / real_length
-                self.mpp = 1 / self.ppm  # mm per pixel
-                # Update label to show both values
-                self.view.ppcm_label.setText(
-                    f"Calibration Scale: {self.ppm:.2f} px/mm | {self.mpp:.4f} mm/px"
-                )
+                self.view.ppcm_label.setText(f"Pixels per mm: {self.ppm:.2f}")
             except ValueError:
                 QMessageBox.warning(
                     self.view, "Error", "Invalid real-world length entered."
@@ -670,10 +707,7 @@ class CalibrationController:
             try:
                 real_length = float(self.view.distance_input.text())
                 self.ppm = pixel_length / real_length
-                self.mpp = 1 / self.ppm  # mm per pixel
-                self.view.ppcm_label.setText(
-                    f"Calibration Scale: {self.ppm:.2f} px/mm | {self.mpp:.4f} mm/px"
-                )
+                self.view.ppcm_label.setText(f"Pixels per mm: {self.ppm:.2f}")
             except ValueError:
                 QMessageBox.warning(
                     self.view, "Error", "Invalid real-world length entered."
@@ -753,7 +787,7 @@ class CalibrationController:
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save calibration: {e}")
 
-    def apply_calibration(self, frame, calibration_data):
+    def apply_calibration(frame, calibration_data):
         """
         Apply calibration to a single frame using provided calibration data.
 
