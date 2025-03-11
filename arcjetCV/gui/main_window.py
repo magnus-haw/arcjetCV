@@ -123,6 +123,28 @@ class MainWindow(QtWidgets.QMainWindow):
         # Show the main window
         self.show()
 
+    def closeEvent(self, event):
+        """Handle window close event by stopping all running threads."""
+        print("Closing application...")
+
+        if hasattr(self, "worker") and self.worker is not None:
+            print("Stopping worker...")
+            self.worker.finished.disconnect()  # Prevent signal errors
+            self.worker.stop()  # Ensure worker stops if it has a `stop` method
+            self.worker.deleteLater()
+            self.worker = None
+
+        if hasattr(self, "thread") and isinstance(self.thread, QThread):
+            if self.thread.isRunning():
+                print("Stopping worker thread...")
+                self.thread.quit()
+                self.thread.wait(5000)  # Wait for up to 5 seconds
+                print("✅ Worker thread stopped successfully")
+
+        self.thread = None  # Clear reference
+        print("✅ Cleanup complete. Closing app.")
+        event.accept()
+
     def show_img(self):
         if self.calibrated == True:
             self.rgb_frame = CalibrationController.apply_calibration(
@@ -564,7 +586,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.videometa["LAST_GOOD_FRAME"] = ihigh
         self.videometa.write()
 
-        # ✅ Create Worker Thread
+        # ✅ Stop existing thread before starting a new one
+        if hasattr(self, "thread") and isinstance(self.thread, QThread):
+            if self.thread.isRunning():
+                print("Stopping existing worker thread...")
+                self.worker.stop()  # Ensure worker can stop (you need to implement this in ProcessorWorker)
+                self.thread.quit()
+                self.thread.wait(5000)  # Wait for up to 5 seconds
+                print("✅ Previous worker thread stopped successfully")
+
+        # ✅ Properly delete old worker
+        if hasattr(self, "worker") and self.worker is not None:
+            self.worker.deleteLater()
+            self.worker = None
+
+        # ✅ Create a new Worker Thread safely
         self.worker = ProcessorWorker(
             self.processor,
             self.video,
@@ -582,6 +618,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker.moveToThread(self.thread)
 
         # ✅ Connect Signals
+        self.thread.started.connect(self.worker.run)
+        self.worker.progress_updated.connect(self.ui.progressBar.setValue)
+        self.worker.finished.connect(self.on_processing_complete)
+
+        # ✅ Ensure proper cleanup
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(
+            lambda: self.thread.wait(5000)
+        )  # Wait for thread to exit
+        self.thread.finished.connect(lambda: print("✅ Worker thread fully terminated"))
+
+        # ✅ Start the new thread
+        self.thread.start()
+
+        # ✅ Connect Signals
         self.worker.progress_updated.connect(
             self.ui.progressBar.setValue
         )  # Update progress bar
@@ -592,8 +643,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_processing_complete(self):
         """Handles UI updates when processing is completed."""
-        self.thread.quit()
-        self.thread.wait()
+        if self.thread and self.thread.isRunning():
+            print("Stopping thread safely...")
+            self.worker.finished.disconnect()  # Prevent signal errors
+            self.worker.deleteLater()  # Mark worker for deletion
+            self.thread.quit()  # Request thread termination
+            self.thread.wait(5000)  # Wait up to 5 seconds for termination
+            print("✅ Worker thread stopped successfully")
+
+        self.thread = None  # Ensure reference is cleared
+        self.worker = None
+
         self.processing_done = True
         self.ui.progressBar.setValue(0)
 

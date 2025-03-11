@@ -30,12 +30,6 @@ def app(qtbot):
 
     yield window  # Let the test use the app
 
-    # ✅ Ensure worker thread is stopped after test
-    if hasattr(window, "thread") and isinstance(window.thread, QThread):
-        if window.thread.isRunning():
-            window.thread.quit()
-            window.thread.wait(5000)  # Wait for up to 5 seconds to clean up
-
 
 def test_main_window_initialization(app):
     assert app.ui.pushButton_loadVideo.text() == "Load Video"
