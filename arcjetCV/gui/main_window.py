@@ -129,7 +129,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if hasattr(self, "worker") and self.worker is not None:
             print("Stopping worker...")
-            self.worker.finished.disconnect()  # Prevent signal errors
+            try:
+                self.worker.finished.disconnect()  # Prevent signal errors
+            except TypeError:
+                pass  # Ignore if already disconnected
+
             self.worker.stop()  # Ensure worker stops if it has a `stop` method
             self.worker.deleteLater()
             self.worker = None
