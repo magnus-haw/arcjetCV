@@ -125,22 +125,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         """Handle window close event by stopping all running threads."""
-        print("Closing application...")
+        print("🔴 Closing application...")
 
         if hasattr(self, "worker") and self.worker is not None:
-            print("Stopping worker...")
+            print("🛑 Stopping worker...")
             try:
                 self.worker.finished.disconnect()  # Prevent signal errors
             except TypeError:
                 pass  # Ignore if already disconnected
 
-            self.worker.stop()  # Ensure worker stops if it has a `stop` method
+            self.worker.stop()  # Ensure worker stops if it has a `stop()` method
             self.worker.deleteLater()
             self.worker = None
 
         if hasattr(self, "thread") and isinstance(self.thread, QThread):
             if self.thread.isRunning():
-                print("Stopping worker thread...")
+                print("🛑 Stopping worker thread...")
                 self.thread.quit()
                 self.thread.wait(5000)  # Wait for up to 5 seconds
                 print("✅ Worker thread stopped successfully")
@@ -593,13 +593,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # ✅ Stop existing thread before starting a new one
         if hasattr(self, "thread") and isinstance(self.thread, QThread):
             if self.thread.isRunning():
-                print("Stopping existing worker thread...")
-                self.worker.stop()  # Ensure worker can stop (you need to implement this in ProcessorWorker)
+                print("⚠️ Stopping existing worker thread...")
+                self.worker.stop()  # Ensure worker has a `stop()` method
                 self.thread.quit()
-                self.thread.wait(5000)  # Wait for up to 5 seconds
+                self.thread.wait(5000)  # Wait for thread to exit
                 print("✅ Previous worker thread stopped successfully")
 
-        # ✅ Properly delete old worker
+        # ✅ Ensure proper cleanup of old worker
         if hasattr(self, "worker") and self.worker is not None:
             self.worker.deleteLater()
             self.worker = None

@@ -115,6 +115,11 @@ class ProcessorWorker(QObject):
         # Signal completion
         self.finished.emit()
 
+    def stop(self):
+        """Stop the worker safely."""
+        print("🛑 Stopping processing thread...")
+        self.stop_flag = True
+
 
 class ArcjetProcessor:
     """

@@ -1,12 +1,10 @@
 import pytest
 from arcjetCV.gui.main_window import MainWindow
-from unittest.mock import patch
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from pathlib import Path
 import os
-import time
 from PySide6.QtCore import QThread
 
 
@@ -274,17 +272,7 @@ def test_process_every_nth_frame(app, qtbot, mocker):
     with qtbot.waitSignal(app.ui.spinBox_frame_skips.valueChanged):
         app.ui.spinBox_frame_skips.setValue(2)
     assert app.ui.spinBox_frame_skips.value() == 2
-    if hasattr(app, "worker") and app.worker:
-        app.worker.stop()  # Add stop method in ProcessorWorker if needed
-        app.worker.deleteLater()
-        app.worker = None
-
-    if hasattr(app, "thread") and isinstance(app.thread, QThread):
-        if app.thread.isRunning():
-            app.thread.quit()
-            app.thread.wait(5000)  # Ensure the thread is properly stopped
-
-    app.thread = None
+   
 
 
 # def test_set_output_filename_and_process(app, qtbot, mocker):
@@ -301,118 +289,27 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 #     # Start processing
 #     app.process_all()
 
-#     # Wait until the processor filename is set
-#     qtbot.waitUntil(lambda: app.processor.filename is not None, timeout=5000)
+#     # ✅ Wait for the processing thread to finish properly
+#     qtbot.waitUntil(lambda: not app.thread.isRunning(), timeout=30000)
 
-#     # Ensure the processor filename was set correctly
+#     # ✅ Ensure filename is set after processing
 #     assert app.processor.filename == "output_filename_150_400.json"
 
-#     # Stop the thread after testing
-#     if hasattr(app, "thread") and app.thread.isRunning():
-#         app.thread.quit()
-#         app.thread.wait(5000)
-# # ✅ Ensure `worker` exists before waiting
-# assert hasattr(app, "worker"), "Worker object not initialized!"
-# assert hasattr(app, "thread"), "Thread object not initialized!"
-# assert isinstance(app.thread, QThread), "Thread is not an instance of QThread!"
+#     # ✅ Clean up threads after test
+#     if hasattr(app, "worker") and app.worker:
+#         try:
+#             app.worker.stop()
+#         except AttributeError:
+#             pass  # Some workers may not have a stop method
+#         app.worker.deleteLater()
+#         app.worker = None
 
-# # ✅ Ensure thread has started
-# assert app.thread.isRunning(), "Thread was not started!"
+#     if hasattr(app, "thread") and isinstance(app.thread, QThread):
+#         if app.thread.isRunning():
+#             app.thread.quit()
+#             app.thread.wait(5000)
 
-# # ✅ Wait for the worker thread to finish processing
-# with qtbot.waitSignal(app.worker.finished, timeout=60000):
-#     app.worker.finished.emit()
-
-# # ✅ Ensure `on_processing_complete` was called
-# app.on_processing_complete.assert_called_once()
-
-# # ✅ Retrieve `out_json` AFTER processing is completed
-# assert hasattr(app.processor, "filename"), "Processor filename was not set!"
-# assert app.processor.filename == "output_filename_150_400.json"
-
-# # ✅ Ensure the file was actually created
-# out_json_path = os.path.join(app.video.folder, app.processor.filename)
-# timeout = 10  # seconds
-# start_time = time.time()
-# while not os.path.exists(out_json_path) and time.time() - start_time < timeout:
-#     time.sleep(0.1)
-
-# assert os.path.exists(
-#     out_json_path
-# ), f"Expected output file '{out_json_path}' was not created!"
-
-# # ✅ Load the generated output JSON file
-# out_json = OutputListJSON(out_json_path)
-
-# # ✅ Ensure the JSON output is valid
-# assert out_json is not None, "Output JSON is None!"
-# assert isinstance(
-#     out_json, OutputListJSON
-# ), "Output JSON is not an OutputListJSON instance!"
-# assert len(out_json.data) > 0, "Output JSON is empty!"  # Ensure data is written
-
-# # ✅ **Forcefully stop the thread after testing**
-# if hasattr(app, "thread") and app.thread.isRunning():
-#     app.thread.quit()  # Gracefully request the thread to stop
-#     app.thread.wait(5000)  # Wait for up to 5 seconds to ensure it stops
-
-# # ✅ Ensure the thread is no longer running
-# assert not app.thread.isRunning(), "Thread did not stop properly after test!"
-
-
-# def test_process_all(app, qtbot, mocker, tmp_path):
-#     """
-#     Test the process_all method of the MainWindow class, ensuring that video processing
-#     runs correctly and outputs the expected file.
-#     """
-#     # Charger une vidéo pour s'assurer que le test est dans le bon contexte
-#     test_load_video(app, qtbot, mocker)
-
-#     # Définir un nom de fichier de sortie
-#     output_filename = "output_filename_150_400.json"
-#     output_filepath = os.path.join(app.video.folder, output_filename)
-
-#     app.ui.lineEdit_filename.setText("output_filename")
-
-#     # Mock de `arcjetcv_message_box` pour éviter un crash lié aux boîtes de dialogue Qt
-#     mocker.patch.object(app, "arcjetcv_message_box", return_value=None)
-
-#     # Espionner les fonctions critiques pour le test
-#     mocker.spy(app.videometa, "write")
-#     mocker.spy(app, "on_processing_complete")
-
-#     # Lancer le traitement
-#     app.process_all()
-
-#     # Vérifier que le thread et le worker sont bien créés
-#     assert hasattr(app, "worker"), "Worker object was not initialized!"
-#     assert hasattr(app, "thread"), "Thread object was not initialized!"
-#     assert isinstance(app.thread, QThread), "Thread is not an instance of QThread!"
-
-#     # Vérifier que le thread démarre bien
-#     assert app.thread.isRunning(), "Thread was not started!"
-
-#     # Attendre la fin du traitement proprement
-#     with qtbot.waitSignal(app.worker.finished, timeout=60000):
-#         app.worker.finished.emit()
-
-#     # Forcer l'arrêt du thread proprement
-#     app.thread.quit()
-#     app.thread.wait()
-
-#     # Vérifier que `on_processing_complete` a bien été appelé
-#     app.on_processing_complete.assert_called_once()
-
-#     # Vérifier que le fichier de sortie a bien été créé
-#     timeout = 10  # secondes
-#     start_time = time.time()
-#     while not os.path.exists(output_filepath) and time.time() - start_time < timeout:
-#         time.sleep(0.1)
-
-#     assert os.path.exists(
-#         output_filepath
-#     ), f"Expected output file '{output_filepath}' was not created!"
-
+#     app.thread = None
 
 def test_toggle_write_video(app, qtbot, mocker):
     """
