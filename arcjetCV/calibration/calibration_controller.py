@@ -173,7 +173,12 @@ class CalibrationController:
                 self._generate_object_points(pattern_size, "asymmetric_circles_grid"),
                 centers_asymmetric_grid,
             )
-        return self.found_asym_pattern_2(img, pattern_size)
+        result = self.found_asym_pattern_2(img, pattern_size, 3000, 15000)
+        if result[0] is not None:
+            return result
+
+        # 4️⃣ Custom asymmetric pattern detection - Second Attempt
+        return self.found_asym_pattern_2(img, pattern_size, 500, 3000)
         # ❌ No pattern detected
         # return None, None, None
 
@@ -188,7 +193,7 @@ class CalibrationController:
                 circles_obj_points[j, 0] += 0.5
         return circles_obj_points
 
-    def found_asym_pattern_2(self, img, pattern_size):
+    def found_asym_pattern_2(self, img, pattern_size, minArea, maxArea):
         """
         Custom asymmetric circle grid detection using a blob detector.
         Used as a fallback when `cv2.findCirclesGrid` fails.
@@ -208,8 +213,9 @@ class CalibrationController:
         blobParams.minThreshold = 35
         blobParams.maxThreshold = 185
         blobParams.filterByArea = True
-        blobParams.minArea = 3000
-        blobParams.maxArea = 15000
+        blobParams.minArea = minArea
+        blobParams.maxArea = maxArea
+
         blobParams.filterByCircularity = True
         blobParams.minCircularity = 0.25
         blobParams.filterByConvexity = True
