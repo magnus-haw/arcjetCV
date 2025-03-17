@@ -4,20 +4,31 @@ No Warranty: THE SUBJECT SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF AN
 Waiver and Indemnity:  RECIPIENT AGREES TO WAIVE ANY AND ALL CLAIMS AGAINST THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT.  IF RECIPIENT'S USE OF THE SUBJECT SOFTWARE RESULTS IN ANY LIABILITIES, DEMANDS, DAMAGES, EXPENSES OR LOSSES ARISING FROM SUCH USE, INCLUDING ANY DAMAGES FROM PRODUCTS BASED ON, OR RESULTING FROM, RECIPIENT'S USE OF THE SUBJECT SOFTWARE, RECIPIENT SHALL INDEMNIFY AND HOLD HARMLESS THE UNITED STATES GOVERNMENT, ITS CONTRACTORS AND SUBCONTRACTORS, AS WELL AS ANY PRIOR RECIPIENT, TO THE EXTENT PERMITTED BY LAW.  RECIPIENT'S SOLE REMEDY FOR ANY SUCH MATTER SHALL BE THE IMMEDIATE, UNILATERAL TERMINATION OF THIS AGREEMENT. 
 """
 
+import sys
+import os
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
-import sys
 from arcjetCV.gui.main_window import MainWindow
 
+# Function to get the correct icon path based on OS
+def get_icon_path():
+    base_path = os.path.dirname(os.path.abspath(__file__))  # Get current script directory
+    icon_filename = "arcjetCV_logo_.ico" if sys.platform.startswith("win") else "arcjetCV_logo_.icns" if sys.platform == "darwin" else "arcjetCV_logo_.png"
+    return os.path.join(base_path, "logo", icon_filename)
 
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()
-    path = "logo/arcjetCV_logo_.png"
-    app.setWindowIcon(QIcon(path))
+
+    # Set application icon
+    icon_path = get_icon_path()
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
+    else:
+        print(f"[WARNING] Icon file not found: {icon_path}")
+
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()

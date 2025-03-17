@@ -54,7 +54,7 @@ setup(
     include_package_data=True,  # Include package data based on the rules below
     package_data={
         "": ["*.txt", "*.md", "*.png", "*.gif"],  # Include these file types
-        "arcjetCV": ["gui/logo/*.png"],  # Include specific logo images
+        "arcjetCV": ["gui/logo/*.png", "gui/logo/*.ico", "gui/logo/*.icns"],  # Include specific logo images
     },
     exclude_package_data={
         "arcjetCV": [
