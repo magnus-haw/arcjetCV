@@ -7,21 +7,36 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 
-# Define a function to check for platform-specific dependencies
 def check_linux_dependencies():
     if sys.platform.startswith("linux"):
-        print(
-            "\n[INFO] Linux detected: Ensure the following system libraries are installed:"
-        )
-        print(
-            "\n[INFO] Run the following command to install the necessary Qt dependencies:"
-        )
-        print(
-            "\n[Ubuntu/Debian] sudo apt-get install libxcb-xinerama0 libxcb1 libx11-xcb1 libxcb-cursor0"
-        )
-        print("[Fedora] sudo dnf install libxcb libX11-xcb libxcb-cursor")
-        print("[Arch] sudo pacman -S libxcb xcb-util xcb-util-cursor\n")
+        print("\n[INFO] Linux detected: Checking required system libraries...")
 
+        # List of required packages
+        required_packages = [
+            "libxcb-xinerama0", "libxcb1", "libx11-xcb1", "libxcb-cursor0",
+            "libxcb-icccm4", "libxcb-keysyms1", "libxcb-render-util0",
+            "libxcb-shape0", "libxcb-xfixes0", "libxcb-randr0",
+            "libxcb-util1", "libxcb-image0", "libxcb-sync1", "libxcb-xinput0"
+        ]
+
+        try:
+            # Check if running on Ubuntu/Debian
+            with open("/etc/os-release") as f:
+                os_info = f.read().lower()
+            if "ubuntu" in os_info or "debian" in os_info:
+                print("\n[INFO] Ubuntu/Debian detected. Installing dependencies via APT...")
+                subprocess.run(["sudo", "apt", "update"], check=True)
+                subprocess.run(["sudo", "apt", "install", "-y"] + required_packages, check=True)
+                print("\n[INFO] System dependencies installed successfully.")
+            else:
+                print("\n[WARNING] Non-Debian system detected. Please install the dependencies manually.")
+                print("\n[INFO] Run one of the following commands based on your distribution:")
+                print("\n[Ubuntu/Debian] sudo apt-get install " + " ".join(required_packages))
+                print("[Fedora] sudo dnf install libxcb libX11-xcb libxcb-cursor")
+                print("[Arch] sudo pacman -S libxcb xcb-util xcb-util-cursor\n")
+        
+        except Exception as e:
+            print(f"\n[ERROR] Could not determine Linux distribution: {e}")
 
 # Run the platform check before proceeding
 check_linux_dependencies()
@@ -29,7 +44,7 @@ check_linux_dependencies()
 # Define the setup configuration
 setup(
     name="arcjetCV",
-    version="0.0.7.dev1",  # Set the version directly here
+    version="0.0.7.dev3",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
