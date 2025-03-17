@@ -12,6 +12,7 @@ dependencies:
   - pytest-qt
   - opencv
   - matplotlib
+  - numpy  
   - pandas
   - pyarrow
   - scikit-learn
