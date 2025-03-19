@@ -60,7 +60,6 @@ sudo pacman -S libxcb
 
 #### Prerequisites:
 - A valid **git** installation.
-- Installation of **git-lfs** [(Git Large File Storage)](https://git-lfs.github.com/) for handling large files.
 - **Miniconda** or **Anaconda** for environment and package management:
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
