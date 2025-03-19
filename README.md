@@ -16,51 +16,77 @@ Package to process arcjet videos and segment the edge of the shock and of the sa
 
 ## Installation
 
-### Prerequisites
+### PyPi Installation (Universal)
 
-Before you start, ensure you have the following tools installed on your system:
+#### Prerequisites:
+- Ensure you have **Python 3.8** or higher installed.
 
-
-1. **Miniconda or Anaconda:** Follow the respective installation guide for [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/) or [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html).
-2. **(macOS only) Install Xcode Command Line Tools:**
-
-    Ensure that you have the Xcode Command Line Tools installed by running:
-
-    ```bash
-    xcode-select --install
-    ```
-    
-### Unix Users (Linux and macOS)
-
-The software can be installed by running:
+To install **arcjetCV** via **pip** from **PyPi**, run:
 
 ```bash
-conda create --name arcjetcv conda-forge::arcjetcv
+pip install arcjetCV
 ```
 
-### Windows Users and Developers
+This will install **arcjetCV** along with its dependencies.
 
-For local development of arcjetCV and for Windows users, these are the recommended installation steps:
+#### Note for macOS Users:
+You might need to install Xcode Command Line Tools:
 
-1. **Install `git`:**
+```bash
+xcode-select --install
+```
 
-   You can download and install it from [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+#### Note for Linux Users:
 
-2. **Install `git lfs` (Git Large File Storage):**
+You may need to install **libxcb-cursor**. Use your package manager to install it:
 
-   You can download and install it from [here](https://git-lfs.github.com/).
+For **Ubuntu/Debian**-based distributions:
+```bash
+sudo apt-get install libxcb-cursor0
+```
 
-3. **Clone the repository and install the package:**
+For **Fedora**:
+```bash
+sudo dnf install libxcb-cursor
+```
+
+For **Arch Linux**:
+```bash
+sudo pacman -S libxcb
+```
+
+### Developer Installation
+
+#### Prerequisites:
+- A valid **git** installation.
+- **Miniconda** or **Anaconda** for environment and package management:
+  - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
+  - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
+
+To install **arcjetCV** for development puropse, follow these steps:
+
+1. Install `git-lfs`:
+
+   Download and install it from [here](https://git-lfs.github.com/).
+
+2. Clone the repository and install the package:
 
 ```bash
 git clone https://github.com/magnus-haw/arcjetCV.git
 cd arcjetCV
 conda env create -f env/arcjetCV_env_[cpu/gpu].yml
-conda activate arcjetCV
-python -m pip install -e . 
+conda activate arcjetcv
+python -m pip install -e .
 ```
 
-The -e flag stands for 'editable' and it means that any change to the local source code will have immediate effect on the arcjetCV python package and GUI.
+The `-e` flag stands for 'editable' and means that any changes to the local source code will immediately affect the **arcjetCV** package and GUI.
+
+#### Note for macOS Users:
+You might need to install Xcode Command Line Tools:
+
+```bash
+xcode-select --install
+```
 
 ## How to Run
 
