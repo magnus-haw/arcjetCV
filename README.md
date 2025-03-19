@@ -56,7 +56,7 @@ For **Arch Linux**:
 sudo pacman -S libxcb
 ```
 
-### Developers Installation
+### Developer Installation
 
 #### Prerequisites:
 - A valid **git** installation.
@@ -64,7 +64,7 @@ sudo pacman -S libxcb
 - **Miniconda** or **Anaconda** for environment and package management:
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
-- For **macOS** users: Make sure the Xcode Command Line Tools are installed:
+- For **macOS** users make sure the Xcode Command Line Tools are installed:
 ```bash
 xcode-select --install
 ```
