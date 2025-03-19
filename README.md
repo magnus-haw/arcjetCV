@@ -64,9 +64,7 @@ sudo pacman -S libxcb
 - **Miniconda** or **Anaconda** for environment and package management:
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
- ##### Note for macOS Users:
-Make sure the Xcode Command Line Tools are installed:
-
+- For **macOS** users: Make sure the Xcode Command Line Tools are installed:
 ```bash
 xcode-select --install
 ```
