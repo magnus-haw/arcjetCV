@@ -56,7 +56,7 @@ For **Arch Linux**:
 sudo pacman -S libxcb
 ```
 
-### Conda Installation
+### Developers Installation
 
 #### Prerequisites:
 - A valid **git** installation.
@@ -64,32 +64,14 @@ sudo pacman -S libxcb
 - **Miniconda** or **Anaconda** for environment and package management:
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
-
-For users who prefer **conda** for managing environments, follow these steps:
-
-1. Create a new conda environment and install arcjetCV:
-
-```bash
-conda create --name arcjetcv conda-forge::arcjetcv
-conda activate arcjetcv
-```
-
-This will install **arcjetCV** along with all its dependencies in an isolated environment.
-
-#### Note for macOS Users:
+ ##### Note for macOS Users:
 Make sure the Xcode Command Line Tools are installed:
 
 ```bash
 xcode-select --install
 ```
 
-### Windows Users and Developers
-
-#### Prerequisites:
-- **Git LFS** [(Git Large File Storage)](https://git-lfs.github.com/) for handling large files.
-- **Miniconda** or **Anaconda** for environment and package management.
-
-For Windows users or for local development of **arcjetCV**, follow these steps:
+To install **arcjetCV** for development puropse, follow these steps:
 
 1. Install `git-lfs`:
 
