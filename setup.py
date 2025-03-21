@@ -3,7 +3,7 @@ import sys
 import os
 
 # Read the README file for long description
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README_pypi.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 
@@ -66,7 +66,7 @@ check_linux_dependencies()
 # Define the setup configuration
 setup(
     name="arcjetCV",
-    version="1.1.0.dev1",  # Set the version directly here
+    version="1.1.0.dev2",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
