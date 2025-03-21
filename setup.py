@@ -65,8 +65,8 @@ check_linux_dependencies()
 
 # Define the setup configuration
 setup(
-    name="arcjetCV",
-    version="1.1.0.dev2",  # Set the version directly here
+    name="arcjetcv",
+    version="1.1.0.dev3",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
