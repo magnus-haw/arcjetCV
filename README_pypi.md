@@ -5,14 +5,13 @@
 -----
 
 <div align="center">
-  <img src="https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
+  <img src="https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
+
 </div>
 
 # arcjetCV
 
 Package to process arcjet videos and segment the edge of the shock and of the sample.
-
-![arcjetCV Functionality](https://github.com/magnus-haw/arcjetCV/blob/main/docs/source/arcjet_video.gif)
 
 ## Installation
 
@@ -62,6 +61,10 @@ sudo pacman -S libxcb
 - **Miniconda** or **Anaconda** for environment and package management:
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
+- For **macOS** users make sure the Xcode Command Line Tools are installed:
+```bash
+xcode-select --install
+```
 
 To install **arcjetCV** for development puropse, follow these steps:
 
@@ -81,35 +84,31 @@ python -m pip install -e .
 
 The `-e` flag stands for 'editable' and means that any changes to the local source code will immediately affect the **arcjetCV** package and GUI.
 
-#### Note for macOS Users:
-You might need to install Xcode Command Line Tools:
-
-```bash
-xcode-select --install
-```
 
 ## How to Run
 
 You can now launch the GUI by running:
 
 ```bash
-conda activate arcjetCV
+conda activate arcjetcv # (if using conda)
 arcjetCV
 ```
 
-or you can import arcjetCV's python API inside a python script, e.g. test.py:
+Alternatively, you can use **arcjetCV's Python API** inside a Python script, e.g., `test.py`:
 
 ```python
 import arcjetCV as arcv
 video = arcv.Video("tests/arcjet_test.mp4")
 ```
 
-and then run it as:
+Run the script with:
 
 ```bash
-conda activate arcjetCV
+conda activate arcjetcv # (if using conda)
 python test.py
 ```
+
+
 
 ## Citing
 

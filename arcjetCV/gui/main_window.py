@@ -7,20 +7,21 @@ import json
 from numbers import Number
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QIcon,QPixmap
+from PySide6.QtCore import Signal, QThread
+from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv
 from matplotlib.widgets import RectangleSelector
 from arcjetCV.gui.arcjetCV_gui import Ui_MainWindow
 from arcjetCV.utils.video import Video, VideoMeta
-from arcjetCV.utils.processor import ArcjetProcessor
+from arcjetCV.utils.processor import ArcjetProcessor, ProcessorWorker
 from arcjetCV.utils.utils import (
     splitfn,
     getOutlierMask,
     annotateImage,
     annotate_image_with_frame_number,
 )
+from arcjetCV.calibration.calibration_controller import CalibrationController
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,7 +40,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.logo_white_path = os.path.join(
             Path(__file__).parent.absolute(), "logo/arcjetCV_logo_white.png"
         )
-        self.logo_path = os.path.join(Path(__file__).parent.absolute(), "logo/arcjetCV_logo_.png")
+        self.logo_path = os.path.join(
+            Path(__file__).parent.absolute(), "logo/arcjetCV_logo_.png"
+        )
         self.setWindowIcon(QIcon(self.logo_path))
 
         # Load and process the application logo
@@ -47,6 +50,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rgb_frame = cv.cvtColor(self.rgb_frame, cv.COLOR_BGR2RGB)
 
         # Initialize frame and plotting windows
+        self.calibrated = None
         self._plot_ref = None
         self._tplot_ref = None
         self._brightness_ref = None
@@ -81,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect interface buttons to their respective functions
         self.ui.pushButton_process.clicked.connect(self.process_all)
         self.ui.pushButton_loadVideo.clicked.connect(self.load_video)
+        self.ui.pushButton_loadCalibration.clicked.connect(self.load_calibration)
         self.ui.pushButton_export_csv.clicked.connect(self.export_to_csv)
         self.ui.pushButton_fitData.clicked.connect(self.fit_data)
         self.ui.pushButton_LoadFiles.clicked.connect(self.load_outputs)
@@ -96,7 +101,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_shock_center.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shockmodel.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
-        self.ui.applyCrop.clicked.connect(self.update_crop)
         self.ui.comboBox_units.setCurrentText("[mm]")
 
         # init_plot_brightness
@@ -119,10 +123,40 @@ class MainWindow(QtWidgets.QMainWindow):
         # Show the main window
         self.show()
 
+    def closeEvent(self, event):
+        """Handle window close event by stopping all running threads."""
+        print("🔴 Closing application...")
+
+        if hasattr(self, "worker") and self.worker is not None:
+            print("🛑 Stopping worker...")
+            try:
+                self.worker.finished.disconnect()  # Prevent signal errors
+            except TypeError:
+                pass  # Ignore if already disconnected
+
+            self.worker.stop()  # Ensure worker stops if it has a `stop()` method
+            self.worker.deleteLater()
+            self.worker = None
+
+        if hasattr(self, "thread") and isinstance(self.thread, QThread):
+            if self.thread.isRunning():
+                print("🛑 Stopping worker thread...")
+                self.thread.quit()
+                self.thread.wait(5000)  # Wait for up to 5 seconds
+                print("✅ Worker thread stopped successfully")
+
+        self.thread = None  # Clear reference
+        print("✅ Cleanup complete. Closing app.")
+        event.accept()
+
     def show_img(self):
+        if self.calibrated == True:
+            self.rgb_frame = CalibrationController.apply_calibration(
+                self.rgb_frame, self.calibration_data
+            )
         if self._plot_ref is None:
             # Create a new plot reference and define the cursor data format
-            self._plot_ref = self.ui.label_img.canvas.axes.imshow(
+            self._plot_ref = self.ui.Window0.canvas.axes.imshow(
                 self.rgb_frame, aspect="equal"
             )
             self._plot_ref.axes.get_xaxis().set_visible(False)
@@ -159,7 +193,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self._plot_ref.set_data(self.rgb_frame)
 
-        self.ui.label_img.canvas.draw()
+        self.ui.Window0.canvas.draw()
 
     def onselect(self, eclick, erelease):
         x1, y1 = eclick.xdata, eclick.ydata
@@ -290,6 +324,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.frame_processed.emit()
         self.plot_location()
 
+    def save_frame(self):
+        frame_index = self.ui.spinBox_FrameIndex.value()
+        frame = self.video.get_frame(frame_index)
+        # Convert from BGR to RGB
+        image = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
+
+        file_dialog = QtWidgets.QFileDialog()
+        file_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.bmp *.tif)")
+        try:
+            if file_dialog.exec():
+                fpath = file_dialog.selectedFiles()[0]
+                cv.imwrite(fpath, image)
+                print("------SAVED FRAME %i-----" % frame_index)
+                self.ui.basebar.setText("------SAVED FRAME %i-----" % frame_index)
+        except:
+            self.arcjetcv_message_box("Warning", "Could not save frame")
+
     def connect_elements(self):
         self.ui.spinBox_FrameIndex.valueChanged.connect(self.update_frame_index)
         self.frame_processed.connect(self.show_img)
@@ -306,6 +358,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.maxIntensity_2.valueChanged.connect(self.update_frame_index)
         self.ui.minSaturation_2.valueChanged.connect(self.update_frame_index)
         self.ui.maxSaturation_2.valueChanged.connect(self.update_frame_index)
+        self.ui.applyCrop.clicked.connect(self.update_crop)
+        self.ui.pushButton_save_frame.clicked.connect(self.save_frame)
         self.ui.checkBox_crop.stateChanged.connect(self.update_frame_index)
         if (
             self.ui.spinBox_crop_xmin.value() < self.ui.spinBox_crop_xmax.value()
@@ -341,14 +395,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.FilterTabs.setDisabled(False)
             self.ui.comboBox_filterType.setDisabled(False)
             self.ui.comboBox_filterType.setDisabled(False)
-            self.ui.label_img.canvas.axes.clear()
-            self.ui.label_img.canvas.draw()
+            self.ui.Window0.canvas.axes.clear()
+            self.ui.Window0.canvas.draw()
 
             try:  # Create video object
                 self.video = Video(self.path)
                 self.videometa = VideoMeta(
                     self.video, os.path.join(self.folder, self.filename + ".meta")
                 )
+
+                if hasattr(self, "pixels_per_mm"):  # Ensure it's defined
+                    self.videometa["PIXELS_PER_MM"] = self.pixels_per_mm
+                    print(
+                        f"DEBUG: Stored pixels_per_mm in videometa: {self.videometa['PIXELS_PER_MM']}"
+                    )  # Debugging
+                else:
+                    print("WARNING: pixels_per_mm not set before loading video.")
                 print("Number of Frames: ", self.video.nframes)
                 print(
                     f"First-Last Good Frame: {self.videometa['FIRST_GOOD_FRAME']}-{self.videometa['LAST_GOOD_FRAME']}"
@@ -391,9 +453,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.plot_start_stop
                 )
                 self.ui.spinBox_LastGoodFrame.valueChanged.connect(self.plot_start_stop)
-
                 if self.processor is None:
-                    self.processor = ArcjetProcessor(self.videometa)
+                    self.processor = ArcjetProcessor(
+                        self.videometa, progress_bar=self.ui.progressBar
+                    )
                 else:  # avoid reimporting CNN model each time
                     self.processor.update_video_meta(self.videometa)
 
@@ -409,11 +472,76 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("! Could not load video !:\n" + str(e))
                 else:
-                    msg = QMessageBox()
-                    msg.setWindowTitle("arcjetCV Warning")
-                    msg.setText("! Could not load video !:\n" + str(e))
-                    msg.setIcon(QMessageBox.Critical)
-                    msg.exec()
+                    self.arcjetcv_message_box(
+                        "Warning", "! Could not load video !:\n" + str(e)
+                    )
+
+    def load_calibration(self):
+        """Method to load a .json calibration file and prepare calibration data."""
+        from PySide6.QtWidgets import QFileDialog
+        import json
+        import numpy as np  # Ensure numpy is imported
+
+        # Open a file dialog to select a JSON file
+        file_path, _ = QFileDialog.getOpenFileName(
+            None, "Select Calibration File", "", "JSON Files (*.json)"
+        )
+
+        if file_path:
+            try:
+                # Load calibration data from the JSON file
+                with open(file_path, "r") as file:
+                    raw_data = json.load(file)
+
+                # Validate and organize calibration data
+                camera_matrix = np.array(
+                    raw_data.get("camera_matrix", [[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
+                    dtype=np.float32,
+                )
+                dist_coeffs = np.array(
+                    raw_data.get("dist_coeffs", [0, 0, 0, 0, 0]), dtype=np.float32
+                )
+                rvec = (
+                    np.array(raw_data["rvec"], dtype=np.float32)
+                    if "rvec" in raw_data
+                    else None
+                )
+                tvec = (
+                    np.array(raw_data["tvec"], dtype=np.float32)
+                    if "tvec" in raw_data
+                    else None
+                )
+
+                # ✅ Ensure pixels_per_mm is always defined
+                pixels_per_mm = raw_data.get(
+                    "pixels_per_mm", 1.0
+                )  # Default to 1.0 if missing
+
+                # ✅ Store calibration data in an accessible attribute
+                self.calibration_data = {
+                    "camera_matrix": camera_matrix,
+                    "dist_coeffs": dist_coeffs,
+                    "rvec": rvec,
+                    "tvec": tvec,
+                    "pixels_per_mm": pixels_per_mm,
+                }
+
+                # ✅ Define self.pixels_per_mm for later use
+                self.pixels_per_mm = pixels_per_mm
+
+                shortpath = self.shorten_path(file_path, 60)
+                self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
+
+            except KeyError as e:
+                self.arcjetcv_message_box(
+                    "Error", f"Missing required calibration key: {str(e)}"
+                )
+                self.calibration_data = None
+            except Exception as e:
+                self.arcjetcv_message_box(
+                    "Error", f"Failed to load calibration file: {str(e)}"
+                )
+                self.calibration_data = None
 
     def plot_location(self, reset=False):
         n = self.ui.spinBox_FrameIndex.value()
@@ -446,42 +574,94 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.Window3.canvas.draw()
 
     def process_all(self):
+        """Starts video processing in a separate QThread."""
         if not self.VIDEO_LOADED:
             return
 
-        # Create OutputListJSON object to store results
+        # Get UI values
         ilow, ihigh = (
             self.ui.spinBox_FirstGoodFrame.value(),
             self.ui.spinBox_LastGoodFrame.value(),
         )
+        frame_stride = self.ui.spinBox_frame_skips.value()
 
+        # Update metadata
         self.videometa["FIRST_GOOD_FRAME"] = ilow
         self.videometa["LAST_GOOD_FRAME"] = ihigh
         self.videometa.write()
 
-        # Process all frames
-        self.processor.process_all(
+        # ✅ Stop existing thread before starting a new one
+        if hasattr(self, "thread") and isinstance(self.thread, QThread):
+            if self.thread.isRunning():
+                print("⚠️ Stopping existing worker thread...")
+                self.worker.stop()  # Ensure worker has a `stop()` method
+                self.thread.quit()
+                self.thread.wait(5000)  # Wait for thread to exit
+                print("✅ Previous worker thread stopped successfully")
+
+        # ✅ Ensure proper cleanup of old worker
+        if hasattr(self, "worker") and self.worker is not None:
+            self.worker.deleteLater()
+            self.worker = None
+
+        # ✅ Create a new Worker Thread safely
+        self.worker = ProcessorWorker(
+            self.processor,
             self.video,
             self.grab_ui_values(),
             ilow,
             ihigh,
-            self.ui.spinBox_frame_skips.value(),
-            output_prefix=self.ui.lineEdit_filename.text(),
+            frame_stride,
+            self.ui.lineEdit_filename.text(),
             write_json=True,
             write_video=self.ui.checkBox_writeVideo.isChecked(),
             display_shock=self.ui.checkBox_display_shock.isChecked(),
         )
 
-        # Create a message box
-        if self.testing:
-            print("The video has been processed.")
-        else:
-            self.msg_box = QMessageBox()
-            self.msg_box.setWindowTitle("Video Processed")
-            self.msg_box.setText("The video has been processed.")
-            self.msg_box.setIcon(QMessageBox.Information)
-            self.msg_box.exec()  # Display the message box
-        return True
+        self.thread = QThread()
+        self.worker.moveToThread(self.thread)
+
+        # ✅ Connect Signals
+        self.thread.started.connect(self.worker.run)
+        self.worker.progress_updated.connect(self.ui.progressBar.setValue)
+        self.worker.finished.connect(self.on_processing_complete)
+
+        # ✅ Ensure proper cleanup
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(
+            lambda: self.thread.wait(5000)
+        )  # Wait for thread to exit
+        self.thread.finished.connect(lambda: print("✅ Worker thread fully terminated"))
+
+        # ✅ Start the new thread
+        self.thread.start()
+
+        # ✅ Connect Signals
+        self.worker.progress_updated.connect(
+            self.ui.progressBar.setValue
+        )  # Update progress bar
+        self.worker.finished.connect(self.on_processing_complete)  # Handle completion
+
+        self.thread.started.connect(self.worker.run)  # Start worker when thread starts
+        self.thread.start()  # Start thread
+
+    def on_processing_complete(self):
+        """Handles UI updates when processing is completed."""
+        if self.thread and self.thread.isRunning():
+            print("Stopping thread safely...")
+            self.worker.finished.disconnect()  # Prevent signal errors
+            self.worker.deleteLater()  # Mark worker for deletion
+            self.thread.quit()  # Request thread termination
+            self.thread.wait(5000)  # Wait up to 5 seconds for termination
+            print("✅ Worker thread stopped successfully")
+
+        self.thread = None  # Ensure reference is cleared
+        self.worker = None
+
+        self.processing_done = True
+        self.ui.progressBar.setValue(0)
+
+        self.arcjetcv_message_box("Video Processed", "The video has been processed.")
 
     def grab_ui_values(self):
         inputdict = {"SEGMENT_METHOD": str(self.ui.comboBox_filterType.currentText())}
@@ -552,8 +732,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("! File loading failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! File loading failed !:\n" + str(e)
-                )
+                self.arcjetcv_message_box("Warning", "File loading failed:\n" + str(e))
 
         self.plot_outputs()
 
@@ -581,7 +760,6 @@ class MainWindow(QtWidgets.QMainWindow):
         index, m95, m50, mc, p50, p95, radius = [], [], [], [], [], [], []
         time, sarea, marea, sc, sm, ypos = [], [], [], [], [], []
 
-        diameter = self.ui.doubleSpinBox_diameter.value()
         units = self.ui.comboBox_units.currentText()
         fps = self.ui.doubleSpinBox_fps.value()
         maskn = self.ui.spinBox_mask_frames.value()
@@ -680,9 +858,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 mask = getOutlierMask(metrics)
                 self.XT_MASK = mask
 
-                # Infer px length
+                # Infer pixel length from raw outputs
                 radius_masked = np.ma.masked_where(mask < 0, radius)
-                pixel_length = diameter / (2 * np.nanmax(radius_masked))
+                if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
+                    pixel_length = 1 / self.raw_outputs[0]["PIXELS_PER_MM"]
+                else:
+                    self.arcjetcv_message_box(
+                        "Warning",
+                        "Pixels per mm not available in raw outputs. Defaulting pixel length to 1.",
+                    )
+                    pixel_length = 1  # Default value if calibration data is missing
                 self.pixel_length = pixel_length
 
                 # Plot XT series
@@ -775,7 +960,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 output_dict["CONFIG"] = [
                     "UNITS: %s" % units,
-                    "MODEL_DIAMETER: %.2f" % diameter,
                     "FPS: %.2f" % fps,
                     "MASK_NFRAMES: %i" % maskn,
                 ]
@@ -792,15 +976,24 @@ class MainWindow(QtWidgets.QMainWindow):
                 # Update data summary with pixel length
                 summary = self.ui.label_data_summary.text()
                 lines = summary.strip().split("\n")
-                if lines[-1][0:5] == "Pixel":
-                    lines[-1] = "Pixel length %s: %.4f" % (
+                px_per_mm = (
+                    1 / pixel_length if pixel_length != 0 else float("inf")
+                )  # Avoid division by zero
+
+                if lines[-1].startswith("Pixel length"):
+                    lines[-1] = "Pixel length %s: %.4f mm/px | %.4f px/mm" % (
                         self.ui.comboBox_units.currentText(),
                         pixel_length,
+                        px_per_mm,
                     )
                 else:
                     lines.append(
-                        "Pixel length %s: %.4f"
-                        % (self.ui.comboBox_units.currentText(), pixel_length)
+                        "Pixel length %s: %.4f mm/px | %.4f px/mm"
+                        % (
+                            self.ui.comboBox_units.currentText(),
+                            pixel_length,
+                            px_per_mm,
+                        )
                     )
                 newsummary = ""
                 for line in lines:
@@ -815,7 +1008,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.arcjetcv_message_box(
                         "Warning",
                         "! Not enough data to plot !: only %i points"
-                        % len(self.raw_outputs)
+                        % len(self.raw_outputs),
                     )
 
         except Exception as e:
@@ -823,8 +1016,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("Warning", "! Plotting failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e)
-                )
+                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e))
 
         self.ui.Window1.repaint()
         self.ui.Window2.repaint()
@@ -874,7 +1066,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.testing:
                 print("Warning", "! Plot saving failed !:\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! Plot saving failed !:\n" + str(e)
+                self.arcjetcv_message_box(
+                    "Warning", "! Plot saving failed !:\n" + str(e)
                 )
 
     def export_to_csv(self):
@@ -932,7 +1125,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Warning", "! CSV export failed !:\n" + str(e))
                 else:
-                    self.arcjetcv_message_box("Warning", "! CSV export failed !:\n" + str(e)
+                    self.arcjetcv_message_box(
+                        "Warning", "! CSV export failed !:\n" + str(e)
                     )
 
     def fit_data(self):
@@ -994,9 +1188,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.testing:
                     print("Warning", "! Fitting failed !:\n" + str(e))
                 else:
-                    self.arcjetcv_message_box("Warning", "! Fitting failed !:\n" + str(e))
+                    self.arcjetcv_message_box(
+                        "Warning", "! Fitting failed !:\n" + str(e)
+                    )
 
-    def arcjetcv_message_box(self,title,message):
+    def arcjetcv_message_box(self, title, message):
 
         msg_box = QMessageBox()
         msg_box.setIconPixmap(QPixmap(self.logo_path))

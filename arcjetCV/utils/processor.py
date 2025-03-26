@@ -9,10 +9,116 @@ from arcjetCV.segmentation.contour.contour import (
     contoursAutoHSV,
     getPoints,
 )
+from PySide6.QtCore import QMetaObject, Qt, QTimer, QThread, Signal, QObject
 from arcjetCV.segmentation.contour.cnn import CNN
 from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number
 from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
+
+
+class ProcessorWorker(QObject):
+    """Worker class that runs ArcjetProcessor in a separate thread."""
+
+    progress_updated = Signal(int)  # Signal for updating the progress bar
+    finished = Signal()  # Signal for when processing is done
+
+    def __init__(
+        self,
+        processor,
+        video,
+        options,
+        first_frame,
+        last_frame,
+        frame_stride,
+        output_prefix,
+        write_json,
+        write_video,
+        display_shock,
+    ):
+        super().__init__()
+        self.processor = processor
+        self.video = video
+        self.options = options
+        self.first_frame = first_frame
+        self.last_frame = last_frame
+        self.frame_stride = frame_stride
+        self.output_prefix = output_prefix
+        self.write_json = write_json
+        self.write_video = write_video
+        self.display_shock = display_shock
+        self.processing_done = False
+
+    def run(self):
+        """Run video processing in a separate thread, consistent with ArcjetProcessor.process_all()."""
+        try:
+            if not self.output_prefix:
+                self.output_prefix = "output"  # Ensure filename is valid
+
+            # Ensure output filename is correctly formatted
+            json_filename = (
+                f"{self.output_prefix}_{self.first_frame}_{self.last_frame}.json"
+            )
+            json_path = os.path.join(self.video.folder, json_filename)
+
+            out_json = OutputListJSON(json_path)
+
+            total_frames = max(
+                1, (self.last_frame - self.first_frame) // self.frame_stride + 1
+            )
+            processed_frames = 0
+
+            # Initialize video writer if necessary
+            if self.write_video:
+                video_output_name = f"video_out_{self.output_prefix}_{self.first_frame}_{self.last_frame}.m4v"
+                self.video.get_writer(video_output_name)
+
+            # Process frames
+            for frame_index in range(
+                self.first_frame, self.last_frame + 1, self.frame_stride
+            ):
+                frame = self.video.get_frame(frame_index)
+                if frame is None:
+                    print(f"Warning: Skipped frame {frame_index}")
+                    continue
+
+                # Process the frame
+                self.options["INDEX"] = frame_index
+                contour_dict, argdict = self.processor.process(frame, self.options)
+                argdict["PIXELS_PER_MM"] = self.processor.pixels_per_mm
+                argdict.update(contour_dict)
+                out_json.append(argdict.copy())
+
+                # Handle video writing
+                if self.write_video:
+                    frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                    self.video.writer.write(frame)
+
+                # Emit progress update
+                processed_frames += 1
+                progress = int((processed_frames / total_frames) * 100)
+                self.progress_updated.emit(progress)
+
+            # Ensure progress reaches 100%
+            self.progress_updated.emit(100)
+
+            # Write JSON output
+            if self.write_json:
+                out_json.write()
+
+            # Close video writer if necessary
+            if self.write_video:
+                self.video.close_writer()
+
+        except Exception as e:
+            print(f"Processing failed: {e}")
+
+        # Signal completion
+        self.finished.emit()
+
+    def stop(self):
+        """Stop the worker safely."""
+        print("🛑 Stopping processing thread...")
+        self.stop_flag = True
 
 
 class ArcjetProcessor:
@@ -23,7 +129,7 @@ class ArcjetProcessor:
     hold processed arrays, and output processed data to file.
     """
 
-    def __init__(self, videometa):
+    def __init__(self, videometa, progress_bar=None):
         """
         Initializes the ArcjetProcessor object.
 
@@ -34,6 +140,11 @@ class ArcjetProcessor:
         self.w = videometa["WIDTH"]
         self.crop = videometa.crop_range()
         self.cnn = CNN()
+        self.pixels_per_mm = videometa.get(
+            "PIXELS_PER_MM", 1.0
+        )  # ✅ Default to 1.0 if missing
+        self.progress_bar = progress_bar
+        self.filename = None
 
     def update_video_meta(self, videometa):
         """
@@ -377,6 +488,9 @@ class ArcjetProcessor:
                 # Process the current frame, obtaining contours and updated argdict
                 contour_dict, argdict = self.process(frame, options)
 
+                # Add pixels_per_mm to the output dictionary
+                argdict["PIXELS_PER_MM"] = self.pixels_per_mm
+
                 # Draw model and shock contours on the frame for visualization
                 color_map = {
                     "MODEL": (0, 255, 0),
@@ -405,14 +519,41 @@ class ArcjetProcessor:
                 if write_video:
                     frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                     video.writer.write(frame)
-
-                # Print processing progress
-                sys.stdout.write(
-                    f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
-                    + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
+                    # ✅ Calculate progress
+                progress_percentage = int(
+                    min(
+                        (
+                            (((frame_index - first_frame) / frame_stride) + 1)
+                            / np.ceil((last_frame - first_frame + 1) / frame_stride)
+                        )
+                        * 100,
+                        100,
+                    )
                 )
+
+                # ✅ Update Progress Bar if it exists
+                if self.progress_bar:
+                    QTimer.singleShot(
+                        0, lambda: self.progress_bar.setValue(progress_percentage)
+                    )
+
+                # ✅ Print progress in the terminal (for debugging)
+                sys.stdout.write(
+                    f"\rProcessing video using {options['SEGMENT_METHOD']} ... {progress_percentage}%"
+                )
+
+                # # Print processing progress
+                # sys.stdout.write(
+                #     f"\rProcessing video using {options['SEGMENT_METHOD']} ... "
+                #     + f"{min(((((frame_index - first_frame) / frame_stride) + 1) / np.ceil((last_frame - first_frame + 1) / frame_stride)) * 100, 100):.1f}%"
+                # )
             except Exception as e:
                 print(f"Failed at frame {frame_index} with error:\n" + str(e))
+        # ✅ Ensure progress reaches 100% at the end
+        if self.progress_bar:
+            QMetaObject.invokeMethod(
+                self.progress_bar, "setValue", Qt.QueuedConnection, 100
+            )
 
         if write_json:
             out_json.write()

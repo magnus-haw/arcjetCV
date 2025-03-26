@@ -8,8 +8,11 @@ dependencies:
   - python
   - pip
   - pyside6
+  - pytest
+  - pytest-qt
   - opencv
   - matplotlib
+  - numpy  
   - pandas
   - pyarrow
   - scikit-learn
