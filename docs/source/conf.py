@@ -48,7 +48,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
 MOCK_MODULES = [
     "matplotlib",
     "matplotlib.backends",
+    "matplotlib.backends.backend_qtagg",
     "matplotlib.backends.backend_qt5agg",
+    "matplotlib.backends.backend_agg",
     "matplotlib.figure",
     "matplotlib.pyplot",
     "matplotlib.colors",
