@@ -49,8 +49,9 @@ MOCK_MODULES = [
     "matplotlib",
     "matplotlib.backends",
     "matplotlib.backends.backend_qtagg",
-    "matplotlib.backends.backend_qt5agg",
     "matplotlib.backends.backend_agg",
+    "matplotlib.backends.backend_qt5agg",
+    "matplotlib.image",
     "matplotlib.figure",
     "matplotlib.pyplot",
     "matplotlib.colors",
@@ -64,16 +65,15 @@ MOCK_MODULES = [
     "pandas",
     "pyarrow",
     "sklearn",
-    "sklearn.neighbors",
+    "sklearn.neighbors",  # <-- Add this line
     "scipy",
-    "segmentation-models-pytorch",
     "torch",
-    "torch.nn",
-    "torch.nn.functional",
     "torchvision",
+    "segmentation-models-pytorch",
 ]
 for module_name in MOCK_MODULES:
     sys.modules[module_name] = mock.Mock()
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
