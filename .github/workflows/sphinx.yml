@@ -21,9 +21,11 @@ jobs:
       with:
         python-version: 3.9
         auto-update-conda: true
-        condarc-file: docs/sphinx_env.yml
-        environment-file: docs/sphinx_env.yml
-        activate-environment: sphinx-env
+
+    - name: Create and Activate Conda Environment
+      run: |
+        conda env create --file docs/sphinx_env.yml
+        echo "conda activate sphinx-env" >> $GITHUB_ENV
 
     - name: Install dependencies
       run: pip install -e .
@@ -31,8 +33,6 @@ jobs:
     - name: Build Documentation
       run: |
         cd docs
-        conda env create --file sphinx_env.yml
-        conda activate sphinx_rtd
         make html
 
     - name: Deploy to GitHub Pages
