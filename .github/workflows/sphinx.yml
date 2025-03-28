@@ -34,7 +34,7 @@ jobs:
       shell: bash -l {0}
       run: |
         source ~/.bashrc
-        conda activate sphinx_env
+        conda activate sphinx_rtd
         conda list
 
     - name: Install dependencies
