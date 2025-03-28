@@ -10,8 +10,6 @@ dependencies:
   - scikit-learn
   - matplotlib
   - pyside6
-  - torch
-  - torchvision
   - segmentation-models-pytorch
   - sphinx
   - sphinx-rtd-theme
