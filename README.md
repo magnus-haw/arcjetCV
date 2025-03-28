@@ -1,4 +1,4 @@
-[![Deploy Documentation](https://github.com/username/arcjetcv/actions/workflows/sphinx.yml/badge.svg)](https://username.github.io/arcjetcv/)
+[![Documentation Status](https://readthedocs.org/projects/arcjetcv/badge/?version=latest)](https://arcjetcv.readthedocs.io/en/latest/?badge=latest)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/arcjetcv/badges/version.svg)](https://anaconda.org/conda-forge/arcjetcv)
 [![tutorial](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/magnus-haw/arcjetCV/blob/main/tutorial.ipynb)
 

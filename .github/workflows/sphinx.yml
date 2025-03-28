@@ -31,6 +31,8 @@ jobs:
     - name: Build Documentation
       run: |
         cd docs
+        conda env create --file sphinx_env.yml
+        conda activate sphinx_rtd
         make html
 
     - name: Deploy to GitHub Pages
