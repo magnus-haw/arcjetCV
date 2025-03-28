@@ -41,6 +41,13 @@ jobs:
         which sphinx-build
         sphinx-build --version
 
+    - name: Generate API Documentation
+      shell: bash -l {0}
+      run: |
+        source /usr/share/miniconda/etc/profile.d/conda.sh
+        conda activate sphinx_rtd
+        sphinx-apidoc -o docs/source/api arcjetCV
+
     - name: Install dependencies
       shell: bash -l {0}
       run: |
