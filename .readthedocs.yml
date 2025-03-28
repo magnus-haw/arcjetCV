@@ -6,4 +6,12 @@ build:
     python: "mambaforge-4.10"
 
 conda:
-    environment: docs/sphinx_env.yml
+  environment: docs/sphinx_env.yml
+
+sphinx:
+  configuration: docs/conf.py
+
+python:
+  install:
+    - method: pip
+      path: .

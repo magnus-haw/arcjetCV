@@ -1,16 +1,46 @@
-import sys, os
+import sys
+import os
 from unittest import mock
 
-sys.path.insert(0, os.path.abspath("../.."))
+# Add the root directory of your package to the system path
+sys.path.insert(0, os.path.abspath("../../arcjetCV"))  # Adjust path if necessary
 
-# run api-doc in terminal
-os.system("sphinx-apidoc -fMT ../../arcjetCV -o api --templatedir=template -e")
+# Liste des modules à mocker
+MOCK_MODULES = [
+    "matplotlib",
+    "matplotlib.backends",
+    "matplotlib.backends.backend_qt5agg",
+    "matplotlib.figure",
+    "matplotlib.pyplot",
+    "matplotlib.colors",
+    "matplotlib.widgets",
+    "PySide6",
+    "PySide6.QtWidgets",
+    "PySide6.QtGui",
+    "PySide6.QtCore",
+    "cv2",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "scipy",
+    "segmentation-models-pytorch",
+    "torch",
+    "torch.nn",
+    "torch.nn.functional",
+    "torchvision",
+]
 
+for module_name in MOCK_MODULES:
+    sys.modules[module_name] = mock.Mock()
+
+# Configurer le backend Matplotlib pour éviter les erreurs
+import matplotlib
+
+matplotlib.use("Agg")
+
+# Configuration Sphinx
 project = "arcjetCV"
 author = "arcjetCV Team"
-
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "myst_parser",
@@ -22,9 +52,7 @@ extensions = [
     "nbsphinx_link",
 ]
 
-# avoid running the notebook's cells
 nbsphinx_execute = "never"
-
 myst_enable_extensions = [
     "dollarmath",
     "amsmath",
@@ -39,44 +67,7 @@ myst_enable_extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = []
-
-language = "python"
-
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
-
-MOCK_MODULES = [
-    "matplotlib",
-    "matplotlib.backends",
-    "matplotlib.backends.backend_qtagg",
-    "matplotlib.backends.backend_agg",
-    "matplotlib.backends.backend_qt5agg",
-    "matplotlib.image",
-    "matplotlib.figure",
-    "matplotlib.pyplot",
-    "matplotlib.colors",
-    "matplotlib.widgets",
-    "PySide6",
-    "PySide6.QtWidgets",
-    "PySide6.QtGui",
-    "PySide6.QtCore",
-    "cv2",
-    "numpy",
-    "pandas",
-    "pyarrow",
-    "sklearn",
-    "sklearn.neighbors",  # <-- Add this line
-    "scipy",
-    "torch",
-    "torchvision",
-    "segmentation-models-pytorch",
-]
-for module_name in MOCK_MODULES:
-    sys.modules[module_name] = mock.Mock()
-
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
 html_logo = "../../arcjetCV/gui/logo/arcjetCV_logo_.png"

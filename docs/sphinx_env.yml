@@ -1,26 +1,24 @@
 name: sphinx_rtd
 channels:
   - conda-forge
-  - defaults
-  - pytorch
 dependencies:
   - python=3.13
   - pip
-  - sphinx
-  - sphinx-rtd-theme
-  - myst-parser
-  - nbsphinx
-  - nbsphinx-link
-  - sphinx-autodoc-typehints
-  - sphinxcontrib-napoleon
-  - jinja2
   - numpy
   - pandas
+  - pyarrow
   - scikit-learn
   - matplotlib
+  - pyside6
   - torch
   - torchvision
+  - segmentation-models-pytorch
+  - sphinx
+  - sphinx-rtd-theme
+  - nbsphinx
+  - nbsphinx-link
+  - myst-parser
+  - docutils
   - pip:
-      - segmentation-models-pytorch
-      - imageio[pyav]
       - opencv-python
+      - opencv-contrib-python
