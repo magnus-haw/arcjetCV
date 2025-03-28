@@ -5,7 +5,7 @@ from unittest import mock
 # Add the root directory of your package to the system path
 sys.path.insert(0, os.path.abspath("../../arcjetCV"))  # Adjust path if necessary
 
-# Liste des modules à mocker
+# List of modules to mock
 MOCK_MODULES = [
     "matplotlib",
     "matplotlib.backends",
@@ -23,22 +23,28 @@ MOCK_MODULES = [
     "pandas",
     "pyarrow",
     "scipy",
-    "segmentation-models-pytorch",
+    "scipy.sparse",
+    "scipy.linalg",
+    "scipy.stats",
+    "scipy.special",
+    "scipy.optimize",
+    "scipy.integrate",
+    "segmentation_models_pytorch",
     "torch",
     "torch.nn",
     "torch.nn.functional",
     "torchvision",
 ]
 
+# Mock each module and its submodules
 for module_name in MOCK_MODULES:
     sys.modules[module_name] = mock.Mock()
 
-# Configurer le backend Matplotlib pour éviter les erreurs
+# Configure the Matplotlib backend to avoid errors
 import matplotlib
-
 matplotlib.use("Agg")
 
-# Configuration Sphinx
+# Sphinx Configuration
 project = "arcjetCV"
 author = "arcjetCV Team"
 
