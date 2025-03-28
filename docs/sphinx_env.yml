@@ -22,3 +22,5 @@ dependencies:
   - pip:
       - opencv-python
       - opencv-contrib-python
+      - torch
+      - torchvision
