@@ -77,13 +77,14 @@ class CalibrationView(QWidget):
         # Add elements to the grid size layout
         grid_size_layout_1.addLayout(label_layout_1)
         grid_size_layout_1.addWidget(
-            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
-        )
-        grid_size_layout_1.addWidget(self.grid_rows_input_1, stretch=1)
-        grid_size_layout_1.addWidget(
             QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight
         )
         grid_size_layout_1.addWidget(self.grid_cols_input_1, stretch=1)
+
+        grid_size_layout_1.addWidget(
+            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
+        )
+        grid_size_layout_1.addWidget(self.grid_rows_input_1, stretch=1)
 
         self.load_button = QPushButton("Load Calibration Images")
         self.calibrate_button = QPushButton("Calibrate Camera")
@@ -148,13 +149,14 @@ class CalibrationView(QWidget):
         # Add elements to the grid size layout
         grid_size_layout.addLayout(label_layout)
         grid_size_layout.addWidget(
-            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
-        )
-        grid_size_layout.addWidget(self.grid_rows_input, stretch=1)
-        grid_size_layout.addWidget(
             QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight
         )
         grid_size_layout.addWidget(self.grid_cols_input, stretch=1)
+
+        grid_size_layout.addWidget(
+            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
+        )
+        grid_size_layout.addWidget(self.grid_rows_input, stretch=1)
 
         pattern_resolution_layout.addLayout(grid_size_layout)
 

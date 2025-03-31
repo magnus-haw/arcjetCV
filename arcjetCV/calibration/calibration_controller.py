@@ -48,53 +48,6 @@ class CalibrationController:
         else:
             self.view.image_label.setText("No images loaded")
 
-    # def detect_pattern(self, img, pattern_size):
-    #     """
-    #     Detect whether the image contains a chessboard or a circles grid.
-
-    #     Args:
-    #         img (numpy.ndarray): The grayscale image to analyze.
-    #         pattern_size (tuple): Chessboard pattern size (columns, rows).
-    #         pattern_size (tuple): Circles grid pattern size (columns, rows).
-
-    #     Returns:
-    #         tuple: (str, object_points, image_points)
-    #             str: "chessboard", "circles_grid", or None.
-    #             object_points: 3D points in real-world space.
-    #             image_points: 2D points in the image plane.
-    #     """
-    #     # Prepare 3D object points for chessboard and circles grid
-    #     chessboard_obj_points = np.zeros(
-    #         (pattern_size[0] * pattern_size[1], 3), np.float32
-    #     )
-    #     chessboard_obj_points[:, :2] = np.mgrid[
-    #         0 : pattern_size[0], 0 : pattern_size[1]
-    #     ].T.reshape(-1, 2)
-
-    #     circles_obj_points = np.zeros(
-    #         (pattern_size[0] * pattern_size[1], 3), np.float32
-    #     )
-    #     circles_obj_points[:, :2] = np.mgrid[
-    #         0 : pattern_size[0], 0 : pattern_size[1]
-    #     ].T.reshape(-1, 2)
-
-    #     # Try detecting chessboard pattern
-    #     ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
-    #         img, pattern_size
-    #     )
-    #     if ret_chessboard:
-    #         return "chessboard", chessboard_obj_points, corners_chessboard
-
-    #     # Try detecting circles grid pattern
-    #     ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
-    #         img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
-    #     )
-    #     if ret_circles_grid:
-    #         return "circles_grid", circles_obj_points, centers_circles_grid
-
-    #     # No pattern detected
-    #     return None, None, None
-
     def _generate_object_points(self, pattern_size, pattern_type):
         """
         Generates 3D object points for a given pattern.
@@ -106,12 +59,10 @@ class CalibrationController:
         Returns:
             numpy.ndarray: 3D object points.
         """
-        obj_points = np.zeros((pattern_size[0] * pattern_size[1], 3), np.float32)
-
+        cols, rows = pattern_size
+        obj_points = np.zeros((rows * cols, 3), np.float32)  # ✅ correct shape
         if pattern_type == "chessboard" or pattern_type == "circles_grid":
-            obj_points[:, :2] = np.mgrid[
-                0 : pattern_size[0], 0 : pattern_size[1]
-            ].T.reshape(-1, 2)
+            obj_points[:, :2] = np.mgrid[0:cols, 0:rows].T.reshape(-1, 2)
 
         elif pattern_type == "asymmetric_circles_grid":
             obj_points[:, :2] = np.array(
@@ -179,8 +130,6 @@ class CalibrationController:
 
         # 4️⃣ Custom asymmetric pattern detection - Second Attempt
         return self.found_asym_pattern_2(img, pattern_size, 500, 3000)
-        # ❌ No pattern detected
-        # return None, None, None
 
     def asym_obj_points(self, rows, cols):
         circles_obj_points = np.zeros((rows * cols, 3), np.float32)
@@ -406,8 +355,8 @@ class CalibrationController:
             return
 
         pattern_size = (
-            self.view.grid_cols_input.value(),
-            self.view.grid_rows_input.value(),
+            self.view.grid_cols_input_1.value(),
+            self.view.grid_rows_input_1.value(),
         )
         obj_points = []
         img_points = []
@@ -422,6 +371,7 @@ class CalibrationController:
 
             # Detect pattern
             pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
+            print(pattern_type)
             if pattern_type:
                 obj_points.append(obj_p)
                 img_points.append(img_p)
