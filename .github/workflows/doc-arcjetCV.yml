@@ -63,7 +63,7 @@ jobs:
         source /usr/share/miniconda/etc/profile.d/conda.sh
         conda activate sphinx_rtd
         cd docs
-        make html
+        sphinx-build -b html docs/source docs/build/html
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
