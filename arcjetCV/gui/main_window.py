@@ -22,6 +22,8 @@ from arcjetCV.utils.utils import (
     annotate_image_with_frame_number,
 )
 from arcjetCV.calibration.calibration_controller import CalibrationController
+from PySide6.QtWidgets import QFileDialog
+import json
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -150,10 +152,12 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def show_img(self):
+        print("OK")
         if self.calibrated == True:
             self.rgb_frame = CalibrationController.apply_calibration(
                 self.rgb_frame, self.calibration_data
             )
+            print("Calibrated")
         if self._plot_ref is None:
             # Create a new plot reference and define the cursor data format
             self._plot_ref = self.ui.Window0.canvas.axes.imshow(
@@ -478,9 +482,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def load_calibration(self):
         """Method to load a .json calibration file and prepare calibration data."""
-        from PySide6.QtWidgets import QFileDialog
-        import json
-        import numpy as np  # Ensure numpy is imported
 
         # Open a file dialog to select a JSON file
         file_path, _ = QFileDialog.getOpenFileName(
@@ -531,7 +532,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 shortpath = self.shorten_path(file_path, 60)
                 self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
-
+                self.calibrated = True
             except KeyError as e:
                 self.arcjetcv_message_box(
                     "Error", f"Missing required calibration key: {str(e)}"

@@ -9,7 +9,6 @@ import json
 import os
 from pathlib import Path
 import shutil
-import matplotlib.pyplot as plt
 
 
 class CalibrationController:
@@ -344,40 +343,6 @@ class CalibrationController:
 
         return rotation_matrix, tvec, (theta_x, theta_y, theta_z)
 
-    def plot_correspondences(self, image, obj_pts, img_pts):
-        """
-        Plot 2D correspondences over the image for debugging.
-
-        Args:
-            image (np.ndarray): The original image (BGR or RGB).
-            obj_pts (np.ndarray): Reference 2D object points.
-            img_pts (np.ndarray): Corresponding image points.
-        """
-        plt.figure(figsize=(10, 10))
-
-        # Convert to RGB if needed
-        if image.ndim == 3 and image.shape[2] == 3:
-            img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        else:
-            img_rgb = image
-
-        plt.imshow(img_rgb)
-
-        for i in range(len(obj_pts)):
-            # Draw line between reference (obj_pt) and detected (img_pt)
-            plt.plot(
-                [obj_pts[i, 0], img_pts[i, 0]], [obj_pts[i, 1], img_pts[i, 1]], "r-"
-            )
-            plt.plot(obj_pts[i, 0], obj_pts[i, 1], "bo")  # object point (reference)
-            plt.plot(img_pts[i, 0], img_pts[i, 1], "go")  # image point (detected)
-
-        plt.title("Correspondences: Blue = Object Points, Green = Image Points")
-        plt.axis("equal")
-        plt.gca().invert_yaxis()  # for image-style y axis
-        plt.grid(True)
-        plt.tight_layout()
-        plt.show()
-
     def calculate_2d_affine_matrix(self, img, obj_points, img_points):
         """
         Computes an affine transformation matrix for 2D correction.
@@ -410,10 +375,6 @@ class CalibrationController:
         print(
             f"🔎 Unique object points: {unique_obj}, Unique image points: {unique_img}"
         )
-
-        # Optional: visualize correspondences
-        print("🧪 Plotting correspondences for debug...")
-        self.plot_correspondences(img, obj_points, img_points)
 
         try:
             affine_matrix, _ = cv2.estimateAffinePartial2D(obj_points, img_points)
@@ -894,7 +855,7 @@ class CalibrationController:
         undistorted_frame = cv2.undistort(
             frame, camera_matrix, dist_coeffs, None, new_camera_matrix
         )
-
+        print("Undistorted frame shape:")
         # Check if affine transformation is available
         if "affine_matrix" in calibration_data:
             affine_matrix = np.array(calibration_data["affine_matrix"])
