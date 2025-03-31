@@ -48,52 +48,52 @@ class CalibrationController:
         else:
             self.view.image_label.setText("No images loaded")
 
-    def detect_pattern(self, img, pattern_size):
-        """
-        Detect whether the image contains a chessboard or a circles grid.
+    # def detect_pattern(self, img, pattern_size):
+    #     """
+    #     Detect whether the image contains a chessboard or a circles grid.
 
-        Args:
-            img (numpy.ndarray): The grayscale image to analyze.
-            pattern_size (tuple): Chessboard pattern size (columns, rows).
-            pattern_size (tuple): Circles grid pattern size (columns, rows).
+    #     Args:
+    #         img (numpy.ndarray): The grayscale image to analyze.
+    #         pattern_size (tuple): Chessboard pattern size (columns, rows).
+    #         pattern_size (tuple): Circles grid pattern size (columns, rows).
 
-        Returns:
-            tuple: (str, object_points, image_points)
-                str: "chessboard", "circles_grid", or None.
-                object_points: 3D points in real-world space.
-                image_points: 2D points in the image plane.
-        """
-        # Prepare 3D object points for chessboard and circles grid
-        chessboard_obj_points = np.zeros(
-            (pattern_size[0] * pattern_size[1], 3), np.float32
-        )
-        chessboard_obj_points[:, :2] = np.mgrid[
-            0 : pattern_size[0], 0 : pattern_size[1]
-        ].T.reshape(-1, 2)
+    #     Returns:
+    #         tuple: (str, object_points, image_points)
+    #             str: "chessboard", "circles_grid", or None.
+    #             object_points: 3D points in real-world space.
+    #             image_points: 2D points in the image plane.
+    #     """
+    #     # Prepare 3D object points for chessboard and circles grid
+    #     chessboard_obj_points = np.zeros(
+    #         (pattern_size[0] * pattern_size[1], 3), np.float32
+    #     )
+    #     chessboard_obj_points[:, :2] = np.mgrid[
+    #         0 : pattern_size[0], 0 : pattern_size[1]
+    #     ].T.reshape(-1, 2)
 
-        circles_obj_points = np.zeros(
-            (pattern_size[0] * pattern_size[1], 3), np.float32
-        )
-        circles_obj_points[:, :2] = np.mgrid[
-            0 : pattern_size[0], 0 : pattern_size[1]
-        ].T.reshape(-1, 2)
+    #     circles_obj_points = np.zeros(
+    #         (pattern_size[0] * pattern_size[1], 3), np.float32
+    #     )
+    #     circles_obj_points[:, :2] = np.mgrid[
+    #         0 : pattern_size[0], 0 : pattern_size[1]
+    #     ].T.reshape(-1, 2)
 
-        # Try detecting chessboard pattern
-        ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
-            img, pattern_size
-        )
-        if ret_chessboard:
-            return "chessboard", chessboard_obj_points, corners_chessboard
+    #     # Try detecting chessboard pattern
+    #     ret_chessboard, corners_chessboard = cv2.findChessboardCorners(
+    #         img, pattern_size
+    #     )
+    #     if ret_chessboard:
+    #         return "chessboard", chessboard_obj_points, corners_chessboard
 
-        # Try detecting circles grid pattern
-        ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
-            img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
-        )
-        if ret_circles_grid:
-            return "circles_grid", circles_obj_points, centers_circles_grid
+    #     # Try detecting circles grid pattern
+    #     ret_circles_grid, centers_circles_grid = cv2.findCirclesGrid(
+    #         img, pattern_size, flags=cv2.CALIB_CB_SYMMETRIC_GRID
+    #     )
+    #     if ret_circles_grid:
+    #         return "circles_grid", circles_obj_points, centers_circles_grid
 
-        # No pattern detected
-        return None, None, None
+    #     # No pattern detected
+    #     return None, None, None
 
     def _generate_object_points(self, pattern_size, pattern_type):
         """
@@ -389,9 +389,7 @@ class CalibrationController:
                 return
 
             # Detect pattern
-            pattern_type, obj_p, img_p = self.detect_pattern(
-                img, pattern_size, pattern_size
-            )
+            pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
             if pattern_type:
                 obj_points.append(obj_p)
                 img_points.append(img_p)

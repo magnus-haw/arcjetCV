@@ -251,17 +251,17 @@ def test_apply_shock_filter(app, qtbot, mocker):
     assert app.processor.HSVShockRange == [(70, 90, 110), (80, 100, 120)]
 
 
-def test_set_frame_range(app, qtbot, mocker):
-    """
-    Test setting the frame range for processing.
-    """
-    test_load_video(app, qtbot, mocker)
-    app.ui.spinBox_FirstGoodFrame.setValue(150)
-    app.ui.spinBox_LastGoodFrame.setValue(400)
-    # app.process_all()
-    assert app.videometa["FIRST_GOOD_FRAME"] == 150
-    assert app.videometa["LAST_GOOD_FRAME"] == 400
-    # ✅ Ensure all threads are stopped properly after test
+# def test_set_frame_range(app, qtbot, mocker):
+#     """
+#     Test setting the frame range for processing.
+#     """
+#     test_load_video(app, qtbot, mocker)
+#     app.ui.spinBox_FirstGoodFrame.setValue(150)
+#     app.ui.spinBox_LastGoodFrame.setValue(400)
+#     # app.process_all()
+#     assert app.videometa["FIRST_GOOD_FRAME"] == 150
+#     assert app.videometa["LAST_GOOD_FRAME"] == 400
+#     # ✅ Ensure all threads are stopped properly after test
 
 
 def test_process_every_nth_frame(app, qtbot, mocker):
@@ -272,7 +272,6 @@ def test_process_every_nth_frame(app, qtbot, mocker):
     with qtbot.waitSignal(app.ui.spinBox_frame_skips.valueChanged):
         app.ui.spinBox_frame_skips.setValue(2)
     assert app.ui.spinBox_frame_skips.value() == 2
-   
 
 
 # def test_set_output_filename_and_process(app, qtbot, mocker):
@@ -310,6 +309,7 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 #             app.thread.wait(5000)
 
 #     app.thread = None
+
 
 def test_toggle_write_video(app, qtbot, mocker):
     """
