@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import matplotlib.pyplot as plt
 
 
 class CalibrationController:
@@ -343,7 +344,41 @@ class CalibrationController:
 
         return rotation_matrix, tvec, (theta_x, theta_y, theta_z)
 
-    def calculate_2d_affine_matrix(self, obj_points, img_points):
+    def plot_correspondences(self, image, obj_pts, img_pts):
+        """
+        Plot 2D correspondences over the image for debugging.
+
+        Args:
+            image (np.ndarray): The original image (BGR or RGB).
+            obj_pts (np.ndarray): Reference 2D object points.
+            img_pts (np.ndarray): Corresponding image points.
+        """
+        plt.figure(figsize=(10, 10))
+
+        # Convert to RGB if needed
+        if image.ndim == 3 and image.shape[2] == 3:
+            img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        else:
+            img_rgb = image
+
+        plt.imshow(img_rgb)
+
+        for i in range(len(obj_pts)):
+            # Draw line between reference (obj_pt) and detected (img_pt)
+            plt.plot(
+                [obj_pts[i, 0], img_pts[i, 0]], [obj_pts[i, 1], img_pts[i, 1]], "r-"
+            )
+            plt.plot(obj_pts[i, 0], obj_pts[i, 1], "bo")  # object point (reference)
+            plt.plot(img_pts[i, 0], img_pts[i, 1], "go")  # image point (detected)
+
+        plt.title("Correspondences: Blue = Object Points, Green = Image Points")
+        plt.axis("equal")
+        plt.gca().invert_yaxis()  # for image-style y axis
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+    def calculate_2d_affine_matrix(self, img, obj_points, img_points):
         """
         Computes an affine transformation matrix for 2D correction.
 
@@ -352,18 +387,54 @@ class CalibrationController:
             img_points (numpy.ndarray): 2D detected points in the image.
 
         Returns:
-            numpy.ndarray: 2D affine transformation matrix (if successful).
+            numpy.ndarray: 2D affine transformation matrix (if successful), else None.
         """
-        if len(obj_points) < 3 or len(img_points) < 3:
+        obj_points = np.asarray(obj_points, dtype=np.float32).reshape(-1, 2)
+        img_points = np.asarray(img_points, dtype=np.float32).reshape(-1, 2)
+        obj_points = np.asarray(obj_points, dtype=np.float32).reshape(-1, 2).copy()
+        img_points = np.asarray(img_points, dtype=np.float32).reshape(-1, 2).copy()
+
+        if obj_points.shape != img_points.shape:
+            print(
+                f"❌ Mismatch in point shapes: obj={obj_points.shape}, img={img_points.shape}"
+            )
+            return None
+
+        if len(obj_points) < 3:
             print("❌ ERROR: At least 3 points are required for affine transformation.")
             return None
 
-        # Compute affine transformation
-        affine_matrix, _ = cv2.estimateAffinePartial2D(obj_points, img_points)
+        # Check for duplicate points
+        unique_obj = len(np.unique(obj_points, axis=0))
+        unique_img = len(np.unique(img_points, axis=0))
+        print(
+            f"🔎 Unique object points: {unique_obj}, Unique image points: {unique_img}"
+        )
 
-        if affine_matrix is None:
-            print("❌ ERROR: Affine transformation failed.")
-        return affine_matrix
+        # Optional: visualize correspondences
+        print("🧪 Plotting correspondences for debug...")
+        self.plot_correspondences(img, obj_points, img_points)
+
+        try:
+            affine_matrix, _ = cv2.estimateAffinePartial2D(obj_points, img_points)
+            if affine_matrix is None:
+                raise ValueError("estimateAffinePartial2D returned None")
+            print("✅ Affine matrix (partial) computed successfully.")
+            return affine_matrix
+        except Exception as e:
+            print(f"⚠️ Partial affine estimation failed: {e}")
+            print("🔁 Trying full affine estimation...")
+
+            try:
+                affine_matrix, _ = cv2.estimateAffine2D(obj_points, img_points)
+                if affine_matrix is None:
+                    print("❌ Full affine estimation also failed.")
+                    return None
+                print("✅ Affine matrix (full) computed as fallback.")
+                return affine_matrix
+            except Exception as ee:
+                print(f"❌ Full affine estimation crashed: {ee}")
+                return None
 
     def calibrate_camera(self):
         """Perform full 3D camera calibration and save results."""
@@ -412,10 +483,16 @@ class CalibrationController:
             obj_points[0], img_points[0], mtx, dist
         )
 
-        # Calculate 2D affine transformation
-        affine_matrix = self.calculate_2d_affine_matrix(
-            obj_points[0][:, :2], img_points[0][:, 0, :]
-        )  # Convert 3D to 2D points
+        obj_pts_2d = obj_points[0][:, :2]  # shape (N, 2)
+        img_pts_2d = img_points[0].reshape(-1, 2)  # shape (N, 2)
+
+        if obj_pts_2d.shape == img_pts_2d.shape and len(obj_pts_2d) >= 3:
+            affine_matrix = self.calculate_2d_affine_matrix(img, obj_pts_2d, img_pts_2d)
+        else:
+            print(
+                f"⚠️ Skipping affine matrix — point mismatch or too few points: obj={obj_pts_2d.shape}, img={img_pts_2d.shape}"
+            )
+            affine_matrix = None
 
         # Store calibration data
         calibration_data = {
