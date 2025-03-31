@@ -17,7 +17,7 @@ dependencies:
   - nbsphinx
   - nbsphinx-link
   - myst-parser
-  - docutils
+  - docutils<0.21
   - pip:
       - opencv-python
       - opencv-contrib-python
