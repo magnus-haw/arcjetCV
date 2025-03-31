@@ -8,6 +8,7 @@ dependencies:
   - pandas
   - pyarrow
   - scikit-learn
+  - scipy
   - matplotlib
   - pyside6
   - segmentation-models-pytorch
