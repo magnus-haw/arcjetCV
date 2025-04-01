@@ -48,30 +48,31 @@ class CalibrationController:
         else:
             self.view.image_label.setText("No images loaded")
 
-    def _generate_object_points(self, pattern_size, pattern_type):
+    def _generate_object_points(self, pattern_size, pattern_type, spacing=1.0):
         """
-        Generates 3D object points for a given pattern.
+        Generates 3D object points for a given pattern with real-world spacing.
 
         Args:
             pattern_size (tuple): The pattern size (columns, rows).
-            pattern_type (str): Type of pattern ("chessboard", "circles_grid", "asymmetric_circles_grid").
+            pattern_type (str): Type of pattern.
+            spacing (float): Real-world spacing between points in meters (default: 1.0)
 
         Returns:
             numpy.ndarray: 3D object points.
         """
         cols, rows = pattern_size
-        obj_points = np.zeros((rows * cols, 3), np.float32)  # ✅ correct shape
-        if pattern_type == "chessboard" or pattern_type == "circles_grid":
+        if pattern_type in ["chessboard", "circles_grid"]:
+            obj_points = np.zeros((rows * cols, 3), np.float32)
             obj_points[:, :2] = np.mgrid[0:cols, 0:rows].T.reshape(-1, 2)
-
+            obj_points *= spacing
         elif pattern_type == "asymmetric_circles_grid":
-            obj_points[:, :2] = np.array(
-                [
-                    [(x, y + 0.5 * (x % 2)) for x in range(pattern_size[0])]
-                    for y in range(pattern_size[1])
-                ]
-            ).reshape(-1, 2)
-
+            obj_points = []
+            for i in range(rows):
+                for j in range(cols):
+                    x = (2 * j + i % 2) * spacing / 2.0
+                    y = i * spacing
+                    obj_points.append([x, y, 0])
+            obj_points = np.array(obj_points, dtype=np.float32).reshape(-1, 1, 3)
         return obj_points
 
     def detect_pattern(self, img, pattern_size):
@@ -358,6 +359,8 @@ class CalibrationController:
             self.view.grid_cols_input_1.value(),
             self.view.grid_rows_input_1.value(),
         )
+        spacing = 1.0  # Use unit spacing; real-world scaling comes later
+
         obj_points = []
         img_points = []
 
@@ -370,9 +373,12 @@ class CalibrationController:
                 return
 
             # Detect pattern
-            pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
+            pattern_type, _, img_p = self.detect_pattern(img, pattern_size)
             print(pattern_type)
             if pattern_type:
+                obj_p = self._generate_object_points(
+                    pattern_size, pattern_type, spacing
+                )
                 obj_points.append(obj_p)
                 img_points.append(img_p)
             else:
@@ -385,6 +391,7 @@ class CalibrationController:
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             obj_points, img_points, img.shape[::-1], None, None
         )
+        print(f"Calibration RMS error: {ret:.4f}")
         if not ret:
             QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
             return
@@ -405,6 +412,9 @@ class CalibrationController:
             )
             affine_matrix = None
 
+        # Get ppm from stored value if available
+        ppm_value = getattr(self, "ppm", None)
+
         # Store calibration data
         calibration_data = {
             "camera_matrix": mtx.tolist(),
@@ -414,6 +424,7 @@ class CalibrationController:
             "affine_matrix": (
                 affine_matrix.tolist() if affine_matrix is not None else None
             ),
+            "pixels_per_mm": ppm_value if ppm_value else None,
         }
 
         # Save calibration data to file
@@ -441,6 +452,7 @@ class CalibrationController:
                     if calibration_data["affine_matrix"]
                     else None
                 ),
+                "pixels_per_mm": ppm_value if ppm_value else None,
             }
             self.calibrated = True
             QMessageBox.information(
