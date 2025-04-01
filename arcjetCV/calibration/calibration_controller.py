@@ -791,7 +791,7 @@ class CalibrationController:
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save calibration: {e}")
 
-    def apply_calibration(frame, calibration_data):
+    def apply_calibration(self, frame, calibration_data):
         """
         Apply calibration to a single frame using provided calibration data.
 
@@ -821,6 +821,12 @@ class CalibrationController:
         # Check if affine transformation is available
         if "affine_matrix" in calibration_data:
             affine_matrix = np.array(calibration_data["affine_matrix"])
+
+            if affine_matrix.ndim != 2 or affine_matrix.shape != (2, 3):
+                print(
+                    f"⚠️ Skipping affine transform due to invalid shape: {affine_matrix.shape}"
+                )
+                return undistorted_frame
 
             # Extract rotation angle from affine transformation
             angle_rad = np.arctan2(affine_matrix[1, 0], affine_matrix[0, 0])
