@@ -1,0 +1,45 @@
+arcjetCV.gui package
+====================
+
+Submodules
+----------
+
+arcjetCV.gui.arcjetCV\_gui module
+---------------------------------
+
+.. automodule:: arcjetCV.gui.arcjetCV_gui
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.gui.custom\_classes module
+-----------------------------------
+
+.. automodule:: arcjetCV.gui.custom_classes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.gui.main module
+------------------------
+
+.. automodule:: arcjetCV.gui.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.gui.main\_window module
+--------------------------------
+
+.. automodule:: arcjetCV.gui.main_window
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arcjetCV.gui
+   :members:
+   :undoc-members:
+   :show-inheritance:

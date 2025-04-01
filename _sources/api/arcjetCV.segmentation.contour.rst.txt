@@ -1,0 +1,29 @@
+arcjetCV.segmentation.contour package
+=====================================
+
+Submodules
+----------
+
+arcjetCV.segmentation.contour.cnn module
+----------------------------------------
+
+.. automodule:: arcjetCV.segmentation.contour.cnn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.segmentation.contour.contour module
+--------------------------------------------
+
+.. automodule:: arcjetCV.segmentation.contour.contour
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arcjetCV.segmentation.contour
+   :members:
+   :undoc-members:
+   :show-inheritance:

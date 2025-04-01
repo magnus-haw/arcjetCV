@@ -1,0 +1,21 @@
+arcjetCV package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   arcjetCV.calibration
+   arcjetCV.gui
+   arcjetCV.segmentation
+   arcjetCV.utils
+
+Module contents
+---------------
+
+.. automodule:: arcjetCV
+   :members:
+   :undoc-members:
+   :show-inheritance:

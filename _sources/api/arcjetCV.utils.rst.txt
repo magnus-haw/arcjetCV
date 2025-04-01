@@ -1,0 +1,53 @@
+arcjetCV.utils package
+======================
+
+Submodules
+----------
+
+arcjetCV.utils.logger module
+----------------------------
+
+.. automodule:: arcjetCV.utils.logger
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.utils.output module
+----------------------------
+
+.. automodule:: arcjetCV.utils.output
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.utils.processor module
+-------------------------------
+
+.. automodule:: arcjetCV.utils.processor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.utils.utils module
+---------------------------
+
+.. automodule:: arcjetCV.utils.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+arcjetCV.utils.video module
+---------------------------
+
+.. automodule:: arcjetCV.utils.video
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arcjetCV.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

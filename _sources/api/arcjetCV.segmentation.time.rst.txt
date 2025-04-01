@@ -1,0 +1,21 @@
+arcjetCV.segmentation.time package
+==================================
+
+Submodules
+----------
+
+arcjetCV.segmentation.time.time\_segmentation module
+----------------------------------------------------
+
+.. automodule:: arcjetCV.segmentation.time.time_segmentation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: arcjetCV.segmentation.time
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,19 @@
+arcjetCV.segmentation package
+=============================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   arcjetCV.segmentation.contour
+   arcjetCV.segmentation.time
+
+Module contents
+---------------
+
+.. automodule:: arcjetCV.segmentation
+   :members:
+   :undoc-members:
+   :show-inheritance:
