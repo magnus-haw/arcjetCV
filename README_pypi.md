@@ -1,7 +1,7 @@
 [![GitHub Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://username.github.io/arcjetcv/)
 [![PyPI version](https://badge.fury.io/py/arcjetcv.svg)](https://pypi.org/project/arcjetcv/)
-[![Downloads](https://pepy.tech/badge/arcjetcv)](https://pepy.tech/project/arcjetcv)
 [![tutorial](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/magnus-haw/arcjetCV/blob/main/tutorial.ipynb)
+[![Downloads](https://pepy.tech/badge/arcjetcv)](https://pepy.tech/project/arcjetcv)
 
 
 -----
