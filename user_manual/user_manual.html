@@ -55,6 +55,15 @@
 <p class="caption" role="heading"><span class="caption-text">User Manual</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#calibration">Calibration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#intrinsic-calibration">Intrinsic Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metric-calibration">Metric Calibration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#steps-pattern-resolution">Steps (Pattern Resolution):</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#save-calibration">Save Calibration</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="#processing">Processing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#edge-filters">Edge Filters</a></li>
 </ul>
@@ -103,6 +112,60 @@ ArcjetCV makes new time-resolved measurements of material recession, expansion n
 <section class="tex2jax_ignore mathjax_ignore" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
 <p>The graphical user interface of arcjetCV is divided into two parts: the “Extract Edges” processing tab and the “Analysis” post-processing tab. These tabs are responsible for processing the video and post-processing the extracted edges, respectively.</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="calibration">
+<h1>Calibration<a class="headerlink" href="#calibration" title="Link to this heading"></a></h1>
+<p>The <strong>Calibrate</strong> tab enables camera correction and physical scaling. It is divided into two panels: <strong>Intrinsic Calibration</strong> and <strong>Metric Calibration</strong>.</p>
+<section id="intrinsic-calibration">
+<h2>Intrinsic Calibration<a class="headerlink" href="#intrinsic-calibration" title="Link to this heading"></a></h2>
+<p>This step calculates the camera’s intrinsic parameters, including focal length, principal point, and distortion coefficients, using a known calibration pattern.</p>
+<ol class="arabic">
+<li><p><strong>Print Chessboard</strong></p>
+<p>Click the “Print Chessboard” button to generate and print a pattern (default: 4 columns × 9 rows of internal corners).</p>
+</li>
+<li><p><strong>Set Pattern Size</strong></p>
+<p>Define the number of internal corners in the chessboard (e.g., Cols: 4, Rows: 9).</p>
+</li>
+<li><p><strong>Load Calibration Images</strong></p>
+<p>Load one or more images (or video) that clearly show the calibration pattern under test conditions.</p>
+</li>
+<li><p><strong>Calibrate Camera</strong></p>
+<p>Press “Calibrate Camera” to compute the intrinsic matrix and distortion coefficients. A preview with green corner markers confirms successful detection.</p>
+</li>
+</ol>
+<hr class="docutils" />
+</section>
+<section id="metric-calibration">
+<h2>Metric Calibration<a class="headerlink" href="#metric-calibration" title="Link to this heading"></a></h2>
+<p>This defines the conversion factor between pixels and physical dimensions (e.g., mm), necessary for accurate recession or displacement measurements.</p>
+<p>You can choose between:</p>
+<ul class="simple">
+<li><p><strong>Pattern Resolution</strong> (recommended)</p></li>
+<li><p><strong>Ruler Resolution</strong> (using known-length features)</p></li>
+</ul>
+<section id="steps-pattern-resolution">
+<h3>Steps (Pattern Resolution):<a class="headerlink" href="#steps-pattern-resolution" title="Link to this heading"></a></h3>
+<ol class="arabic">
+<li><p><strong>Set Pattern Size</strong></p>
+<p>Must match the one used during intrinsic calibration (e.g., Cols: 4, Rows: 9).</p>
+</li>
+<li><p><strong>Load Image for Resolution Measurement</strong></p>
+<p>Load a still image taken under test conditions that includes the same pattern.</p>
+</li>
+<li><p><strong>Enter Diagonal Distance</strong></p>
+<p>Input the real-world diagonal distance of the pattern in millimeters.</p>
+</li>
+<li><p><strong>Calculate Resolution</strong></p>
+<p>Click the “Calculate Resolution” button to compute the scaling factor (e.g., mm/pixel), which will be used in the <strong>Analyze</strong> tab.</p>
+</li>
+</ol>
+<hr class="docutils" />
+</section>
+</section>
+<section id="save-calibration">
+<h2>Save Calibration<a class="headerlink" href="#save-calibration" title="Link to this heading"></a></h2>
+<p>Click <strong>Save Calibration</strong> to export both intrinsic and metric parameters to a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file. This file can be reused for distortion correction and accurate plotting in later analysis.</p>
+</section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="processing">
 <h1>Processing<a class="headerlink" href="#processing" title="Link to this heading"></a></h1>

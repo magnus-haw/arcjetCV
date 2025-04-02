@@ -14,6 +14,66 @@ Introduction
 
 The graphical user interface of arcjetCV is divided into two parts: the "Extract Edges" processing tab and the "Analysis" post-processing tab. These tabs are responsible for processing the video and post-processing the extracted edges, respectively.
 
+Calibration
+============================================
+
+The **Calibrate** tab enables camera correction and physical scaling. It is divided into two panels: **Intrinsic Calibration** and **Metric Calibration**.
+
+### Intrinsic Calibration
+
+This step calculates the camera's intrinsic parameters, including focal length, principal point, and distortion coefficients, using a known calibration pattern.
+
+1. **Print Chessboard**
+
+   Click the "Print Chessboard" button to generate and print a pattern (default: 4 columns × 9 rows of internal corners).
+
+2. **Set Pattern Size**
+
+   Define the number of internal corners in the chessboard (e.g., Cols: 4, Rows: 9).
+
+3. **Load Calibration Images**
+
+   Load one or more images (or video) that clearly show the calibration pattern under test conditions.
+
+4. **Calibrate Camera**
+
+   Press "Calibrate Camera" to compute the intrinsic matrix and distortion coefficients. A preview with green corner markers confirms successful detection.
+
+---
+
+### Metric Calibration
+
+This defines the conversion factor between pixels and physical dimensions (e.g., mm), necessary for accurate recession or displacement measurements.
+
+You can choose between:
+
+- **Pattern Resolution** (recommended)
+- **Ruler Resolution** (using known-length features)
+
+#### Steps (Pattern Resolution):
+
+1. **Set Pattern Size**
+
+   Must match the one used during intrinsic calibration (e.g., Cols: 4, Rows: 9).
+
+2. **Load Image for Resolution Measurement**
+
+   Load a still image taken under test conditions that includes the same pattern.
+
+3. **Enter Diagonal Distance**
+
+   Input the real-world diagonal distance of the pattern in millimeters.
+
+4. **Calculate Resolution**
+
+   Click the "Calculate Resolution" button to compute the scaling factor (e.g., mm/pixel), which will be used in the **Analyze** tab.
+
+---
+
+### Save Calibration
+
+Click **Save Calibration** to export both intrinsic and metric parameters to a `.json` file. This file can be reused for distortion correction and accurate plotting in later analysis.
+
 Processing
 ============================================
 
