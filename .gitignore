@@ -162,4 +162,3 @@ train_masks/
 api/
 test.py
 
-include README_pypi.md
