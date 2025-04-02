@@ -68,7 +68,7 @@ sudo pacman -S libxcb
 xcode-select --install
 ```
 
-To install **arcjetCV** for development puropse, follow these steps:
+To install **arcjetCV** for development purposes, follow these steps:
 
 1. Install `git-lfs`:
 

@@ -63,7 +63,7 @@ sudo pacman -S libxcb
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
 
-To install **arcjetCV** for development puropse, follow these steps:
+To install **arcjetCV** for development purposes, follow these steps:
 
 1. Install `git-lfs`:
 
