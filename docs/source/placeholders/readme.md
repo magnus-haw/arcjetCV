@@ -1,1 +1,1 @@
-```{include} ../../../README.md
+```{include} ../../../README_pypi.md
