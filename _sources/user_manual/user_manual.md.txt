@@ -33,11 +33,11 @@ This step calculates the camera's intrinsic parameters, including focal length, 
 
 3. **Load Calibration Images**
 
-   Load one or more images (or video) that clearly show the calibration pattern under test conditions.
+   Load one or more images that clearly show the calibration pattern under test conditions.
 
 4. **Calibrate Camera**
 
-   Press "Calibrate Camera" to compute the intrinsic matrix and distortion coefficients. A preview with green corner markers confirms successful detection.
+   Press "Calibrate Camera" to compute the intrinsic matrix and distortion coefficients.
 
 ---
 
