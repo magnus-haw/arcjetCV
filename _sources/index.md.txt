@@ -3,7 +3,7 @@
 ```{toctree} 
 :caption: Quick Start
 :maxdepth: 2
-placeholders/readme_pypi.md
+placeholders/readme.md
 ```
 
 ```{toctree} 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> &mdash; arcjetCV  documentation</title>
+  <title>arcjetCV &mdash; arcjetCV  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
@@ -19,7 +19,9 @@
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Introduction" href="../user_manual/user_manual.html" />
+    <link rel="prev" title="arcjetCV Documentation" href="../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,7 +44,29 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">User Manual</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">arcjetCV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pypi-installation-universal">PyPi Installation (Universal)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#note-for-macos-users">Note for macOS Users:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#note-for-linux-users">Note for Linux Users:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#developer-installation">Developer Installation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Prerequisites:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-run">How to Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citing">Citing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#legal-license">Legal / License</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Manual</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../user_manual/user_manual.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_manual/user_manual.html#calibration">Calibration</a></li>
@@ -68,10 +92,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">
-
-
-</li>
+      <li class="breadcrumb-item active">arcjetCV</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/placeholders/readme.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -81,19 +102,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="id1">
-<h1><a class="reference external" href="https://magnus-haw.github.io/arcjetCV/"><img alt="GitHub Docs" src="https://img.shields.io/badge/docs-GitHub%20Pages-blue" /></a>
+  <p><a class="reference external" href="https://magnus-haw.github.io/arcjetCV/"><img alt="GitHub Docs" src="https://img.shields.io/badge/docs-GitHub%20Pages-blue" /></a>
 <a class="reference external" href="https://pypi.org/project/arcjetcv/"><img alt="PyPI version" src="https://badge.fury.io/py/arcjetcv.svg" /></a>
-<a class="reference external" href="https://colab.research.google.com/github/magnus-haw/arcjetCV/blob/main/tutorial.ipynb"><img alt="tutorial" src="https://colab.research.google.com/assets/colab-badge.svg" /></a>
-<a class="reference external" href="https://pepy.tech/project/arcjetcv"><img alt="Downloads" src="https://pepy.tech/badge/arcjetcv" /></a><a class="headerlink" href="#id1" title="Link to this heading"></a></h1>
+<a class="reference external" href="https://pepy.tech/project/arcjetcv"><img alt="Downloads" src="https://pepy.tech/badge/arcjetcv" /></a>
+<a class="reference external" href="https://colab.research.google.com/github/magnus-haw/arcjetCV/blob/main/tutorial.ipynb"><img alt="tutorial" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<hr class="docutils" />
 <div align="center">
-  <img src="https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
+  <img src="https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
 </div>
-</section>
 <section class="tex2jax_ignore mathjax_ignore" id="arcjetcv">
 <h1>arcjetCV<a class="headerlink" href="#arcjetcv" title="Link to this heading"></a></h1>
 <p>Package to process arcjet videos and segment the edge of the shock and of the sample.</p>
-<p><img alt="arcjetCV Functionality" src="https://github.com/magnus-haw/arcjetCV/blob/main/docs/source/arcjet_video.gif" /></p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <section id="pypi-installation-universal">
@@ -135,8 +154,8 @@
 </section>
 <section id="developer-installation">
 <h3>Developer Installation<a class="headerlink" href="#developer-installation" title="Link to this heading"></a></h3>
-<section id="id2">
-<h4>Prerequisites:<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<section id="id1">
+<h4>Prerequisites:<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
 <ul class="simple">
 <li><p>A valid <strong>git</strong> installation.</p></li>
 <li><p><strong>Miniconda</strong> or <strong>Anaconda</strong> for environment and package management:</p>
@@ -145,7 +164,11 @@
 <li><p><a class="reference external" href="https://docs.anaconda.com/free/anaconda/install/index.html">Anaconda</a></p></li>
 </ul>
 </li>
+<li><p>For <strong>macOS</strong> users make sure the Xcode Command Line Tools are installed:</p></li>
 </ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xcode-select<span class="w"> </span>--install
+</pre></div>
+</div>
 <p>To install <strong>arcjetCV</strong> for development purposes, follow these steps:</p>
 <ol class="arabic">
 <li><p>Install <code class="docutils literal notranslate"><span class="pre">git-lfs</span></code>:</p>
@@ -162,29 +185,22 @@ python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </sp
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">-e</span></code> flag stands for ‘editable’ and means that any changes to the local source code will immediately affect the <strong>arcjetCV</strong> package and GUI.</p>
 </section>
-<section id="id3">
-<h4>Note for macOS Users:<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
-<p>You might need to install Xcode Command Line Tools:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xcode-select<span class="w"> </span>--install
-</pre></div>
-</div>
-</section>
 </section>
 </section>
 <section id="how-to-run">
 <h2>How to Run<a class="headerlink" href="#how-to-run" title="Link to this heading"></a></h2>
 <p>You can now launch the GUI by running:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetCV
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetcv<span class="w"> </span><span class="c1"># (if using conda)</span>
 arcjetCV
 </pre></div>
 </div>
-<p>or you can import arcjetCV’s python API inside a python script, e.g. test.py:</p>
+<p>Alternatively, you can use <strong>arcjetCV’s Python API</strong> inside a Python script, e.g., <code class="docutils literal notranslate"><span class="pre">test.py</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">arcjetCV</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">arcv</span>
 <span class="n">video</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">Video</span><span class="p">(</span><span class="s2">&quot;tests/arcjet_test.mp4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>and then run it as:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetCV
+<p>Run the script with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetcv<span class="w"> </span><span class="c1"># (if using conda)</span>
 python<span class="w"> </span>test.py
 </pre></div>
 </div>
@@ -213,7 +229,10 @@ python<span class="w"> </span>test.py
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="arcjetCV Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../user_manual/user_manual.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
