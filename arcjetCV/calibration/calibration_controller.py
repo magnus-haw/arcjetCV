@@ -421,7 +421,7 @@ class CalibrationController:
         square_layout = square_obj_pts * scale
 
         H, _ = cv2.findHomography(img_pts_2d, square_layout)
-
+        H_inv = np.linalg.inv(H)
         # Get ppm from stored value if available
         ppm_value = getattr(self, "ppm", None)
 
@@ -439,6 +439,7 @@ class CalibrationController:
             "centers": img_points[0].tolist(),  # shape (N, 1, 2)
             "square_layout": square_layout.tolist(),  # shape (N, 2)
             "homography": H.tolist(),
+            "homography_inverse": H_inv.tolist(),
         }
 
         # Save calibration data to file
@@ -474,6 +475,9 @@ class CalibrationController:
                 ),
                 "homography": np.array(
                     calibration_data["homography"], dtype=np.float32
+                ),
+                "homography_inverse": np.array(
+                    calibration_data["homography_inverse"], dtype=np.float32
                 ),
             }
             self.calibrated = True

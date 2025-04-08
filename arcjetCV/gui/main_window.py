@@ -199,13 +199,43 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.ui.Window0.canvas.draw()
 
+    # def onselect(self, eclick, erelease):
+    #     x1, y1 = eclick.xdata, eclick.ydata
+    #     x2, y2 = erelease.xdata, erelease.ydata
+    #     self.ui.spinBox_crop_xmin.setValue(x1)
+    #     self.ui.spinBox_crop_xmax.setValue(x2)
+    #     self.ui.spinBox_crop_ymin.setValue(y1)
+    #     self.ui.spinBox_crop_ymax.setValue(y2)
+    #     self.update_crop()
+
     def onselect(self, eclick, erelease):
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
-        self.ui.spinBox_crop_xmin.setValue(x1)
-        self.ui.spinBox_crop_xmax.setValue(x2)
-        self.ui.spinBox_crop_ymin.setValue(y1)
-        self.ui.spinBox_crop_ymax.setValue(y2)
+
+        # If image was rotated 90° clockwise, reverse it
+        # Convert (x, y) to pre-rotation coordinates
+        if self.calibrated and "homography_inverse" in self.calibration_data:
+            h, w = self.rgb_frame.shape[:2]
+
+            def unrotate_point(x, y):
+                # Reverse 90° clockwise = rotate 90° counter-clockwise
+                return y, w - x
+
+            x1, y1 = unrotate_point(x1, y1)
+            x2, y2 = unrotate_point(x2, y2)
+
+            # Optional: undo homography if you want original pixel space
+            H_inv = np.array(self.calibration_data["homography_inverse"])
+            pts = np.array([[x1, y1], [x2, y2]], dtype=np.float32).reshape(-1, 1, 2)
+            pts_original = cv.perspectiveTransform(pts, H_inv).reshape(-1, 2)
+            x1, y1 = pts_original[0]
+            x2, y2 = pts_original[1]
+
+        # Store corrected coordinates
+        self.ui.spinBox_crop_xmin.setValue(int(min(x1, x2)))
+        self.ui.spinBox_crop_xmax.setValue(int(max(x1, x2)))
+        self.ui.spinBox_crop_ymin.setValue(int(min(y1, y2)))
+        self.ui.spinBox_crop_ymax.setValue(int(max(y1, y2)))
         self.update_crop()
 
     def update_crop(self):
