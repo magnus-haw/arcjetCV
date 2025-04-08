@@ -215,6 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # If image was rotated 90° clockwise, reverse it
         # Convert (x, y) to pre-rotation coordinates
         if self.calibrated and "homography_inverse" in self.calibration_data:
+            print("good crop")
             h, w = self.rgb_frame.shape[:2]
 
             def unrotate_point(x, y):
