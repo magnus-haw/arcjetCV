@@ -494,7 +494,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 with open(file_path, "r") as file:
                     raw_data = json.load(file)
 
-                # Validate and organize calibration data
+                # Required parameters
                 camera_matrix = np.array(
                     raw_data.get("camera_matrix", [[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
                     dtype=np.float32,
@@ -512,27 +512,58 @@ class MainWindow(QtWidgets.QMainWindow):
                     if "tvec" in raw_data
                     else None
                 )
+                pixels_per_mm = raw_data.get("pixels_per_mm", 1.0)
 
-                # ✅ Ensure pixels_per_mm is always defined
-                pixels_per_mm = raw_data.get(
-                    "pixels_per_mm", 1.0
-                )  # Default to 1.0 if missing
+                # Optional keys for advanced rectification
+                centers = (
+                    np.array(raw_data["centers"], dtype=np.float32)
+                    if "centers" in raw_data
+                    else None
+                )
+                square_layout = (
+                    np.array(raw_data["square_layout"], dtype=np.float32)
+                    if "square_layout" in raw_data
+                    else None
+                )
+                homography = (
+                    np.array(raw_data["homography"], dtype=np.float32)
+                    if "homography" in raw_data
+                    else None
+                )
+                pattern_size = (
+                    tuple(raw_data["pattern_size"])
+                    if "pattern_size" in raw_data
+                    else None
+                )
+                affine_matrix = (
+                    np.array(raw_data["affine_matrix"], dtype=np.float32)
+                    if "affine_matrix" in raw_data
+                    and raw_data["affine_matrix"] is not None
+                    else None
+                )
 
-                # ✅ Store calibration data in an accessible attribute
+                # Store everything
                 self.calibration_data = {
                     "camera_matrix": camera_matrix,
                     "dist_coeffs": dist_coeffs,
                     "rvec": rvec,
                     "tvec": tvec,
                     "pixels_per_mm": pixels_per_mm,
+                    "centers": centers,
+                    "square_layout": square_layout,
+                    "homography": homography,
+                    "pattern_size": pattern_size,
+                    "affine_matrix": affine_matrix,
                 }
 
-                # ✅ Define self.pixels_per_mm for later use
                 self.pixels_per_mm = pixels_per_mm
+                self.calibrated = True
 
                 shortpath = self.shorten_path(file_path, 60)
                 self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
-                self.calibrated = True
+
+                print("✅ Calibration data loaded:", list(self.calibration_data.keys()))
+
             except KeyError as e:
                 self.arcjetcv_message_box(
                     "Error", f"Missing required calibration key: {str(e)}"

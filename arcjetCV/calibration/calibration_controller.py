@@ -373,12 +373,8 @@ class CalibrationController:
                 return
 
             # Detect pattern
-            pattern_type, _, img_p = self.detect_pattern(img, pattern_size)
-            print(pattern_type)
+            pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
             if pattern_type:
-                obj_p = self._generate_object_points(
-                    pattern_size, pattern_type, spacing
-                )
                 obj_points.append(obj_p)
                 img_points.append(img_p)
             else:
@@ -412,6 +408,20 @@ class CalibrationController:
             )
             affine_matrix = None
 
+        # Step: build normalized square layout for the asymmetric pattern
+        square_obj_pts = []
+        for i in range(pattern_size[1]):  # rows
+            for j in range(pattern_size[0]):  # cols
+                x = 2 * j + (i % 2)
+                y = i
+                square_obj_pts.append([x, y])
+        square_obj_pts = np.array(square_obj_pts, dtype=np.float32)
+        square_obj_pts -= np.min(square_obj_pts, axis=0)
+        scale = 1000.0 / np.max(square_obj_pts[:, 1])  # scale to 1000px height
+        square_layout = square_obj_pts * scale
+
+        H, _ = cv2.findHomography(img_pts_2d, square_layout)
+
         # Get ppm from stored value if available
         ppm_value = getattr(self, "ppm", None)
 
@@ -425,6 +435,10 @@ class CalibrationController:
                 affine_matrix.tolist() if affine_matrix is not None else None
             ),
             "pixels_per_mm": ppm_value if ppm_value else None,
+            "pattern_size": list(pattern_size),
+            "centers": img_points[0].tolist(),  # shape (N, 1, 2)
+            "square_layout": square_layout.tolist(),  # shape (N, 2)
+            "homography": H.tolist(),
         }
 
         # Save calibration data to file
@@ -452,7 +466,15 @@ class CalibrationController:
                     if calibration_data["affine_matrix"]
                     else None
                 ),
-                "pixels_per_mm": ppm_value if ppm_value else None,
+                "pixels_per_mm": calibration_data.get("pixels_per_mm", None),
+                "pattern_size": tuple(calibration_data["pattern_size"]),
+                "centers": np.array(calibration_data["centers"], dtype=np.float32),
+                "square_layout": np.array(
+                    calibration_data["square_layout"], dtype=np.float32
+                ),
+                "homography": np.array(
+                    calibration_data["homography"], dtype=np.float32
+                ),
             }
             self.calibrated = True
             QMessageBox.information(
@@ -791,105 +813,55 @@ class CalibrationController:
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save calibration: {e}")
 
-    def apply_calibration(self, frame, calibration_data):
+    @staticmethod
+    def apply_calibration(frame, calibration_data):
         """
-        Apply calibration to a single frame using provided calibration data.
+        Apply calibration and homography using precomputed pattern points
+        (no runtime detection).
 
         Args:
-            frame (numpy.ndarray): The input frame (image) to calibrate.
-            calibration_data (dict): A dictionary containing calibration data with keys:
-                - "camera_matrix": The intrinsic camera matrix.
-                - "dist_coeffs": The distortion coefficients.
-                - "affine_matrix" (optional): A 2D affine transformation matrix.
+            frame (np.ndarray): Original image (BGR).
+            calibration_data (dict): Must include:
+                - 'camera_matrix': intrinsic matrix
+                - 'dist_coeffs': distortion coefficients
+                - 'centers': 2D detected points (Nx1x2)
+                - 'square_layout': matching ideal square points (Nx2)
+                - 'pattern_size': (cols, rows) of the asymmetric grid
 
         Returns:
-            numpy.ndarray: The calibrated frame (image).
+            np.ndarray: Rectified image.
         """
-        # Extract calibration data
-        camera_matrix = np.array(calibration_data["camera_matrix"])
-        dist_coeffs = np.array(calibration_data["dist_coeffs"])
+        print("Calibration keys available:", list(calibration_data.keys()))
+        camera_matrix = np.array(calibration_data["camera_matrix"], dtype=np.float32)
+        dist_coeffs = np.array(calibration_data["dist_coeffs"], dtype=np.float32)
+        centers = np.array(calibration_data["centers"], dtype=np.float32)
+        square_layout = np.array(calibration_data["square_layout"], dtype=np.float32)
 
-        # Undistort the frame
         h, w = frame.shape[:2]
-        new_camera_matrix, _ = cv2.getOptimalNewCameraMatrix(
-            camera_matrix, dist_coeffs, (w, h), 1, (w, h)
-        )
-        undistorted_frame = cv2.undistort(
-            frame, camera_matrix, dist_coeffs, None, new_camera_matrix
-        )
-        print("Undistorted frame shape:")
-        # Check if affine transformation is available
-        if "affine_matrix" in calibration_data:
-            affine_matrix = np.array(calibration_data["affine_matrix"])
 
-            if affine_matrix.ndim != 2 or affine_matrix.shape != (2, 3):
-                print(
-                    f"⚠️ Skipping affine transform due to invalid shape: {affine_matrix.shape}"
-                )
-                return undistorted_frame
+        # Step 1: Undistort original image
+        undistorted = cv2.undistort(frame, camera_matrix, dist_coeffs)
 
-            # Extract rotation angle from affine transformation
-            angle_rad = np.arctan2(affine_matrix[1, 0], affine_matrix[0, 0])
-            angle_deg = np.degrees(angle_rad)  # Convert to degrees
+        # Step 2: Compute homography from stored centers and layout
+        H, _ = cv2.findHomography(centers, square_layout)
 
-            # Show warning if angle correction is greater than 8 degrees
-            if abs(angle_deg) > 8:
-                QMessageBox.warning(
-                    None,
-                    "Warning",
-                    f"⚠️ High rotation correction detected: {angle_deg:.2f}°.\n"
-                    "Please verify the calibration data.",
-                )
+        # Step 3: Compute warped canvas bounds
+        corners = np.array(
+            [[0, 0], [w - 1, 0], [w - 1, h - 1], [0, h - 1]], dtype=np.float32
+        ).reshape(-1, 1, 2)
+        warped_corners = cv2.perspectiveTransform(corners, H).reshape(-1, 2)
+        min_x, min_y = np.min(warped_corners, axis=0)
+        max_x, max_y = np.max(warped_corners, axis=0)
 
-            # Apply the affine transformation
-            return cv2.warpAffine(undistorted_frame, affine_matrix, (w, h))
+        # Step 4: Translate to avoid cropping
+        T = np.array([[1, 0, -min_x], [0, 1, -min_y], [0, 0, 1]], dtype=np.float32)
+        H_shifted = T @ H
+        canvas_size = (int(np.ceil(max_x - min_x)), int(np.ceil(max_y - min_y)))
 
-        # Return undistorted frame if no affine transformation is applied
-        return undistorted_frame
+        # Step 5: Warp using final homography
+        rectified = cv2.warpPerspective(undistorted, H_shifted, canvas_size)
 
-        # if "rvec" in calibration_data and "tvec" in calibration_data:
-        #     rvec = np.array(calibration_data["rvec"], dtype=np.float32).reshape(3, 1)
-        #     tvec = np.array(calibration_data["tvec"], dtype=np.float32).reshape(3, 1)
+        # ✅ Step 6: Rotate 90 degrees CCW to fix layout
+        rectified_rotated = cv2.rotate(rectified, cv2.ROTATE_90_CLOCKWISE)
 
-        #     # Define object points (assuming a flat image plane)
-        #     height, width = undistorted_frame.shape[:2]
-        #     object_points = np.array(
-        #         [[0, 0, 0], [width, 0, 0], [width, height, 0], [0, height, 0]],
-        #         dtype=np.float32,
-        #     )
-
-        #     # Project 3D points to 2D image coordinates
-        #     success, image_points = cv2.projectPoints(
-        #         object_points, rvec, tvec, new_camera_matrix, None
-        #     )
-
-        #     if not success or image_points is None or np.isnan(image_points).any():
-        #         print(
-        #             "❌ ERROR: Invalid projected points. Skipping perspective transform."
-        #         )
-        #         return undistorted_frame
-
-        #     # Compute perspective transform
-        #     src_points = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
-        #     dst_points = np.float32(image_points[:, 0, :])  # Ensure correct shape
-        #     perspective_transform = cv2.getPerspectiveTransform(src_points, dst_points)
-
-        #     if np.isnan(perspective_transform).any():
-        #         print("❌ ERROR: Perspective transform contains NaN values.")
-        #         return undistorted_frame
-
-        #     # Apply the transformation
-        #     calibrated_frame = cv2.warpPerspective(
-        #         undistorted_frame, perspective_transform, (width, height)
-        #     )
-
-        #     if np.all(calibrated_frame == 0):
-        #         print(
-        #             "❌ ERROR: Warping failed, resulting in a black image. Returning undistorted frame."
-        #         )
-        #         return undistorted_frame
-
-        #     return calibrated_frame
-        # else:
-        #     print("ℹ️ INFO: No 3D transformation applied, returning undistorted frame.")
-        #     return undistorted_frame
+        return rectified_rotated
