@@ -152,12 +152,11 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def show_img(self):
-        print("OK")
-        if self.calibrated == True:
-            self.rgb_frame = CalibrationController.apply_calibration(
-                self.rgb_frame, self.calibration_data
-            )
-            print("Calibrated")
+        # if self.calibrated == True:
+        #     self.rgb_frame = CalibrationController.apply_calibration(
+        #         self.rgb_frame, self.calibration_data
+        #     )
+        #     print("Calibrated")
         if self._plot_ref is None:
             # Create a new plot reference and define the cursor data format
             self._plot_ref = self.ui.Window0.canvas.axes.imshow(
@@ -214,23 +213,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # If image was rotated 90° clockwise, reverse it
         # Convert (x, y) to pre-rotation coordinates
-        if self.calibrated and "homography_inverse" in self.calibration_data:
-            print("good crop")
-            h, w = self.rgb_frame.shape[:2]
+        print(self.calibrated)
+        # if self.calibrated:
+        #     print("good crop")
+        #     h, w = self.rgb_frame.shape[:2]
 
-            def unrotate_point(x, y):
-                # Reverse 90° clockwise = rotate 90° counter-clockwise
-                return y, w - x
+        #     def unrotate_point(x, y):
+        #         # Reverse 90° clockwise = rotate 90° counter-clockwise
+        #         return y, w - x
 
-            x1, y1 = unrotate_point(x1, y1)
-            x2, y2 = unrotate_point(x2, y2)
+        #     x1, y1 = unrotate_point(x1, y1)
+        #     x2, y2 = unrotate_point(x2, y2)
 
-            # Optional: undo homography if you want original pixel space
-            H_inv = np.array(self.calibration_data["homography_inverse"])
-            pts = np.array([[x1, y1], [x2, y2]], dtype=np.float32).reshape(-1, 1, 2)
-            pts_original = cv.perspectiveTransform(pts, H_inv).reshape(-1, 2)
-            x1, y1 = pts_original[0]
-            x2, y2 = pts_original[1]
+        #     # Optional: undo homography if you want original pixel space
+        #     H_inv = np.array(self.calibration_data["homography_inverse"])
+        #     pts = np.array([[x1, y1], [x2, y2]], dtype=np.float32).reshape(-1, 1, 2)
+        #     pts_original = cv.perspectiveTransform(pts, H_inv).reshape(-1, 2)
+        #     x1, y1 = pts_original[0]
+        #     x2, y2 = pts_original[1]
 
         # Store corrected coordinates
         self.ui.spinBox_crop_xmin.setValue(int(min(x1, x2)))
@@ -313,6 +313,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rgb_frame = self.video.get_frame(frame_index)
         if self.rgb_frame is None:
             return
+        if self.calibrated == True:
+            self.rgb_frame = CalibrationController.apply_calibration(
+                self.rgb_frame, self.calibration_data
+            )
+            print("Calibrated")
 
         self.processor.flow_dir = self.ui.comboBox_flowDirection.currentText()
 
@@ -339,22 +344,31 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # Draw contours
+        width = self.rgb_frame.shape[1]
+        thickness = max(
+            1, width // 500
+        )  # Scale thickness with width, minimum thickness of 1
         for key in contour_dict.keys():
             if key == "MODEL":
-                cv.drawContours(self.rgb_frame, contour_dict[key], -1, (0, 255, 0), 2)
+                cv.drawContours(
+                    self.rgb_frame, contour_dict[key], -1, (0, 255, 0), thickness
+                )
             elif key == "SHOCK" and self.ui.checkBox_display_shock.isChecked():
-                cv.drawContours(self.rgb_frame, contour_dict[key], -1, (255, 0, 0), 2)
+                cv.drawContours(
+                    self.rgb_frame, contour_dict[key], -1, (255, 0, 0), thickness
+                )
 
         # Draw annotations
         annotate_image_with_frame_number(self.rgb_frame, frame_index)
         if self.ui.checkBox_annotate.isChecked():
             annotateImage(self.rgb_frame, argdict, top=True, left=True)
 
-        # Draw Crop box
         if self.ui.checkBox_crop.isChecked():
             start_point = (self.processor.crop[1][0], self.processor.crop[0][0])
             end_point = (self.processor.crop[1][1], self.processor.crop[0][1])
-            cv.rectangle(self.rgb_frame, start_point, end_point, (255, 255, 255), 2)
+            cv.rectangle(
+                self.rgb_frame, start_point, end_point, (255, 255, 255), thickness
+            )
 
         self.frame_processed.emit()
         self.plot_location()
@@ -561,6 +575,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     if "homography" in raw_data
                     else None
                 )
+                homography_inverse = (
+                    np.array(raw_data["homography_inverse"], dtype=np.float32)
+                    if "homography_inverse" in raw_data
+                    else None
+                )
                 pattern_size = (
                     tuple(raw_data["pattern_size"])
                     if "pattern_size" in raw_data
@@ -583,6 +602,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     "centers": centers,
                     "square_layout": square_layout,
                     "homography": homography,
+                    "homography_inverse": homography_inverse,  # Add homography_inverse here
                     "pattern_size": pattern_size,
                     "affine_matrix": affine_matrix,
                 }
@@ -605,6 +625,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     "Error", f"Failed to load calibration file: {str(e)}"
                 )
                 self.calibration_data = None
+        self.update_frame_index()
 
     def plot_location(self, reset=False):
         n = self.ui.spinBox_FrameIndex.value()

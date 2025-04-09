@@ -146,17 +146,17 @@ class Ui_MainWindow(object):
         self.verticalLayout_6 = QVBoxLayout()
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.verticalLayout_6.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.pushButton_loadVideo = QPushButton(self.tab)
-        self.pushButton_loadVideo.setObjectName("pushButton_loadVideo")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(
-            self.pushButton_loadVideo.sizePolicy().hasHeightForWidth()
-        )
-        self.pushButton_loadVideo.setSizePolicy(sizePolicy1)
+        # self.pushButton_loadVideo = QPushButton(self.tab)
+        # self.pushButton_loadVideo.setObjectName("pushButton_loadVideo")
+        # sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        # sizePolicy1.setHorizontalStretch(0)
+        # sizePolicy1.setVerticalStretch(0)
+        # sizePolicy1.setHeightForWidth(
+        #     self.pushButton_loadVideo.sizePolicy().hasHeightForWidth()
+        # )
+        # self.pushButton_loadVideo.setSizePolicy(sizePolicy1)
 
-        self.verticalLayout_6.addWidget(self.pushButton_loadVideo)
+        # self.verticalLayout_6.addWidget(self.pushButton_loadVideo)
 
         self.pushButton_loadCalibration = QPushButton(self.tab)
         self.pushButton_loadCalibration.setObjectName("pushButton_loadCalibration")
@@ -186,6 +186,18 @@ class Ui_MainWindow(object):
 
         # Add the label to the layout
         self.verticalLayout_6.addWidget(self.label_calibrationPath)
+
+        self.pushButton_loadVideo = QPushButton(self.tab)
+        self.pushButton_loadVideo.setObjectName("pushButton_loadVideo")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(
+            self.pushButton_loadVideo.sizePolicy().hasHeightForWidth()
+        )
+        self.pushButton_loadVideo.setSizePolicy(sizePolicy1)
+
+        self.verticalLayout_6.addWidget(self.pushButton_loadVideo)
 
         self.verticalSpacer_4 = QSpacerItem(
             20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
