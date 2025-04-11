@@ -526,105 +526,76 @@ class MainWindow(QtWidgets.QMainWindow):
                     )
 
     def load_calibration(self):
-        """Method to load a .json calibration file and prepare calibration data."""
+        """
+        Load a JSON calibration file and store the available calibration parameters.
 
-        # Open a file dialog to select a JSON file
+        Only existing keys in the JSON file will be loaded. Missing keys are skipped.
+        The calibration data is stored in self.calibration_data and self.pixels_per_mm.
+        """
         file_path, _ = QFileDialog.getOpenFileName(
             None, "Select Calibration File", "", "JSON Files (*.json)"
         )
 
-        if file_path:
-            try:
-                # Load calibration data from the JSON file
-                with open(file_path, "r") as file:
-                    raw_data = json.load(file)
+        if not file_path:
+            return
 
-                # Required parameters
-                camera_matrix = np.array(
-                    raw_data.get("camera_matrix", [[1, 0, 0], [0, 1, 0], [0, 0, 1]]),
-                    dtype=np.float32,
-                )
-                dist_coeffs = np.array(
-                    raw_data.get("dist_coeffs", [0, 0, 0, 0, 0]), dtype=np.float32
-                )
-                rvec = (
-                    np.array(raw_data["rvec"], dtype=np.float32)
-                    if "rvec" in raw_data
-                    else None
-                )
-                tvec = (
-                    np.array(raw_data["tvec"], dtype=np.float32)
-                    if "tvec" in raw_data
-                    else None
-                )
-                pixels_per_mm = raw_data.get("pixels_per_mm", 1.0)
+        try:
+            with open(file_path, "r") as file:
+                raw_data = json.load(file)
 
-                # Optional keys for advanced rectification
-                centers = (
-                    np.array(raw_data["centers"], dtype=np.float32)
-                    if "centers" in raw_data
-                    else None
-                )
-                square_layout = (
-                    np.array(raw_data["square_layout"], dtype=np.float32)
-                    if "square_layout" in raw_data
-                    else None
-                )
-                homography = (
-                    np.array(raw_data["homography"], dtype=np.float32)
-                    if "homography" in raw_data
-                    else None
-                )
-                homography_inverse = (
-                    np.array(raw_data["homography_inverse"], dtype=np.float32)
-                    if "homography_inverse" in raw_data
-                    else None
-                )
-                pattern_size = (
-                    tuple(raw_data["pattern_size"])
-                    if "pattern_size" in raw_data
-                    else None
-                )
-                affine_matrix = (
-                    np.array(raw_data["affine_matrix"], dtype=np.float32)
-                    if "affine_matrix" in raw_data
-                    and raw_data["affine_matrix"] is not None
-                    else None
-                )
+            # Initialize calibration data dictionary
+            self.calibration_data = {}
 
-                # Store everything
-                self.calibration_data = {
-                    "camera_matrix": camera_matrix,
-                    "dist_coeffs": dist_coeffs,
-                    "rvec": rvec,
-                    "tvec": tvec,
-                    "pixels_per_mm": pixels_per_mm,
-                    "centers": centers,
-                    "square_layout": square_layout,
-                    "homography": homography,
-                    "homography_inverse": homography_inverse,  # Add homography_inverse here
-                    "pattern_size": pattern_size,
-                    "affine_matrix": affine_matrix,
-                }
+            # Load each expected key if it exists
+            key_types = {
+                "camera_matrix": (np.float32, (3, 3)),
+                "dist_coeffs": (np.float32, None),
+                "rvec": (np.float32, None),
+                "tvec": (np.float32, None),
+                "pixels_per_mm": (float, None),
+                "centers": (np.float32, None),
+                "square_layout": (np.float32, None),
+                "homography": (np.float32, None),
+                "homography_inverse": (np.float32, None),
+                "pattern_size": (tuple, None),
+                "affine_matrix": (np.float32, None),
+            }
 
-                self.pixels_per_mm = pixels_per_mm
-                self.calibrated = True
+            for key, (dtype, shape) in key_types.items():
+                if key in raw_data:
+                    value = raw_data[key]
+                    if dtype == np.float32:
+                        arr = np.array(value, dtype=dtype)
+                        self.calibration_data[key] = arr
+                    elif dtype == float:
+                        self.calibration_data[key] = float(value)
+                    elif dtype == tuple:
+                        self.calibration_data[key] = tuple(value)
 
-                shortpath = self.shorten_path(file_path, 60)
-                self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
+            # Set ppm and status flag
+            self.pixels_per_mm = self.calibration_data.get("pixels_per_mm", None)
+            self.calibrated = True
 
-                print("✅ Calibration data loaded:", list(self.calibration_data.keys()))
+            # Update label
+            shortpath = self.shorten_path(file_path, 60)
+            self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
 
-            except KeyError as e:
-                self.arcjetcv_message_box(
-                    "Error", f"Missing required calibration key: {str(e)}"
-                )
-                self.calibration_data = None
-            except Exception as e:
-                self.arcjetcv_message_box(
-                    "Error", f"Failed to load calibration file: {str(e)}"
-                )
-                self.calibration_data = None
+            print("✅ Calibration data loaded:", list(self.calibration_data.keys()))
+
+        except Exception as e:
+            self.arcjetcv_message_box(
+                "Error", f"Failed to load calibration file: {str(e)}"
+            )
+            self.calibration_data = None
+            self.calibrated = False
+            # Update pixels_per_mm in both the processor and videometa
+            if self.pixels_per_mm:
+                self.videometa["PIXELS_PER_MM"] = self.pixels_per_mm
+                self.videometa.write()  # Save the updated value in the meta file
+                self.processor.pixels_per_mm = (
+                    self.pixels_per_mm
+                )  # Ensure the processor has the updated value
+
         self.update_frame_index()
 
     def plot_location(self, reset=False):
