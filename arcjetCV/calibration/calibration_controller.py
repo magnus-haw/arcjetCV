@@ -16,10 +16,10 @@ class CalibrationController:
         self.view = view
         self.model = CalibrationModel()
 
-        # Connect signals and slots
-        self.view.load_button.clicked.connect(self.load_chessboard_images)
-        self.view.calibrate_button.clicked.connect(self.calibrate_camera)
-        self.view.print_button.clicked.connect(self.print_chessboard)
+        # # Connect signals and slots
+        # self.view.load_button.clicked.connect(self.load_chessboard_images)
+        # self.view.calibrate_button.clicked.connect(self.calibrate_camera)
+        # self.view.print_button.clicked.connect(self.print_chessboard)
         self.view.load_image_button.clicked.connect(self.load_image)
         self.view.load_image_button_pattern.clicked.connect(self.load_image_diagonal)
         self.view.calculate_button.clicked.connect(self.calculate_ppcm)
@@ -347,6 +347,144 @@ class CalibrationController:
                 print(f"❌ Full affine estimation crashed: {ee}")
                 return None
 
+    def calibrate_camera_2(self, img_path):
+        """Perform full 3D camera calibration and save results."""
+
+        pattern_size = (
+            self.view.grid_cols_input.value(),
+            self.view.grid_rows_input.value(),
+        )
+        spacing = 1.0  # Use unit spacing; real-world scaling comes later
+
+        obj_points = []
+        img_points = []
+
+        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            QMessageBox.warning(self.view, "Error", f"Failed to load image: {img_path}")
+            return
+
+        # Detect pattern
+        pattern_type, obj_p, img_p = self.detect_pattern(img, pattern_size)
+        if pattern_type:
+            obj_points.append(obj_p)
+            img_points.append(img_p)
+        else:
+            QMessageBox.warning(
+                self.view, "Error", f"No pattern detected in {img_path}"
+            )
+            return
+
+        # Perform camera calibration
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
+            obj_points, img_points, img.shape[::-1], None, None
+        )
+        print(f"Calibration RMS error: {ret:.4f}")
+        if not ret:
+            QMessageBox.warning(self.view, "Error", "Camera calibration failed.")
+            return
+
+        # Calculate 3D orientation
+        rotation_matrix, tvec, euler_angles = self.calculate_3d_orientation(
+            obj_points[0], img_points[0], mtx, dist
+        )
+
+        obj_pts_2d = obj_points[0][:, :2]  # shape (N, 2)
+        img_pts_2d = img_points[0].reshape(-1, 2)  # shape (N, 2)
+
+        if obj_pts_2d.shape == img_pts_2d.shape and len(obj_pts_2d) >= 3:
+            affine_matrix = self.calculate_2d_affine_matrix(img, obj_pts_2d, img_pts_2d)
+        else:
+            print(
+                f"⚠️ Skipping affine matrix — point mismatch or too few points: obj={obj_pts_2d.shape}, img={img_pts_2d.shape}"
+            )
+            affine_matrix = None
+
+        # Step: build normalized square layout for the asymmetric pattern
+        square_obj_pts = []
+        for i in range(pattern_size[1]):  # rows
+            for j in range(pattern_size[0]):  # cols
+                x = 2 * j + (i % 2)
+                y = i
+                square_obj_pts.append([x, y])
+        square_obj_pts = np.array(square_obj_pts, dtype=np.float32)
+        square_obj_pts -= np.min(square_obj_pts, axis=0)
+        scale = 1000.0 / np.max(square_obj_pts[:, 1])  # scale to 1000px height
+        square_layout = square_obj_pts * scale
+
+        H, _ = cv2.findHomography(img_pts_2d, square_layout)
+        H_inv = np.linalg.inv(H)
+        # Get ppm from stored value if available
+        ppm_value = getattr(self, "ppm", None)
+
+        # Store calibration data
+        calibration_data = {
+            "camera_matrix": mtx.tolist(),
+            "dist_coeffs": dist.tolist(),
+            "rvec": rvecs[0].tolist() if rvecs else None,
+            "tvec": tvecs[0].tolist() if tvecs else None,
+            "affine_matrix": (
+                affine_matrix.tolist() if affine_matrix is not None else None
+            ),
+            "pixels_per_mm": ppm_value if ppm_value else None,
+            "pattern_size": list(pattern_size),
+            "centers": img_points[0].tolist(),  # shape (N, 1, 2)
+            "square_layout": square_layout.tolist(),  # shape (N, 2)
+            "homography": H.tolist(),
+            "homography_inverse": H_inv.tolist(),
+        }
+
+        # Save calibration data to file
+        success, save_error = self.save_to_json(calibration_data)
+        if success:
+            self.calibration_data = {
+                "camera_matrix": np.array(
+                    calibration_data["camera_matrix"], dtype=np.float32
+                ),
+                "dist_coeffs": np.array(
+                    calibration_data["dist_coeffs"], dtype=np.float32
+                ),
+                "rvec": (
+                    np.array(calibration_data["rvec"], dtype=np.float32)
+                    if calibration_data["rvec"]
+                    else None
+                ),
+                "tvec": (
+                    np.array(calibration_data["tvec"], dtype=np.float32)
+                    if calibration_data["tvec"]
+                    else None
+                ),
+                "affine_matrix": (
+                    np.array(calibration_data["affine_matrix"], dtype=np.float32)
+                    if calibration_data["affine_matrix"]
+                    else None
+                ),
+                "pixels_per_mm": calibration_data.get("pixels_per_mm", None),
+                "pattern_size": tuple(calibration_data["pattern_size"]),
+                "centers": np.array(calibration_data["centers"], dtype=np.float32),
+                "square_layout": np.array(
+                    calibration_data["square_layout"], dtype=np.float32
+                ),
+                "homography": np.array(
+                    calibration_data["homography"], dtype=np.float32
+                ),
+                "homography_inverse": np.array(
+                    calibration_data["homography_inverse"], dtype=np.float32
+                ),
+            }
+            self.calibrated = True
+            QMessageBox.information(
+                self.view,
+                "Success",
+                "3D and 2D Camera calibration successful and saved.",
+            )
+        else:
+            self.calibration_data = None
+            self.calibrated = False
+            QMessageBox.warning(
+                self.view, "Error", f"Failed to save calibration: {save_error}"
+            )
+
     def calibrate_camera(self):
         """Perform full 3D camera calibration and save results."""
         if not self.image_paths:
@@ -631,9 +769,10 @@ class CalibrationController:
         if not file_path:
             QMessageBox.warning(self.view, "Error", "No image selected.")
             return
-
-        # Load and convert the image
         self.image = cv2.imread(file_path)
+        self.calibrate_camera_2(file_path)
+        self.image = self.apply_calibration(self.image, self.calibration_data)
+        # Load and convert the image
         if self.image is None:
             QMessageBox.warning(self.view, "Error", "Unable to load the image.")
             return
@@ -650,7 +789,6 @@ class CalibrationController:
         if pattern_type is None:
             QMessageBox.warning(self.view, "Error", "No valid pattern detected.")
             return
-
         # Draw detected pattern
         if pattern_type == "chessboard":
             cv2.drawChessboardCorners(self.image, pattern_size, corners, True)
@@ -811,9 +949,13 @@ class CalibrationController:
             try:
                 # Copy content from calibration.json
                 shutil.copy(source_file, file_path)
+                with open(source_file, "w") as f:
+                    # You can reset to an empty calibration structure, or use a default template
+                    f.write("{}")  # Writing an empty JSON or default content
                 QMessageBox.information(
                     self, "Success", f"Calibration saved as {file_path}"
                 )
+
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save calibration: {e}")
 

@@ -37,71 +37,71 @@ class CalibrationView(QWidget):
         # Right side: buttons and inputs
         button_layout = QVBoxLayout()
 
-        # Pattern Calibration Section
-        self.pattern_calibration_group = QGroupBox("1. Intrinsic Calibration")
-        self.pattern_calibration_layout = QVBoxLayout()
+        # # Pattern Calibration Section
+        # self.pattern_calibration_group = QGroupBox("1. Intrinsic Calibration")
+        # self.pattern_calibration_layout = QVBoxLayout()
 
-        # Adding Pattern Calibration Buttons
-        self.print_button = QPushButton("Print Chessboard")
+        # # Adding Pattern Calibration Buttons
+        # self.print_button = QPushButton("Print Chessboard")
 
-        grid_size_layout_1 = QHBoxLayout()
-        label_layout_1 = QHBoxLayout()  # Layout for aligning labels on the left
+        # grid_size_layout_1 = QHBoxLayout()
+        # label_layout_1 = QHBoxLayout()  # Layout for aligning labels on the left
 
-        grid_size_label_1 = QLabel("Pattern Size:")
+        # grid_size_label_1 = QLabel("Pattern Size:")
 
-        # Ensure labels stay on the left
-        label_layout_1.addWidget(grid_size_label_1)
-        label_layout_1.addStretch()  # Push elements to the left
+        # # Ensure labels stay on the left
+        # label_layout_1.addWidget(grid_size_label_1)
+        # label_layout_1.addStretch()  # Push elements to the left
 
-        # Spinboxes for grid size input
-        self.grid_rows_input_1 = QSpinBox()
-        self.grid_cols_input_1 = QSpinBox()
+        # # Spinboxes for grid size input
+        # self.grid_rows_input_1 = QSpinBox()
+        # self.grid_cols_input_1 = QSpinBox()
 
-        # Configure QSpinBox properties
-        self.grid_rows_input_1.setMinimum(1)
-        self.grid_rows_input_1.setMaximum(100)
-        self.grid_rows_input_1.setValue(9)
+        # # Configure QSpinBox properties
+        # self.grid_rows_input_1.setMinimum(1)
+        # self.grid_rows_input_1.setMaximum(100)
+        # self.grid_rows_input_1.setValue(9)
 
-        self.grid_cols_input_1.setMinimum(1)
-        self.grid_cols_input_1.setMaximum(100)
-        self.grid_cols_input_1.setValue(4)
+        # self.grid_cols_input_1.setMinimum(1)
+        # self.grid_cols_input_1.setMaximum(100)
+        # self.grid_cols_input_1.setValue(4)
 
-        # Ensure QSpinBox fields expand properly
-        self.grid_rows_input_1.setSizePolicy(
-            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
-        )
-        self.grid_cols_input_1.setSizePolicy(
-            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
-        )
+        # # Ensure QSpinBox fields expand properly
+        # self.grid_rows_input_1.setSizePolicy(
+        #     QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        # )
+        # self.grid_cols_input_1.setSizePolicy(
+        #     QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
+        # )
 
-        # Add elements to the grid size layout
-        grid_size_layout_1.addLayout(label_layout_1)
-        grid_size_layout_1.addWidget(
-            QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight
-        )
-        grid_size_layout_1.addWidget(self.grid_cols_input_1, stretch=1)
+        # # Add elements to the grid size layout
+        # grid_size_layout_1.addLayout(label_layout_1)
+        # grid_size_layout_1.addWidget(
+        #     QLabel("Cols:"), alignment=Qt.AlignmentFlag.AlignRight
+        # )
+        # grid_size_layout_1.addWidget(self.grid_cols_input_1, stretch=1)
 
-        grid_size_layout_1.addWidget(
-            QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
-        )
-        grid_size_layout_1.addWidget(self.grid_rows_input_1, stretch=1)
+        # grid_size_layout_1.addWidget(
+        #     QLabel("Rows:"), alignment=Qt.AlignmentFlag.AlignRight
+        # )
+        # grid_size_layout_1.addWidget(self.grid_rows_input_1, stretch=1)
 
-        self.load_button = QPushButton("Load Calibration Images")
-        self.calibrate_button = QPushButton("Calibrate Camera")
-        self.image_label = QLabel("No images loaded")
+        # self.load_button = QPushButton("Load Calibration Images")
+        # self.calibrate_button = QPushButton("Calibrate Camera")
+        # self.image_label = QLabel("No images loaded")
 
-        self.pattern_calibration_layout.addWidget(self.print_button)
-        self.pattern_calibration_layout.addLayout(grid_size_layout_1)
-        self.pattern_calibration_layout.addWidget(self.load_button)
-        self.pattern_calibration_layout.addWidget(self.calibrate_button)
-        self.pattern_calibration_layout.addWidget(self.image_label)
-        self.pattern_calibration_group.setLayout(self.pattern_calibration_layout)
+        # self.pattern_calibration_layout.addWidget(self.print_button)
+        # self.pattern_calibration_layout.addLayout(grid_size_layout_1)
+        # self.pattern_calibration_layout.addWidget(self.load_button)
+        # self.pattern_calibration_layout.addWidget(self.calibrate_button)
+        # self.pattern_calibration_layout.addWidget(self.image_label)
+        # self.pattern_calibration_group.setLayout(self.pattern_calibration_layout)
 
-        button_layout.addWidget(self.pattern_calibration_group)
-        button_layout.addSpacing(20)
+        # button_layout.addWidget(self.pattern_calibration_group)
+        # button_layout.addSpacing(20)
 
         # Image Resolution Section
-        self.image_resolution_group = QGroupBox("2. Metric Calibration")
+        self.image_resolution_group = QGroupBox()  # "2. Metric Calibration")
         self.image_resolution_layout = QVBoxLayout()
 
         self.resolution_tabs = QTabWidget()
@@ -164,9 +164,7 @@ class CalibrationView(QWidget):
         load_image_layout_pattern = QHBoxLayout()
         load_image_layout_pattern.setContentsMargins(0, 0, 0, 0)
         load_image_label_pattern = QLabel("2.")
-        self.load_image_button_pattern = QPushButton(
-            "Load Image for Resolution Measurement"
-        )
+        self.load_image_button_pattern = QPushButton("Load Calibration Image")
         self.load_image_button_pattern.setSizePolicy(
             QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed
         )
