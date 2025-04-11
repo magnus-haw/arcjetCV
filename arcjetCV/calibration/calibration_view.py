@@ -42,7 +42,7 @@ class CalibrationView(QWidget):
         # self.pattern_calibration_layout = QVBoxLayout()
 
         # # Adding Pattern Calibration Buttons
-        # self.print_button = QPushButton("Print Chessboard")
+        self.print_button = QPushButton("Print Chessboard")
 
         # grid_size_layout_1 = QHBoxLayout()
         # label_layout_1 = QHBoxLayout()  # Layout for aligning labels on the left
@@ -285,6 +285,8 @@ class CalibrationView(QWidget):
         self.ppcm_label = QLabel("Calibration Scale: N/A")
         self.image_resolution_layout.addWidget(self.ppcm_label)
         self.ruler_resolution_tab.setLayout(ruler_resolution_layout)
+
+        button_layout.addWidget(self.print_button)
 
         # Add tabs to the resolution group
         self.image_resolution_group.setLayout(self.image_resolution_layout)

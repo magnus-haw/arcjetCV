@@ -119,31 +119,73 @@ def test_detect_pattern(calibration_controller, qtbot):
     assert img_points is not None, "Image points not generated."
 
 
-def test_calibrate_camera(calibration_controller, qtbot):
-    """Test the full camera calibration process using the calibration image."""
+# def test_calibrate_camera(calibration_controller, qtbot):
+#     """Test the full camera calibration process using the calibration image."""
+#     controller = calibration_controller
+#     project_root = find_project_root()
+#     image_path = project_root / "tests" / "arcjetcv_calibration.jpg"
+#     controller.image_paths = [str(image_path)]
+
+#     assert len(controller.image_paths) > 0, "No test images loaded for calibration."
+
+#     # Auto-dismiss any popup during calibration
+#     auto_dismiss_popup()
+
+#     try:
+#         controller.calibrate_camera()
+
+#         # Ensure calibration data exists
+#         assert controller.calibration_data, "Calibration data not stored."
+#         assert "camera_matrix" in controller.calibration_data, "Camera matrix missing."
+#         assert (
+#             "dist_coeffs" in controller.calibration_data
+#         ), "Distortion coefficients missing."
+
+#         print("✅ Camera calibration completed successfully!")
+#     except Exception as e:
+#         pytest.fail(f"❌ Calibration raised an exception: {e}")
+
+
+def test_apply_calibration(calibration_controller):
+    """Test applying calibration to the calibration image."""
     controller = calibration_controller
     project_root = find_project_root()
     image_path = project_root / "tests" / "arcjetcv_calibration.jpg"
-    controller.image_paths = [str(image_path)]
 
-    assert len(controller.image_paths) > 0, "No test images loaded for calibration."
+    # Set the expected pattern size (same as used during calibration)
+    controller.view.grid_cols_input.setValue(4)
+    controller.view.grid_rows_input.setValue(9)
 
-    # Auto-dismiss any popup during calibration
-    auto_dismiss_popup()
+    # Prevent popups from blocking the test
+    with patch.object(QMessageBox, "information") as mock_info, patch.object(
+        QMessageBox, "warning"
+    ) as mock_warning:
 
-    try:
-        controller.calibrate_camera()
+        # Call the calibration function with correct signature
+        controller.calibrate_camera(str(image_path))
 
-        # Ensure calibration data exists
+        # Make sure calibration succeeded
         assert controller.calibration_data, "Calibration data not stored."
-        assert "camera_matrix" in controller.calibration_data, "Camera matrix missing."
-        assert (
-            "dist_coeffs" in controller.calibration_data
-        ), "Distortion coefficients missing."
 
-        print("✅ Camera calibration completed successfully!")
-    except Exception as e:
-        pytest.fail(f"❌ Calibration raised an exception: {e}")
+        # Check some essential fields
+        assert "camera_matrix" in controller.calibration_data
+        assert "dist_coeffs" in controller.calibration_data
+        assert controller.calibrated is True
+
+        # Load original image and apply calibration
+        test_img = get_calibration_image()
+        calibrated_img = controller.apply_calibration(
+            test_img, controller.calibration_data
+        )
+
+        assert calibrated_img is not None, "Failed to apply calibration."
+        assert calibrated_img.shape[2] == test_img.shape[2], "Channel count mismatch"
+        assert (
+            calibrated_img.shape[0] > 0 and calibrated_img.shape[1] > 0
+        ), "Image shape invalid"
+
+        # Confirm that a success popup was triggered
+        mock_info.assert_called_once()
 
 
 def test_save_to_json(calibration_controller, tmp_path):
@@ -202,7 +244,7 @@ def test_apply_calibration(calibration_controller):
     # Auto-dismiss any popup during calibration
     auto_dismiss_popup()
 
-    controller.calibrate_camera()
+    controller.calibrate_camera(str(image_path))
 
     # Ensure calibration data exists
     assert controller.calibration_data, "Calibration data not stored."
