@@ -114,7 +114,7 @@ python test.py
 
 ## Citing
 
-If you use arcjetCV in your research, please use the following BibTeX entry to cite [our paper](https://arxiv.org/abs/2404.11492):
+If you use arcjetCV in your research, please use the following BibTeX entry to cite [our paper](https://doi.org/10.2514/1.A36132):
 
 ```BibTeX
 @article{doi:10.2514/1.A36132,
