@@ -117,11 +117,17 @@ python test.py
 If you use arcjetCV in your research, please use the following BibTeX entry to cite [our paper](https://arxiv.org/abs/2404.11492):
 
 ```BibTeX
-@article{arcjetCV,
-  title={arcjetCV: an open-source software to analyze material ablation},
-  author={Quintart, Alexandre and Haw, Magnus and Semeraro, Federico},
-  journal={arXiv preprint arXiv:2404.11492},
-  year={2024}
+@article{doi:10.2514/1.A36132,
+author = {Quintart, Alexandre M. and Haw, Magnus A. and Semeraro, Federico},
+title = {arcjetCV: Open-Source Software to Analyze Material Ablation},
+journal = {Journal of Spacecraft and Rockets},
+volume = {0},
+number = {0},
+pages = {1-10},
+year = {0},
+doi = {10.2514/1.A36132},
+URL = {https://doi.org/10.2514/1.A36132},
+eprint = {https://doi.org/10.2514/1.A36132}
 }
 ```
 
