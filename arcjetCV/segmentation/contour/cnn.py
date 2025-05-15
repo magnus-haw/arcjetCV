@@ -16,7 +16,7 @@ class CNN:
         # Download if missing
         if not self.checkpoint_path.exists():
             print(f"[INFO] Downloading model weights to {self.checkpoint_path}...")
-            url = "https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
+            url = "https://github.com/magnus-haw/arcjetCV/rawÒ/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
             urllib.request.urlretrieve(url, self.checkpoint_path)
 
         self.checkpoint_path = (
@@ -32,7 +32,9 @@ class CNN:
             activation=None,
         )
         self.model.load_state_dict(
-            torch.load(self.checkpoint_path, map_location=self.device)
+            torch.load(
+                self.checkpoint_path, map_location=self.device, weights_only=False
+            )
         )
         self.model.to(self.device)
         self.model.eval()
