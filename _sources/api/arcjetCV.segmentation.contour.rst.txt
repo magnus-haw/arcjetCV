@@ -20,6 +20,14 @@ arcjetCV.segmentation.contour.contour module
    :undoc-members:
    :show-inheritance:
 
+arcjetCV.segmentation.contour.model\_loader module
+--------------------------------------------------
+
+.. automodule:: arcjetCV.segmentation.contour.model_loader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
