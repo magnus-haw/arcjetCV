@@ -2,21 +2,31 @@ import torch
 from pathlib import Path
 import cv2
 from torchvision import transforms as T
+import segmentation_models_pytorch as smp
 
 
 class CNN:
     def __init__(self):
-        # predict fails from GUI (Could not load library libcudnn_ops_infer.so), works from script. Fix: run it cpu only
-        self.device = torch.device(
-            "cpu"
-        )  # torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        # Automatically choose GPU if available
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.checkpoint_path = (
             Path(__file__)
             .parent.absolute()
-            .joinpath(Path("Unet-xception_25_original.pt"))
+            .joinpath("Unet-xception_25_weights_only.pt")
         )
-        self.model = torch.load(self.checkpoint_path, map_location=self.device)
+
+        self.model = smp.Unet(
+            encoder_name="xception",
+            encoder_weights=None,
+            classes=4,  # match saved model
+            activation=None,
+        )
+        self.model.load_state_dict(
+            torch.load(self.checkpoint_path, map_location=self.device)
+        )
+        self.model.to(self.device)
+        self.model.eval()
 
         self.mean = [0.485, 0.456, 0.406]
         self.std = [0.229, 0.224, 0.225]
