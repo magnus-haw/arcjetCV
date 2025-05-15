@@ -598,8 +598,11 @@ class CalibrationController:
             return
         self.start_point = (event.xdata, event.ydata)
 
-        if self.line_artist:
-            self.line_artist.remove()
+        if self.line_artist is not None:
+            try:
+                self.line_artist.remove()
+            except Exception as e:
+                print(f"⚠️ Could not remove line_artist: {e}")
             self.line_artist = None
         self.view.canvas.draw()
 
