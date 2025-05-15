@@ -10,6 +10,7 @@ class CNN:
     def __init__(self):
         # Automatically choose GPU if available
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model_name = "Unet-xception_25_weights_only.pt"
         self.checkpoint_path = Path(__file__).parent / model_name
 
         # Download if missing
