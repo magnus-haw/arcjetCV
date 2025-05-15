@@ -66,7 +66,7 @@ check_linux_dependencies()
 # Define the setup configuration
 setup(
     name="arcjetcv",
-    version="1.1.1",  # Set the version directly here
+    version="1.1.2",  # Set the version directly here
     author="arcjetCV team",
     description="Package to process arcjet videos and segment the edge of the shock and of the sample",
     long_description=long_description,
@@ -86,6 +86,7 @@ setup(
         "arcjetCV": [
             "segmentation/contour/Unet-xception_25_original.pt",  # Exclude .pt files
             "segmentation/contour/Unet-xception-last-checkpoint.pt",
+            "segmentation/contour/Unet-xception_25_weights_only.pt",
         ],
     },
     install_requires=[

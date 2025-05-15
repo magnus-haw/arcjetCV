@@ -3,12 +3,20 @@ from pathlib import Path
 import cv2
 from torchvision import transforms as T
 import segmentation_models_pytorch as smp
+import urllib.request
 
 
 class CNN:
     def __init__(self):
         # Automatically choose GPU if available
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.checkpoint_path = Path(__file__).parent / model_name
+
+        # Download if missing
+        if not self.checkpoint_path.exists():
+            print(f"[INFO] Downloading model weights to {self.checkpoint_path}...")
+            url = "https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
+            urllib.request.urlretrieve(url, self.checkpoint_path)
 
         self.checkpoint_path = (
             Path(__file__)

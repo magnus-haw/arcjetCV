@@ -519,10 +519,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             except Exception as e:
                 if self.testing:
-                    print("! Could not load video !:\n" + str(e))
+                    print("Could not load video :\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
-                        "Warning", "! Could not load video !:\n" + str(e)
+                        "Warning", "Could not load video :\n" + str(e)
                     )
 
     def load_calibration(self):
