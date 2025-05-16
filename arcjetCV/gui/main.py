@@ -9,7 +9,7 @@ import os
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 from arcjetCV.gui.main_window import MainWindow
-from arcjetCV.segmentation.model_loader import get_model_checkpoint
+from arcjetCV.segmentation.contour.model_loader import get_model_checkpoint
 
 
 # Function to get the correct icon path based on OS
@@ -31,7 +31,10 @@ def main():
 
     # Set application icon
     icon_path = get_icon_path()
-    get_model_checkpoint()
+    try:
+        get_model_checkpoint()
+    except Exception as e:
+        print(f"[WARNING] Could not preload model weights: {e}")
 
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
