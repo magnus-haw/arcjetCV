@@ -4,6 +4,7 @@ import cv2
 from torchvision import transforms as T
 import segmentation_models_pytorch as smp
 import urllib.request
+import hashlib
 
 
 class CNN:
