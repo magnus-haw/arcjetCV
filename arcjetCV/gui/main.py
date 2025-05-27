@@ -10,37 +10,37 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 from arcjetCV.gui.main_window import MainWindow
 from arcjetCV.segmentation.contour.model_loader import get_model_checkpoint
+from pathlib import Path
 
 
-# Function to get the correct icon path based on OS
 def get_icon_path():
-    base_path = os.path.dirname(
-        os.path.abspath(__file__)
-    )  # Get current script directory
-    icon_filename = (
-        "arcjetCV_logo_.ico"
-        if sys.platform.startswith("win")
-        else "arcjetCV_logo.icns" if sys.platform == "darwin" else "arcjetCV_logo_.png"
-    )
-    return os.path.join(base_path, "logo", icon_filename)
+    base_path = Path(__file__).resolve().parent
+    if sys.platform.startswith("win"):
+        icon_filename = "arcjetCV_logo_.png"
+    elif sys.platform == "darwin":
+        icon_filename = "arcjetCV_logo.icns"
+    else:
+        icon_filename = "arcjetCV_logo_.png"
+    return base_path / "logo" / icon_filename
 
 
 def main():
     app = QApplication(sys.argv)
-    window = MainWindow()
-
-    # Set application icon
     icon_path = get_icon_path()
+
+    if icon_path.exists():
+        icon = QIcon(str(icon_path))
+        app.setWindowIcon(icon)  # sets default for future windows
+    else:
+        print(f"[WARNING] Icon file not found: {icon_path}")
+
+    window = MainWindow()
+    if icon_path.exists():
+        window.setWindowIcon(QIcon(str(icon_path)))  # <- explicit for taskbar
     try:
         get_model_checkpoint()
     except Exception as e:
         print(f"[WARNING] Could not preload model weights: {e}")
-
-    if os.path.exists(icon_path):
-        app.setWindowIcon(QIcon(icon_path))
-    else:
-        print(f"[WARNING] Icon file not found: {icon_path}")
-
     window.show()
     sys.exit(app.exec())
 
