@@ -7,7 +7,7 @@ import json
 from numbers import Number
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Signal, QThread
+from PySide6.QtCore import Signal, QThread, Qt
 from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv
@@ -673,27 +673,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.thread = QThread()
         self.worker.moveToThread(self.thread)
-
-        # ✅ Connect Signals
+    
+        # ✅ Connect signals (only once)
         self.thread.started.connect(self.worker.run)
         self.worker.progress_updated.connect(self.ui.progressBar.setValue)
         self.worker.finished.connect(self.on_processing_complete)
-
-        # ✅ Ensure proper cleanup
         self.worker.finished.connect(self.thread.quit)
         self.thread.finished.connect(lambda: print("✅ Worker thread fully terminated"))
 
-        # ✅ Start the new thread
+        # ✅ Start the thread
         self.thread.start()
-
-        # ✅ Connect Signals
-        self.worker.progress_updated.connect(
-            self.ui.progressBar.setValue
-        )  # Update progress bar
-        self.worker.finished.connect(self.on_processing_complete)  # Handle completion
-
-        self.thread.started.connect(self.worker.run)  # Start worker when thread starts
-        self.thread.start()  # Start thread
 
     def on_processing_complete(self):
         """Handles UI updates when processing is completed."""
@@ -1246,11 +1235,20 @@ class MainWindow(QtWidgets.QMainWindow):
                         "Warning", "! Fitting failed !:\n" + str(e)
                     )
 
-    def arcjetcv_message_box(self, title, message):
+    # def arcjetcv_message_box(self, title, message):
 
+    #     msg_box = QMessageBox()
+    #     msg_box.setIconPixmap(QPixmap(self.logo_path))
+    #     msg_box.setWindowTitle(title)
+    #     msg_box.setText(message)
+    #     msg_box.setStandardButtons(QMessageBox.Ok)
+    #     msg_box.exec_()
+
+    def arcjetcv_message_box(self, title, message):
         msg_box = QMessageBox()
-        msg_box.setIconPixmap(QPixmap(self.logo_path))
+        icon = QPixmap(self.logo_path).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        msg_box.setIconPixmap(icon)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.exec_()
+        msg_box.exec()
