@@ -126,30 +126,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show()
 
     def closeEvent(self, event):
-        """Handle window close event by stopping all running threads."""
         print("🔴 Closing application...")
+        try:
+            if hasattr(self, "worker") and self.worker is not None:
+                print("🛑 Attempting to stop worker...")
+                self.worker.stop()
+                self.worker.deleteLater()
+                self.worker = None
 
-        if hasattr(self, "worker") and self.worker is not None:
-            print("🛑 Stopping worker...")
-            try:
-                self.worker.finished.disconnect()  # Prevent signal errors
-            except TypeError:
-                pass  # Ignore if already disconnected
+            if hasattr(self, "thread") and isinstance(self.thread, QThread):
+                if self.thread.isRunning():
+                    print("🛑 Waiting for thread to finish...")
+                    self.thread.quit()
+                    self.thread.wait(5000)
+                    print("✅ Thread fully stopped.")
+                self.thread.deleteLater()
+                self.thread = None
 
-            self.worker.stop()  # Ensure worker stops if it has a `stop()` method
-            self.worker.deleteLater()
-            self.worker = None
+        except Exception as e:
+            print(f"[ERROR] during closeEvent: {e}")
 
-        if hasattr(self, "thread") and isinstance(self.thread, QThread):
-            if self.thread.isRunning():
-                print("🛑 Stopping worker thread...")
-                self.thread.quit()
-                self.thread.wait(5000)  # Wait for up to 5 seconds
-                print("✅ Worker thread stopped successfully")
-
-        self.thread = None  # Clear reference
-        print("✅ Cleanup complete. Closing app.")
         event.accept()
+
 
     def show_img(self):
         # if self.calibrated == True:
@@ -699,21 +697,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_processing_complete(self):
         """Handles UI updates when processing is completed."""
-        if self.thread and self.thread.isRunning():
+        if self.thread:
             print("Stopping thread safely...")
-            self.worker.finished.disconnect()  # Prevent signal errors
-            self.worker.deleteLater()  # Mark worker for deletion
-            self.thread.quit()  # Request thread termination
-            self.thread.wait(5000)  # Wait up to 5 seconds for termination
+            try:
+                self.worker.finished.disconnect()
+            except:
+                pass
+            self.thread.quit()
+            self.thread.wait(5000)
             print("✅ Worker thread stopped successfully")
 
-        self.thread = None  # Ensure reference is cleared
-        self.worker = None
+            self.worker.deleteLater()
+            self.worker = None
+            self.thread.deleteLater()
+            self.thread = None
 
         self.processing_done = True
         self.ui.progressBar.setValue(0)
-
         self.arcjetcv_message_box("Video Processed", "The video has been processed.")
+
 
     def grab_ui_values(self):
         inputdict = {"SEGMENT_METHOD": str(self.ui.comboBox_filterType.currentText())}
