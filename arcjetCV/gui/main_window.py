@@ -683,9 +683,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ✅ Ensure proper cleanup
         self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(
-            lambda: self.thread.wait(5000)
-        )  # Wait for thread to exit
         self.thread.finished.connect(lambda: print("✅ Worker thread fully terminated"))
 
         # ✅ Start the new thread
