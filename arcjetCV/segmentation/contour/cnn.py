@@ -4,7 +4,6 @@ import cv2
 from torchvision import transforms as T
 import segmentation_models_pytorch as smp
 import urllib.request
-import hashlib
 
 
 class CNN:
@@ -13,13 +12,12 @@ class CNN:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model_name = "Unet-xception_25_weights_only.pt"
         self.checkpoint_path = Path(__file__).parent / model_name
-        self.expected_hash = (
-            "adcfd0e04c51be32b69e8ab1139c172df8c3e9c2fc85844db2c8926240631171"
-        )
-        self.download_url = "https://github.com/magnus-haw/arcjetCV/raw/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
 
-        if not self._verify_model():
-            self._download_model()
+        # Download if missing
+        if not self.checkpoint_path.exists():
+            print(f"[INFO] Downloading model weights to {self.checkpoint_path}...")
+            url = "https://github.com/magnus-haw/arcjetCV/rawÒ/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
+            urllib.request.urlretrieve(url, self.checkpoint_path)
 
         self.checkpoint_path = (
             Path(__file__)
@@ -70,21 +68,3 @@ class CNN:
             masked, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST
         )
         return masked
-
-    def _verify_model(self):
-        """Return True if model file exists and matches expected SHA256 hash."""
-        if not self.checkpoint_path.exists():
-            return False
-        h = hashlib.sha256()
-        with self.checkpoint_path.open("rb") as f:
-            for chunk in iter(lambda: f.read(8192), b""):
-                h.update(chunk)
-        return h.hexdigest() == self.expected_hash
-
-    def _download_model(self):
-        """Download model weights from URL and verify the hash."""
-        print(f"[INFO] Downloading model weights to {self.checkpoint_path}...")
-        urllib.request.urlretrieve(self.download_url, self.checkpoint_path)
-        if not self._verify_model():
-            raise ValueError("[ERROR] Model download failed: hash mismatch.")
-        print("[INFO] Model downloaded and verified successfully.")

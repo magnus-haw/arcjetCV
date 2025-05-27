@@ -1,6 +1,7 @@
 import urllib.request
 from pathlib import Path
 import os
+import hashlib
 from PySide6.QtWidgets import (
     QApplication,
     QMessageBox,
@@ -10,6 +11,29 @@ from PySide6.QtWidgets import (
     QProgressBar,
 )
 from PySide6.QtCore import Qt, QThread, Signal
+
+
+# -------------------- CONFIG --------------------
+
+MODEL_NAME = "Unet-xception_25_weights_only.pt"
+MODEL_URL = "https://github.com/magnus-haw/arcjetCV/raw/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
+EXPECTED_HASH = "adcfd0e04c51be32b69e8ab1139c172df8c3e9c2fc85844db2c8926240631171"
+
+
+# -------------------- SHA256 CHECK --------------------
+
+
+def verify_sha256(path: Path, expected_hash: str) -> bool:
+    if not path.exists():
+        return False
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest() == expected_hash
+
+
+# -------------------- BACKGROUND DOWNLOAD THREAD --------------------
 
 
 class DownloadThread(QThread):
@@ -34,6 +58,9 @@ class DownloadThread(QThread):
             self.finished.emit()
         except Exception as e:
             self.error.emit(str(e))
+
+
+# -------------------- POPUP WIDGET --------------------
 
 
 class DownloadPopup(QDialog):
@@ -62,15 +89,20 @@ class DownloadPopup(QDialog):
         self.reject()
 
 
-def get_model_checkpoint():
-    model_name = "Unet-xception_25_weights_only.pt"
-    checkpoint_path = Path(__file__).parent / model_name
-    if not checkpoint_path.exists():
-        url = "https://github.com/magnus-haw/arcjetCV/raw/main/arcjetCV/segmentation/contour/Unet-xception_25_weights_only.pt"
+# -------------------- MAIN FUNCTION --------------------
 
+
+def get_model_checkpoint():
+    checkpoint_path = Path(__file__).parent / MODEL_NAME
+
+    # If file doesn't exist or hash is incorrect, download
+    if not verify_sha256(checkpoint_path, EXPECTED_HASH):
         app = QApplication.instance() or QApplication([])
-        popup = DownloadPopup(url, str(checkpoint_path))
+        popup = DownloadPopup(MODEL_URL, str(checkpoint_path))
         if not popup.exec():
             raise RuntimeError("Download canceled or failed.")
+
+        if not verify_sha256(checkpoint_path, EXPECTED_HASH):
+            raise RuntimeError("Download failed or file corrupted (hash mismatch).")
 
     return checkpoint_path
