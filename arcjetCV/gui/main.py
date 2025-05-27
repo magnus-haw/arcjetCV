@@ -11,6 +11,7 @@ from PySide6.QtGui import QIcon
 from arcjetCV.gui.main_window import MainWindow
 from arcjetCV.segmentation.contour.model_loader import get_model_checkpoint
 from pathlib import Path
+from PySide6.QtCore import QCoreApplication
 
 
 def get_icon_path():
@@ -25,6 +26,9 @@ def get_icon_path():
 
 
 def main():
+    QCoreApplication.setApplicationName("arcjetCV")
+    QCoreApplication.setOrganizationName("NASA")  # optional, use your name/org
+
     app = QApplication(sys.argv)
     icon_path = get_icon_path()
 

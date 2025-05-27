@@ -956,7 +956,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(
-            QCoreApplication.translate("MainWindow", "MainWindow", None)
+            QCoreApplication.translate("MainWindow", "arcjetCV", None)
         )
         self.actionLoad_video.setText(
             QCoreApplication.translate("MainWindow", "Load video", None)
