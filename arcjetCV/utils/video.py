@@ -4,10 +4,16 @@ import cv2 as cv
 import numpy as np
 import threading
 from arcjetCV.utils.utils import splitfn
-from arcjetCV.segmentation.time.time_segmentation import (
-    time_segmentation,
-    extract_interest,
-)
+try:
+    from arcjetCV.segmentation.time.time_segmentation import (
+        time_segmentation,
+        extract_interest,
+    )
+    _time_segmentation_error = None
+except ModuleNotFoundError as exc:
+    time_segmentation = None
+    extract_interest = None
+    _time_segmentation_error = exc
 
 
 class Video(object):
@@ -199,19 +205,29 @@ class VideoMeta(dict):
             self["CHANNELS"] = video.chan
             self["NFRAMES"] = video.nframes
 
-            try:  # Infer meta parameters
-                print("Inferring first and last frames ... ", end="")
-                _, out = time_segmentation(video)
-                start, end = extract_interest(out)
-                print("Done")
-                self["FIRST_GOOD_FRAME"] = max(
-                    round(start[0] * video.nframes / 500), int(video.nframes * 0.1)
-                )
-                self["LAST_GOOD_FRAME"] = min(
-                    round(video.nframes * end[-1] / 500), int(video.nframes)
-                )
-            except:
-                print("Time Segmentation Failed")
+            if time_segmentation is not None and extract_interest is not None:
+                try:  # Infer meta parameters
+                    print("Inferring first and last frames ... ", end="")
+                    _, out = time_segmentation(video)
+                    start, end = extract_interest(out)
+                    print("Done")
+                    self["FIRST_GOOD_FRAME"] = max(
+                        round(start[0] * video.nframes / 500), int(video.nframes * 0.1)
+                    )
+                    self["LAST_GOOD_FRAME"] = min(
+                        round(video.nframes * end[-1] / 500), int(video.nframes)
+                    )
+                except Exception as exc:
+                    print(f"Time segmentation failed: {exc}")
+                    self["FIRST_GOOD_FRAME"] = 0
+                    self["LAST_GOOD_FRAME"] = video.nframes
+            else:
+                if _time_segmentation_error is not None:
+                    print(
+                        "Time segmentation unavailable "
+                        f"({type(_time_segmentation_error).__name__}: "
+                        f"{_time_segmentation_error})."
+                    )
                 self["FIRST_GOOD_FRAME"] = 0
                 self["LAST_GOOD_FRAME"] = video.nframes
 

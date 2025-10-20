@@ -1,19 +1,28 @@
 import cv2 as cv
 import numpy as np
 import os, sys
-from arcjetCV.segmentation.contour.contour import (
-    contoursHSV,
-    contoursGRAY,
-    contoursCNN,
-    getEdgeFromContour,
-    contoursAutoHSV,
-    getPoints,
-)
 from PySide6.QtCore import QMetaObject, Qt, QTimer, QThread, Signal, QObject
-from arcjetCV.segmentation.contour.cnn import CNN
 from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number
 from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
+
+try:
+    from arcjetCV.segmentation.contour.contour import (
+        contoursHSV,
+        contoursGRAY,
+        contoursCNN,
+        getEdgeFromContour,
+        contoursAutoHSV,
+        getPoints,
+    )
+    from arcjetCV.segmentation.contour.cnn import CNN
+
+    _contour_import_error = None
+except ModuleNotFoundError as exc:
+    contoursHSV = contoursGRAY = contoursCNN = getEdgeFromContour = None
+    contoursAutoHSV = getPoints = None
+    CNN = None
+    _contour_import_error = exc
 
 
 class ProcessorWorker(QObject):
@@ -135,6 +144,13 @@ class ArcjetProcessor:
 
         :param videometa: dictionary containing video metadata
         """
+        if _contour_import_error is not None:
+            raise ModuleNotFoundError(
+                "arcjetCV.segmentation.contour is unavailable. "
+                "Install the contour segmentation optional dependencies "
+                f"({type(_contour_import_error).__name__}: {_contour_import_error})."
+            )
+
         self.flow_dir = videometa["FLOW_DIRECTION"]
         self.h = videometa["HEIGHT"]
         self.w = videometa["WIDTH"]
