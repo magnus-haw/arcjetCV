@@ -815,7 +815,29 @@ class MainWindow(QtWidgets.QMainWindow):
         index, m95, m50, mc, p50, p95, radius = [], [], [], [], [], [], []
         time, sarea, marea, sc, sm, ypos = [], [], [], [], [], []
 
-        units = self.ui.comboBox_units.currentText()
+        units_selected = self.ui.comboBox_units.currentText()
+        units_lower = units_selected.lower()
+        use_mm_requested = "mm" in units_lower
+
+        pixels_per_mm_default = None
+        if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
+            pixels_per_mm_default = self.raw_outputs[0]["PIXELS_PER_MM"]
+
+        default_pixel_length = (
+            1 / pixels_per_mm_default
+            if pixels_per_mm_default not in (None, 0, float("inf"))
+            else None
+        )
+
+        use_mm = use_mm_requested and default_pixel_length is not None
+        units = "[mm]" if use_mm else ("[px]" if use_mm_requested else units_selected)
+        xy_scale_default = default_pixel_length if use_mm else 1.0
+        length_unit_label = units.strip()
+        if length_unit_label.startswith("[") and length_unit_label.endswith("]"):
+            length_unit_label = length_unit_label[1:-1]
+        if not length_unit_label:
+            length_unit_label = units
+
         fps = self.ui.doubleSpinBox_fps.value()
         maskn = self.ui.spinBox_mask_frames.value()
 
@@ -824,18 +846,44 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(self.raw_outputs) > 10:
                 numframes = len(self.raw_outputs)
                 max_traces = 10
-                nskip = int(numframes / max_traces)
-                for i in range(0, len(self.raw_outputs), maskn):
+                first_color = "red"
+                swell_color = "#2e8b57"
+                last_color = "#1f77b4"
+                mid_color = "#999999"
+
+                model_traces = []
+                shock_traces = {}
+                swell_trace_index = None
+
+                for loop_idx, i in enumerate(range(0, len(self.raw_outputs), maskn)):
                     # Save frame index, time
                     index.append(self.raw_outputs[i]["INDEX"])
                     time.append(self.raw_outputs[i]["INDEX"] / fps)
+
+                    frame_scale = xy_scale_default
+                    frame_pixels_per_mm = self.raw_outputs[i].get(
+                        "PIXELS_PER_MM", pixels_per_mm_default
+                    )
+                    if use_mm and frame_pixels_per_mm not in (None, 0, float("inf")):
+                        frame_scale = 1 / frame_pixels_per_mm
 
                     # Model positions (-95%, -50%, center, 50%, 95% radius)
                     if self.raw_outputs[i]["MODEL"] is not None:
                         xpos = self.raw_outputs[i]["MODEL_INTERP_XPOS"]
                         center = self.raw_outputs[i]["MODEL_YCENTER"]
-                        self.raw_outputs[i]["MODEL"] = np.array(
-                            self.raw_outputs[i]["MODEL"]
+                        model_array = np.array(self.raw_outputs[i]["MODEL"])
+                        self.raw_outputs[i]["MODEL"] = model_array
+                        model_coords = np.array(model_array[:, 0, :], dtype=float)
+                        if use_mm:
+                            model_coords *= frame_scale
+                        model_traces.append(
+                            {
+                                "loop_idx": loop_idx,
+                                "coords": model_coords,
+                                "centroid": self.raw_outputs[i].get(
+                                    "MODEL_CENTROID_X"
+                                ),
+                            }
                         )
                         m95.append(xpos[0])
                         m50.append(xpos[1])
@@ -856,9 +904,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     # Shock center x-position
                     if self.raw_outputs[i]["SHOCK"] is not None:
                         sc.append(self.raw_outputs[i]["SHOCK_INTERP_XPOS"][0])
-                        self.raw_outputs[i]["SHOCK"] = np.array(
-                            self.raw_outputs[i]["SHOCK"]
-                        )
+                        shock_array = np.array(self.raw_outputs[i]["SHOCK"])
+                        self.raw_outputs[i]["SHOCK"] = shock_array
+                        shock_coords = np.array(shock_array[:, 0, :], dtype=float)
+                        if use_mm:
+                            shock_coords *= frame_scale
+                        shock_traces[loop_idx] = shock_coords
                     else:
                         sc.append(np.nan)
 
@@ -882,29 +933,112 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:
                         sm.append(np.nan)
 
-                    # Plot XY contours
-                    if nskip > 1 and i % nskip == 0:
+                if model_traces:
+                    # Determine swell index based on minimum centroid value
+                    valid_centroids = [
+                        (idx, trace["centroid"])
+                        for idx, trace in enumerate(model_traces)
+                        if trace["centroid"] is not None
+                    ]
+                    if valid_centroids:
+                        swell_trace_index = min(valid_centroids, key=lambda x: x[1])[0]
 
-                        if self.raw_outputs[i]["MODEL"] is not None:
-                            self.ax1.plot(
-                                np.array(self.raw_outputs[i]["MODEL"][:, 0, 0]),
-                                np.array(self.raw_outputs[i]["MODEL"][:, 0, 1]),
-                                "g-",
-                                label="model_%i" % index[-1],
-                            )
+                    num_model_traces = len(model_traces)
+                    stride = max(1, num_model_traces // max_traces)
+                    selected_indices = set(range(0, num_model_traces, stride))
+                    selected_indices.add(0)
+                    selected_indices.add(num_model_traces - 1)
+                    if swell_trace_index is not None:
+                        selected_indices.add(swell_trace_index)
+                    selected_indices = sorted(selected_indices)
+
+                    used_labels = set()
+
+                    def style_for_trace(trace_idx):
+                        if trace_idx == 0:
+                            return first_color, 2.5, "Initial Profile"
+                        if (
+                            swell_trace_index is not None
+                            and trace_idx == swell_trace_index
+                        ):
+                            return swell_color, 1.0, "Growth Profile"
+                        if trace_idx == num_model_traces - 1:
+                            return last_color, 1.0, "Final Profile"
+                        return mid_color, 1.0, "Model Profile"
+
+                    for trace_idx in selected_indices:
+                        trace = model_traces[trace_idx]
+                        coords = trace["coords"]
+                        color, linewidth, label = style_for_trace(trace_idx)
+                        display_label = (
+                            label if label and label not in used_labels else None
+                        )
+                        if display_label:
+                            used_labels.add(display_label)
+
+                        self.ax1.plot(
+                            coords[:, 0],
+                            coords[:, 1],
+                            color=color,
+                            linewidth=linewidth,
+                            alpha=0.9 if display_label else 0.5,
+                            label=display_label,
+                        )
 
                         if (
-                            self.raw_outputs[i]["SHOCK"] is not None
-                            and self.ui.checkBox_display_shock2.isChecked()
+                            self.ui.checkBox_display_shock2.isChecked()
+                            and trace["loop_idx"] in shock_traces
                         ):
-                            self.ax1.plot(
-                                np.array(self.raw_outputs[i]["SHOCK"][:, 0, 0]),
-                                np.array(self.raw_outputs[i]["SHOCK"][:, 0, 1]),
-                                "r--",
-                                label="shock_%i" % index[-1],
+                            shock_coords = shock_traces[trace["loop_idx"]]
+                            shock_label = (
+                                "Shock Profile"
+                                if "Shock Profile" not in used_labels
+                                else None
                             )
-                self.ax1.set_xlabel("X (px)")
-                self.ax1.set_ylabel("Y (px)")
+                            if shock_label:
+                                used_labels.add(shock_label)
+                            self.ax1.plot(
+                                shock_coords[:, 0],
+                                shock_coords[:, 1],
+                                color="black",
+                                linewidth=0.8,
+                                linestyle="--",
+                                alpha=0.5,
+                                label=shock_label,
+                            )
+
+                    self.swell_loop_idx = (
+                        model_traces[swell_trace_index]["loop_idx"]
+                        if swell_trace_index is not None
+                        else None
+                    )
+                    self.swell_time = (
+                        time[self.swell_loop_idx]
+                        if self.swell_loop_idx is not None
+                        and self.swell_loop_idx < len(time)
+                        else None
+                    )
+                else:
+                    self.swell_loop_idx = None
+                    self.swell_time = None
+
+                handles, labels = self.ax1.get_legend_handles_labels()
+                if labels:
+                    legend_map = {}
+                    for handle, label in zip(handles, labels):
+                        if not label or label in legend_map:
+                            continue
+                        legend_map[label] = handle
+
+                    legend = self.ax1.legend(
+                        list(legend_map.values()),
+                        list(legend_map.keys()),
+                        loc="best",
+                    )
+                    legend.get_title().set_fontweight("bold")
+
+                self.ax1.set_xlabel(f"X ({length_unit_label})")
+                self.ax1.set_ylabel(f"Y ({length_unit_label})")
                 self.ax1.invert_yaxis()
                 self.ax1.figure.canvas.draw()
 
@@ -915,72 +1049,228 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 # Infer pixel length from raw outputs
                 radius_masked = np.ma.masked_where(mask < 0, radius)
-                if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
-                    pixel_length = 1 / self.raw_outputs[0]["PIXELS_PER_MM"]
+                if default_pixel_length is not None:
+                    pixel_length = default_pixel_length
                 else:
-                    self.arcjetcv_message_box(
-                        "Warning",
-                        "Pixels per mm not available in raw outputs. Defaulting pixel length to 1.",
-                    )
-                    pixel_length = 1  # Default value if calibration data is missing
+                    pixel_length = 1  # Default to pixel units if calibration missing
+                    if use_mm_requested:
+                        self.arcjetcv_message_box(
+                            "Warning",
+                            "Pixels per mm not available in raw outputs. "
+                            "Spatial data will be shown in pixels.",
+                        )
                 self.pixel_length = pixel_length
+                series_scale = pixel_length if use_mm else 1.0
+                radius_series = radius_masked * series_scale
 
                 # Plot XT series
-                ym95 = np.ma.masked_where(mask < 0, m95) * pixel_length
-                ym50 = np.ma.masked_where(mask < 0, m50) * pixel_length
-                ymc = np.ma.masked_where(mask < 0, mc) * pixel_length
-                yp50 = np.ma.masked_where(mask < 0, p50) * pixel_length
-                yp95 = np.ma.masked_where(mask < 0, p95) * pixel_length
+                ym95 = np.ma.masked_where(mask < 0, m95) * series_scale
+                ym50 = np.ma.masked_where(mask < 0, m50) * series_scale
+                ymc = np.ma.masked_where(mask < 0, mc) * series_scale
+                yp50 = np.ma.masked_where(mask < 0, p50) * series_scale
+                yp95 = np.ma.masked_where(mask < 0, p95) * series_scale
                 ysarea = np.ma.masked_where(mask < 0, sarea)
                 ymarea = np.ma.masked_where(mask < 0, marea)
-                ysc = np.ma.masked_where(mask < 0, sc) * pixel_length
-                ysm = np.ma.masked_where(mask < 0, sm) * pixel_length
-                yypos = np.ma.masked_where(mask < 0, ypos) * pixel_length
+                ysc = np.ma.masked_where(mask < 0, sc) * series_scale
+                ysm = np.ma.masked_where(mask < 0, sm) * series_scale
+                yypos = np.ma.masked_where(mask < 0, ypos) * series_scale
 
                 self.PLOTKEYS = []
 
                 if self.ui.checkBox_m95_radius.isChecked():
-                    self.ax2.plot(time, ym95, "ms", label="Model -95%R")
+                    self.ax2.plot(
+                        time,
+                        ym95,
+                        color="magenta",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model -95%R",
+                    )
                     self.PLOTKEYS.append("MODEL_-0.95R " + units)
 
                 if self.ui.checkBox_m50_radius.isChecked():
-                    self.ax2.plot(time, ym50, "bx", label="Model -50%R")
+                    self.ax2.plot(
+                        time,
+                        ym50,
+                        color="blue",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model -50%R",
+                    )
                     self.PLOTKEYS.append("MODEL_-0.50R " + units)
 
                 if self.ui.checkBox_model_center.isChecked():
-                    self.ax2.plot(time, ymc, "go", label="Model center")
+                    time_arr = np.asarray(time, dtype=float)
+                    center_mask = ~np.ma.getmaskarray(ymc)
+                    time_valid = time_arr[center_mask]
+                    center_valid = np.asarray(ymc)[center_mask]
+
+                    if center_valid.size > 0:
+                        center_zeroed = center_valid - center_valid[0]
+                        swell_idx = int(np.argmin(center_zeroed))
+                        swell_time_value = time_valid[swell_idx]
+
+                        self.ax2.axvline(
+                            swell_time_value,
+                            ymin=0.0,
+                            ymax=1.0,
+                            linestyle="--",
+                            color="black",
+                            linewidth=1,
+                            label=f"Recess Start: {swell_time_value:.2f} [s]",
+                        )
+
+                        if swell_idx >= 0:
+                            self.ax2.plot(
+                                time_valid[: swell_idx + 1],
+                                center_zeroed[: swell_idx + 1],
+                                color=swell_color,
+                                linewidth=0,
+                                marker="o",
+                                markersize=5,
+                                label="Growth",
+                            )
+
+                        if swell_idx + 1 < center_zeroed.size:
+                            recession_time = time_valid[swell_idx + 1 :]
+                            recession_values = center_zeroed[swell_idx + 1 :]
+                            self.ax2.plot(
+                                recession_time,
+                                recession_values,
+                                color=last_color,
+                                linewidth=0,
+                                marker="o",
+                                markersize=5,
+                                label="Recess",
+                            )
+                            if recession_time.size >= 2:
+                                coeffs = np.polyfit(
+                                    recession_time, recession_values, 1
+                                )
+                                fit_line = np.polyval(coeffs, recession_time)
+                                self.ax2.plot(
+                                    recession_time,
+                                    fit_line,
+                                    color="red",
+                                    linewidth=1,
+                                    label=f"Fit: y = {coeffs[0]:.2f}x+{coeffs[1]:.2f}",
+                                )
+
+                        valid_indices = np.flatnonzero(center_mask)
+                        if swell_idx < valid_indices.size:
+                            self.swell_loop_idx = int(valid_indices[swell_idx])
+                            self.swell_time = time[self.swell_loop_idx]
+
+                        time_span = time_valid.max() - time_valid.min()
+                        if time_span > 0:
+                            xtick_candidates = [0, 25, 50, 75, 100, 125, 150, 175, 200]
+                            xticks = [
+                                val
+                                for val in xtick_candidates
+                                if time_valid.min() <= val <= time_valid.max()
+                            ]
+                            if xticks:
+                                self.ax2.set_xticks(xticks)
+
+                        y_max = max(center_zeroed.max(), 0.0)
+                        yticks = [0, 2, 4, 6, 8]
+                        yticks_in_range = [
+                            val for val in yticks if 0 <= val <= max(y_max, 8)
+                        ]
+                        if yticks_in_range:
+                            self.ax2.set_yticks(yticks_in_range)
+
                     self.PLOTKEYS.append("MODEL_CENTER " + units)
 
                 if self.ui.checkBox_50_radius.isChecked():
-                    self.ax2.plot(time, yp50, "cx", label="Model +50%R")
+                    self.ax2.plot(
+                        time,
+                        yp50,
+                        color="cyan",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model +50%R",
+                    )
                     self.PLOTKEYS.append("MODEL_0.50R " + units)
 
                 if self.ui.checkBox_95_radius.isChecked():
-                    self.ax2.plot(time, yp95, "rs", label="Model +95%R")
+                    self.ax2.plot(
+                        time,
+                        yp95,
+                        color="red",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model +95%R",
+                    )
                     self.PLOTKEYS.append("MODEL_0.95R " + units)
 
                 if self.ui.checkBox_shock_area.isChecked():
-                    self.ax2.plot(time, ysarea, "y^", label="Shock area (px)")
+                    self.ax2.plot(
+                        time,
+                        ysarea,
+                        color="gold",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Shock area (px)",
+                    )
                     self.PLOTKEYS.append("SHOCK_AREA [px]")
 
                 if self.ui.checkBox_model_rad.isChecked():
-                    self.ax2.plot(time, radius_masked, "bx", label="Model radius (px)")
-                    self.PLOTKEYS.append("MODEL_RADIUS [px]")
+                    self.ax2.plot(
+                        time,
+                        radius_series,
+                        color="navy",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label=f"Model radius ({length_unit_label})",
+                    )
+                    self.PLOTKEYS.append("MODEL_RADIUS " + units)
 
                 if self.ui.checkBox_shock_center.isChecked():
-                    self.ax2.plot(time, ysc, "cs", label="Shock center")
+                    self.ax2.plot(
+                        time,
+                        ysc,
+                        color="darkcyan",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Shock center",
+                    )
                     self.PLOTKEYS.append("SHOCK_CENTER " + units)
 
                 if self.ui.checkBox_shockmodel.isChecked():
-                    self.ax2.plot(time, ysm, "r--", label="Shock-model distance")
+                    self.ax2.plot(
+                        time,
+                        ysm,
+                        color="darkred",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        linestyle="--",
+                        label="Shock-model distance",
+                    )
                     self.PLOTKEYS.append("SHOCK_TO_MODEL " + units)
 
                 if self.ui.checkBox_ypos.isChecked():
-                    self.ax2.plot(time, yypos, "ks", label="Axis position")
+                    self.ax2.plot(
+                        time,
+                        yypos,
+                        color="black",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Axis position",
+                    )
                     self.PLOTKEYS.append("MODEL_YPOS " + units)
 
                 self.ax2.set_xlabel("Time (s)")
-                self.ax2.set_ylabel("%s" % (self.ui.comboBox_units.currentText()))
+                self.ax2.set_ylabel(units)
 
                 legend = self.ax2.legend()
                 legend.set_draggable(True)
@@ -1004,11 +1294,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.length_units[k]
                     )
 
-                self.px_units = [ymarea, ysarea, radius_masked]
+                self.px_units = [ymarea, ysarea, radius_series]
                 self.px_labels = [
                     "MODEL_AREA [px]",
                     "SHOCK_AREA [px]",
-                    "MODEL_RADIUS [px]",
+                    "MODEL_RADIUS " + units,
                 ]
                 for k in range(0, len(self.px_units)):
                     output_dict[self.px_labels[k]] = self.px_units[k]
