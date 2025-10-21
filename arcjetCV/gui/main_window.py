@@ -926,12 +926,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         model_coords = np.array(model_array[:, 0, :], dtype=float)
                         if use_mm:
                             model_coords *= frame_scale
-                        if self.ui.checkBox_kalman_filter.isChecked():
-                            model_x = self._apply_kalman_filter(model_coords[:, 0])
-                            model_y = self._apply_kalman_filter(model_coords[:, 1])
-                            model_coords = np.column_stack(
-                                (np.asarray(model_x, dtype=float), np.asarray(model_y, dtype=float))
-                            )
                         model_traces.append(
                             {
                                 "loop_idx": loop_idx,
@@ -965,12 +959,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         shock_coords = np.array(shock_array[:, 0, :], dtype=float)
                         if use_mm:
                             shock_coords *= frame_scale
-                        if self.ui.checkBox_kalman_filter.isChecked():
-                            shock_x = self._apply_kalman_filter(shock_coords[:, 0])
-                            shock_y = self._apply_kalman_filter(shock_coords[:, 1])
-                            shock_coords = np.column_stack(
-                                (np.asarray(shock_x, dtype=float), np.asarray(shock_y, dtype=float))
-                            )
                         shock_traces[loop_idx] = shock_coords
                     else:
                         sc.append(np.nan)
@@ -1031,6 +1019,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     for trace_idx in selected_indices:
                         trace = model_traces[trace_idx]
                         coords = trace["coords"]
+                        if self.ui.checkBox_kalman_filter.isChecked():
+                            model_x = self._apply_kalman_filter(coords[:, 0])
+                            model_y = self._apply_kalman_filter(coords[:, 1])
+                            coords = np.column_stack(
+                                (np.asarray(model_x, dtype=float), np.asarray(model_y, dtype=float))
+                            )
                         color, linewidth, label = style_for_trace(trace_idx)
                         display_label = (
                             label if label and label not in used_labels else None
@@ -1052,6 +1046,15 @@ class MainWindow(QtWidgets.QMainWindow):
                             and trace["loop_idx"] in shock_traces
                         ):
                             shock_coords = shock_traces[trace["loop_idx"]]
+                            if self.ui.checkBox_kalman_filter.isChecked():
+                                shock_x = self._apply_kalman_filter(shock_coords[:, 0])
+                                shock_y = self._apply_kalman_filter(shock_coords[:, 1])
+                                shock_coords = np.column_stack(
+                                    (
+                                        np.asarray(shock_x, dtype=float),
+                                        np.asarray(shock_y, dtype=float),
+                                    )
+                                )
                             shock_label = (
                                 "Shock Profile"
                                 if "Shock Profile" not in used_labels
@@ -1151,6 +1154,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     radius_series = self._apply_kalman_filter(radius_series)
 
                 self.PLOTKEYS = []
+                self.max_expansion_info = None
+                self.max_recession_info = None
 
                 if self.ui.checkBox_m95_radius.isChecked():
                     self.ax2.plot(
@@ -1184,6 +1189,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     if center_valid.size > 0:
                         center_zeroed = center_valid - center_valid[0]
+                        exp_idx = int(np.argmin(center_zeroed))
+                        rec_idx = int(np.argmax(center_zeroed))
+                        self.max_expansion_info = (
+                            float(center_zeroed[exp_idx]),
+                            float(time_valid[exp_idx]),
+                        )
+                        self.max_recession_info = (
+                            float(center_zeroed[rec_idx]),
+                            float(time_valid[rec_idx]),
+                        )
                         swell_idx = int(np.argmin(center_zeroed))
                         swell_time_value = time_valid[swell_idx]
 
@@ -1393,32 +1408,54 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.doubleSpinBox_fit_start_time.setValue(min(time))
                 self.ui.doubleSpinBox_fit_last_time.setValue(max(time))
 
-                # Update data summary with pixel length
-                summary = self.ui.label_data_summary.text()
-                lines = summary.strip().split("\n")
+                # Update data summary with pixel length and displacement statistics
+                summary = self.ui.label_data_summary.text().strip()
+                lines = summary.split("\n") if summary else []
                 px_per_mm = (
                     1 / pixel_length if pixel_length != 0 else float("inf")
                 )  # Avoid division by zero
 
-                if lines[-1].startswith("Pixel length"):
-                    lines[-1] = "Pixel length %s: %.4f mm/px | %.4f px/mm" % (
+                def upsert_line(prefix, text):
+                    for idx, line in enumerate(lines):
+                        if line.startswith(prefix):
+                            lines[idx] = text
+                            return
+                    lines.append(text)
+
+                def remove_line(prefix):
+                    lines[:] = [line for line in lines if not line.startswith(prefix)]
+
+                upsert_line(
+                    "Pixel length",
+                    "Pixel length %s: %.4f mm/px | %.4f px/mm"
+                    % (
                         self.ui.comboBox_units.currentText(),
                         pixel_length,
                         px_per_mm,
+                    ),
+                )
+
+                if self.max_expansion_info is not None:
+                    exp_val, exp_time = self.max_expansion_info
+                    upsert_line(
+                        "Max expansion",
+                        "Max expansion: %+0.3f %s at %.2f s"
+                        % (exp_val, length_unit_label, exp_time),
                     )
                 else:
-                    lines.append(
-                        "Pixel length %s: %.4f mm/px | %.4f px/mm"
-                        % (
-                            self.ui.comboBox_units.currentText(),
-                            pixel_length,
-                            px_per_mm,
-                        )
+                    remove_line("Max expansion")
+
+                if self.max_recession_info is not None:
+                    rec_val, rec_time = self.max_recession_info
+                    upsert_line(
+                        "Max recession",
+                        "Max recession: %+0.3f %s at %.2f s"
+                        % (rec_val, length_unit_label, rec_time),
                     )
-                newsummary = ""
-                for line in lines:
-                    newsummary += line + "\n"
-                self.ui.label_data_summary.setText(newsummary.strip())
+                else:
+                    remove_line("Max recession")
+
+                self.ui.label_data_summary.setText("\n".join(lines))
                 self.ui.basebar.setText("Finished plotting data")
             else:
                 self.ui.basebar.setText("Not enough data to plot")
