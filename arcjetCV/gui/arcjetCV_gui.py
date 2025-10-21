@@ -777,6 +777,16 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.checkBox_display_shock2, 4, 1, 1, 1)
 
+        self.label_kalman_filter = QLabel(self.tab_5)
+        self.label_kalman_filter.setObjectName("label_kalman_filter")
+
+        self.gridLayout_2.addWidget(self.label_kalman_filter, 5, 0, 1, 1)
+
+        self.checkBox_kalman_filter = QCheckBox(self.tab_5)
+        self.checkBox_kalman_filter.setObjectName("checkBox_kalman_filter")
+
+        self.gridLayout_2.addWidget(self.checkBox_kalman_filter, 5, 1, 1, 1)
+
         self.tabWidget_2.addTab(self.tab_5, "")
         self.tab_6 = QWidget()
         self.tab_6.setObjectName("tab_6")
@@ -1126,6 +1136,10 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Display Shock", None)
         )
         self.checkBox_display_shock2.setText("")
+        self.label_kalman_filter.setText(
+            QCoreApplication.translate("MainWindow", "Kalman filter", None)
+        )
+        self.checkBox_kalman_filter.setText("")
         self.tabWidget_2.setTabText(
             self.tabWidget_2.indexOf(self.tab_5),
             QCoreApplication.translate("MainWindow", "Plotting params", None),

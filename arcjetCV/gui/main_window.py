@@ -103,6 +103,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_shock_center.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shockmodel.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
+        self.ui.checkBox_kalman_filter.stateChanged.connect(self.plot_outputs)
         self.ui.comboBox_units.setCurrentText("[mm]")
 
         # init_plot_brightness
@@ -801,6 +802,55 @@ class MainWindow(QtWidgets.QMainWindow):
         last_part = path[-(max_visible_length - len(first_part)) :]
         return first_part + "..." + last_part
 
+    def _apply_kalman_filter(self, series):
+        if series is None:
+            return series
+
+        is_masked = isinstance(series, np.ma.MaskedArray)
+        if is_masked:
+            data = np.array(series.filled(np.nan), dtype=float)
+            mask = np.ma.getmaskarray(series).copy()
+        else:
+            data = np.array(series, dtype=float)
+            mask = np.zeros_like(data, dtype=bool)
+
+        non_finite_mask = ~np.isfinite(data)
+        if non_finite_mask.any():
+            mask = mask | non_finite_mask
+            data[non_finite_mask] = np.nan
+
+        valid_mask = ~mask
+        if np.count_nonzero(valid_mask) <= 1:
+            return series
+
+        valid_values = data[valid_mask]
+        measurement_var = np.nanvar(valid_values)
+        if not np.isfinite(measurement_var) or measurement_var <= 1e-12:
+            measurement_var = 1.0
+
+        process_var = measurement_var * 0.05
+        if not np.isfinite(process_var) or process_var <= 0:
+            process_var = 1e-3
+
+        error_cov = measurement_var
+        filtered = data.copy()
+        valid_indices = np.flatnonzero(valid_mask)
+        estimate = data[valid_indices[0]]
+        filtered[valid_indices[0]] = estimate
+
+        for idx in valid_indices[1:]:
+            error_cov += process_var
+            kalman_gain = error_cov / (error_cov + measurement_var)
+            estimate = estimate + kalman_gain * (data[idx] - estimate)
+            error_cov = (1.0 - kalman_gain) * error_cov
+            filtered[idx] = estimate
+
+        if is_masked:
+            return np.ma.masked_array(filtered, mask=mask)
+
+        filtered[~valid_mask] = data[~valid_mask]
+        return filtered
+
     def plot_outputs(self):
         self.ui.basebar.setText("Setting up plots...")
 
@@ -876,6 +926,12 @@ class MainWindow(QtWidgets.QMainWindow):
                         model_coords = np.array(model_array[:, 0, :], dtype=float)
                         if use_mm:
                             model_coords *= frame_scale
+                        if self.ui.checkBox_kalman_filter.isChecked():
+                            model_x = self._apply_kalman_filter(model_coords[:, 0])
+                            model_y = self._apply_kalman_filter(model_coords[:, 1])
+                            model_coords = np.column_stack(
+                                (np.asarray(model_x, dtype=float), np.asarray(model_y, dtype=float))
+                            )
                         model_traces.append(
                             {
                                 "loop_idx": loop_idx,
@@ -909,6 +965,12 @@ class MainWindow(QtWidgets.QMainWindow):
                         shock_coords = np.array(shock_array[:, 0, :], dtype=float)
                         if use_mm:
                             shock_coords *= frame_scale
+                        if self.ui.checkBox_kalman_filter.isChecked():
+                            shock_x = self._apply_kalman_filter(shock_coords[:, 0])
+                            shock_y = self._apply_kalman_filter(shock_coords[:, 1])
+                            shock_coords = np.column_stack(
+                                (np.asarray(shock_x, dtype=float), np.asarray(shock_y, dtype=float))
+                            )
                         shock_traces[loop_idx] = shock_coords
                     else:
                         sc.append(np.nan)
@@ -1074,6 +1136,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 ysc = np.ma.masked_where(mask < 0, sc) * series_scale
                 ysm = np.ma.masked_where(mask < 0, sm) * series_scale
                 yypos = np.ma.masked_where(mask < 0, ypos) * series_scale
+
+                if self.ui.checkBox_kalman_filter.isChecked():
+                    ym95 = self._apply_kalman_filter(ym95)
+                    ym50 = self._apply_kalman_filter(ym50)
+                    ymc = self._apply_kalman_filter(ymc)
+                    yp50 = self._apply_kalman_filter(yp50)
+                    yp95 = self._apply_kalman_filter(yp95)
+                    ysarea = self._apply_kalman_filter(ysarea)
+                    ymarea = self._apply_kalman_filter(ymarea)
+                    ysc = self._apply_kalman_filter(ysc)
+                    ysm = self._apply_kalman_filter(ysm)
+                    yypos = self._apply_kalman_filter(yypos)
+                    radius_series = self._apply_kalman_filter(radius_series)
 
                 self.PLOTKEYS = []
 
