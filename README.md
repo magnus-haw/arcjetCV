@@ -120,14 +120,14 @@ If you use arcjetCV in your research, please use the following BibTeX entry to c
 author = {Quintart, Alexandre M. and Haw, Magnus A. and Semeraro, Federico},
 title = {arcjetCV: Open-Source Software to Analyze Material Ablation},
 journal = {Journal of Spacecraft and Rockets},
-volume = {0},
-number = {0},
-pages = {1-10},
-year = {0},
+volume = {62},
+number = {5},
+pages = {1644-1653},
+year = {2025},
 doi = {10.2514/1.A36132},
 URL = {https://doi.org/10.2514/1.A36132},
-eprint = {https://doi.org/10.2514/1.A36132}
-}
+eprint = {https://doi.org/10.2514/1.A36132},
+abstract = { ArcjetCV is an open-source Python software designed to automate time-resolved measurements of heat shield material ablation and recession rates from arcjet test video footage. This new automated and accessible capability enables two-dimensional in situ recession characterization from profile video. ArcjetCV automates the video segmentation process using two primary machine-learning models: a one-dimensional (1D) Convolutional Neural Network (CNN) to infer the time window of interest and a two-dimensional CNN for image segmentation. A graphical user interface simplifies the user experience and an application programming interface allows users to call the core functions from scripts, enabling batch video processing. ArcjetCV’s capability to measure time-resolved recession the enables characterization of nonlinear processes (nonlinear recession, shrinkage, swelling, etc.), contributing to higher-fidelity validation and improved modeling of heat shield material performance. The source code associated with this paper can be found at https://github.com/magnus-haw/arcjetCV. }}
 ```
 
 ## Legal / License
