@@ -1,0 +1,29 @@
+site_name: arcjetCV Wiki
+site_description: GUI and API documentation for processing arc jet test footage
+site_url: https://magnus-haw.github.io/arcjetCV/
+repo_url: https://github.com/magnus-haw/arcjetCV
+repo_name: magnus-haw/arcjetCV
+docs_dir: mkdocs
+site_dir: site
+nav:
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - User Manual: user-manual.md
+  - Tutorials: tutorials.md
+  - API & CLI: api.md
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: blue
+      accent: amber
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - tables
