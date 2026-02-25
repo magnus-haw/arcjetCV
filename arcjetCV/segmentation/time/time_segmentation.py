@@ -7,6 +7,13 @@ from scipy import interpolate
 from pathlib import Path
 
 
+def _torch_load_compat(path, **kwargs):
+    try:
+        return torch.load(path, weights_only=False, **kwargs)
+    except TypeError:
+        return torch.load(path, **kwargs)
+
+
 def extract_interest(signal):
     """Extract the starts and ends of a signal that is the mean brightness of frames
     Args:
@@ -28,34 +35,67 @@ def extract_interest(signal):
     return start, end
 
 
-def time_segmentation(video):
+def time_segmentation(video, progress_callback=None):
     """apply a segmentation on a the mean brightness of frames of a video
     """
-    n = 0
+    max_sampled_frames = 120
+    baseline_samples = max(2, ((video.nframes - 1) // 10) + 1)
+    nsamples = min(max_sampled_frames, baseline_samples)
+    sample_indices = np.linspace(0, video.nframes - 1, num=nsamples, dtype=int)
+
     nFrame = []
     Value = []
-    for frame_index in range(0, video.nframes - 1, 10):
-        n = n + 1
+    if progress_callback is not None:
+        progress_callback(0, "Detecting sample insertion")
+    for frame_index in sample_indices:
         try:
-            _frame = video.get_frame(frame_index)
-            y = _frame.shape[0]
-            x = _frame.shape[1]
-            _frame = _frame[0:x, round(0.2 * y) : round(0.8 * y)]
-            kernel = np.ones((20, 20), np.uint8)
-            _frame = cv2.erode(_frame, kernel, cv2.BORDER_REFLECT)
-            hsv = cv2.cvtColor(_frame, cv2.COLOR_BGR2HSV)
-            Value.append(np.mean(hsv[:, :, 2]))
-            nFrame.append(n)
-        except:
+            _frame = video.get_frame(int(frame_index))
+            h = _frame.shape[0]
+            w = _frame.shape[1]
+            y0 = int(0.2 * h)
+            y1 = int(0.8 * h)
+            roi = _frame[:, y0:y1]
+
+            # Downsample before computing brightness to speed up loading on large frames.
+            max_dim = 256
+            if max(roi.shape[0], roi.shape[1]) > max_dim:
+                scale = max_dim / float(max(roi.shape[0], roi.shape[1]))
+                roi = cv2.resize(
+                    roi,
+                    (
+                        max(1, int(roi.shape[1] * scale)),
+                        max(1, int(roi.shape[0] * scale)),
+                    ),
+                    interpolation=cv2.INTER_AREA,
+                )
+
+            gray = cv2.cvtColor(roi, cv2.COLOR_RGB2GRAY)
+            Value.append(np.mean(gray))
+            nFrame.append((frame_index / max(1, video.nframes - 1)) * 500.0)
+            if progress_callback is not None:
+                progress = int((len(Value) / max(1, nsamples)) * 100)
+                progress_callback(progress, "Detecting sample insertion...")
+        except Exception:
             pass
-    nFrame = np.linspace(0, 500, len(Value))
-    Value = (Value - np.min(Value)) / np.ptp(Value)
+
+    if len(Value) < 2:
+        raise RuntimeError("Insufficient sampled frames for time segmentation.")
+
+    Value = np.array(Value, dtype=float)
+    value_range = np.ptp(Value)
+    if value_range <= 0:
+        raise RuntimeError("Brightness signal is constant; cannot segment in time.")
+    Value = (Value - np.min(Value)) / value_range
+
+    nFrame = np.array(nFrame, dtype=float)
     p = interpolate.interp1d(nFrame, Value, fill_value="extrapolate")
     reg = np.linspace(0, 500, 500)
 
     model = Conv1DNet()
     checkpoint_path = Path(__file__).parent.absolute().joinpath(Path('time-checkpoint.pt'))
-    model.load_state_dict(torch.load(checkpoint_path))
+    model.load_state_dict(_torch_load_compat(checkpoint_path))
+    if progress_callback is not None:
+        progress_callback(100, "Detecting sample insertion")
     input = np.array(p(reg))
 
     # Prepare input tensor with shape [1, 1, 500]

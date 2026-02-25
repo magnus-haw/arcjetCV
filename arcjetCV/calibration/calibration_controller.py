@@ -1,7 +1,8 @@
 from arcjetCV.calibration.calibration_model import CalibrationModel
 from arcjetCV.calibration.calibration_view import CalibrationView
 from PySide6.QtWidgets import QFileDialog, QMessageBox
-from PySide6.QtPrintSupport import QPrinter, QPrintDialog
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import QUrl
 from matplotlib.backend_bases import cursors
 import numpy as np
 import cv2
@@ -507,47 +508,33 @@ class CalibrationController:
 
     def print_chessboard(self):
         """
-        Generate and print a chessboard calibration pattern.
-
-        Creates a standard black-and-white chessboard PNG image and attempts to print it.
-        The generated file is saved as 'chessboard_pattern.png' and printed via QPrinter.
+        Open the packaged calibration PDF for printing.
 
         :return: None
         :rtype: None
         """
-        filename = "chessboard_pattern.png"
-        rows, cols, square_size = 9, 6, 50
-        image_size = (cols * square_size, rows * square_size)
+        pdf_path = Path(__file__).resolve().parent / "calibration.pdf"
+        if not pdf_path.exists():
+            QMessageBox.warning(
+                self.view,
+                "Error",
+                f"Calibration PDF not found:\n{pdf_path}",
+            )
+            return
 
-        chessboard = np.ones((image_size[1], image_size[0]), dtype=np.uint8) * 255
-        for i in range(rows):
-            for j in range(cols):
-                if (i + j) % 2 == 0:
-                    x_start = j * square_size
-                    y_start = i * square_size
-                    chessboard[
-                        y_start : y_start + square_size, x_start : x_start + square_size
-                    ] = 0
-
-        cv2.imwrite(filename, chessboard)
-
-        printer = QPrinter()
-        print_dialog = QFileDialog(printer)
-        if print_dialog.exec() == QFileDialog.Accepted:
-            image = QImage(filename)
-            painter = QPainter(printer)
-            rect = painter.viewport()
-            size = image.size()
-            size.scale(rect.size(), Qt.KeepAspectRatio)
-            painter.setViewport(rect.x(), rect.y(), size.width(), size.height())
-            painter.setWindow(image.rect())
-            painter.drawImage(0, 0, image)
-            painter.end()
+        opened = QDesktopServices.openUrl(QUrl.fromLocalFile(str(pdf_path)))
+        if opened:
             QMessageBox.information(
-                self.view, "Success", f"{filename} printed successfully."
+                self.view,
+                "Print Calibration Pattern",
+                "Opened calibration PDF.\nUse your PDF viewer print action.",
             )
         else:
-            QMessageBox.information(self.view, "Cancelled", "Printing cancelled.")
+            QMessageBox.warning(
+                self.view,
+                "Error",
+                f"Could not open calibration PDF:\n{pdf_path}",
+            )
 
     def load_image(self):
         """Load an image for resolution measurement."""

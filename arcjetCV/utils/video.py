@@ -165,7 +165,7 @@ class VideoMeta(dict):
     ```
     """
 
-    def __init__(self, video, path):
+    def __init__(self, video, path, progress_callback=None):
         """
         Initializes the VideoMeta object.
 
@@ -178,6 +178,11 @@ class VideoMeta(dict):
         self.name = name
         self.ext = ext
         self.path = path
+        self._progress_callback = progress_callback
+
+        def _emit_progress(value, message):
+            if self._progress_callback is not None:
+                self._progress_callback(int(max(0, min(100, value))), message)
 
         ### Meta Parameters for each video
         self["WIDTH"] = None
@@ -198,8 +203,11 @@ class VideoMeta(dict):
         self["BRIGHTNESS"] = None
 
         if os.path.exists(path):
+            _emit_progress(15, "Loading metadata...")
             self.load(path)
+            _emit_progress(100, "Metadata loaded.")
         else:
+            _emit_progress(5, "Initializing metadata...")
             self["WIDTH"] = video.w
             self["HEIGHT"] = video.h
             self["CHANNELS"] = video.chan
@@ -208,7 +216,13 @@ class VideoMeta(dict):
             if time_segmentation is not None and extract_interest is not None:
                 try:  # Infer meta parameters
                     print("Inferring first and last frames ... ", end="")
-                    _, out = time_segmentation(video)
+                    _emit_progress(10, "Inferring first/last valid frames...")
+
+                    def _time_seg_progress(pct, msg):
+                        mapped = 10 + int(35 * (pct / 100.0))
+                        _emit_progress(mapped, msg)
+
+                    _, out = time_segmentation(video, progress_callback=_time_seg_progress)
                     start, end = extract_interest(out)
                     print("Done")
                     self["FIRST_GOOD_FRAME"] = max(
@@ -235,17 +249,27 @@ class VideoMeta(dict):
             self.reset_frame_crop()
 
             print("Calculating brightness ... ", end="")
+            _emit_progress(45, "Calculating brightness trace...")
             self["BRIGHTNESS"] = []
             video.set_frame(0)
-            for _ in range(video.nframes):
+            progress_stride = max(1, video.nframes // 100)
+            for idx in range(video.nframes):
                 ret, frame = video.cap.read()
                 if not ret:
                     break
                 gray_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
                 brightness = np.mean(gray_frame)
                 self["BRIGHTNESS"].append(round(brightness, 2))
+                if idx % progress_stride == 0:
+                    frame_progress = idx / max(1, video.nframes - 1)
+                    _emit_progress(
+                        45 + int(50 * frame_progress),
+                        "Calculating brightness trace...",
+                    )
             print("Done")
+            _emit_progress(98, "Writing metadata...")
             self.write()
+            _emit_progress(100, "Video metadata ready.")
 
     def write(self):
         """

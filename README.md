@@ -111,6 +111,24 @@ conda activate arcjetCV
 python test.py
 ```
 
+## Documentation (django-wiki)
+
+The living documentation now runs on django-wiki inside `wiki_site/` (preferred path for edits). To start it locally:
+
+```bash
+cd wiki_site
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Open http://127.0.0.1:8000/ to add and edit pages (log in with the superuser you created). Admin is at `/admin/` and auth views are under `/accounts/`.
+
+Legacy Sphinx and MkDocs builds remain in `docs/` and `mkdocs/` if you still need static HTML/PDF exports.
+
 ## Citing
 
 If you use arcjetCV in your research, please use the following BibTeX entry to cite [our paper](https://doi.org/10.2514/1.A36132):

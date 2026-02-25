@@ -7,7 +7,7 @@ import json
 from numbers import Number
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Signal, QThread
+from PySide6.QtCore import Signal, QThread, Qt
 from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
 from matplotlib.colors import rgb_to_hsv
@@ -438,6 +438,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plot_ref = None
         if self.path != "":
             self.folder, self.filename, self.ext = splitfn(self.path)
+            loading_dialog = None
+
+            if not self.testing:
+                loading_dialog = QtWidgets.QProgressDialog(
+                    "Loading video...", "Cancel", 0, 100, self
+                )
+                loading_dialog.setWindowTitle("Loading Video")
+                loading_dialog.setWindowModality(Qt.WindowModal)
+                loading_dialog.setMinimumDuration(0)
+                loading_dialog.setAutoClose(False)
+                loading_dialog.setValue(0)
+                loading_dialog.show()
+
+            def update_loading_progress(value, message):
+                if loading_dialog is None:
+                    return
+                loading_dialog.setValue(int(max(0, min(100, value))))
+                if message:
+                    loading_dialog.setLabelText(message)
+                QtWidgets.QApplication.processEvents()
+                if loading_dialog.wasCanceled():
+                    raise RuntimeError("Video loading canceled by user.")
+
+            # Old matplotlib artists become invalid after axes.clear(); drop refs.
+            self.start_line = None
+            self.stop_line = None
+            self._tplot_ref = None
 
             self.ui.spinBox_FrameIndex.setDisabled(False)
             self.ui.comboBox_flowDirection.setDisabled(False)
@@ -449,9 +476,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.Window0.canvas.draw()
 
             try:  # Create video object
+                update_loading_progress(2, "Opening video file...")
                 self.video = Video(self.path)
                 self.videometa = VideoMeta(
-                    self.video, os.path.join(self.folder, self.filename + ".meta")
+                    self.video,
+                    os.path.join(self.folder, self.filename + ".meta"),
+                    progress_callback=update_loading_progress,
                 )
 
                 if hasattr(self, "pixels_per_mm"):  # Ensure it's defined
@@ -498,12 +528,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 self.ui.Window3.canvas.draw()
 
-                self.ui.Window3.canvas.clicked.connect(self.brightness_click_slot)
-                self.ui.spinBox_FirstGoodFrame.valueChanged.connect(
-                    self.plot_start_stop
+                self.ui.Window3.canvas.clicked.connect(
+                    self.brightness_click_slot, Qt.UniqueConnection
                 )
-                self.ui.spinBox_LastGoodFrame.valueChanged.connect(self.plot_start_stop)
+                self.ui.spinBox_FirstGoodFrame.valueChanged.connect(
+                    self.plot_start_stop, Qt.UniqueConnection
+                )
+                self.ui.spinBox_LastGoodFrame.valueChanged.connect(
+                    self.plot_start_stop, Qt.UniqueConnection
+                )
                 if self.processor is None:
+                    update_loading_progress(99, "Initializing processor...")
                     self.processor = ArcjetProcessor(
                         self.videometa, progress_bar=self.ui.progressBar
                     )
@@ -517,6 +552,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     self.update_frame_index()
                     self.NEW_VIDEO = False
+                update_loading_progress(100, "Video loaded.")
 
             except Exception as e:
                 if self.testing:
@@ -525,6 +561,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.arcjetcv_message_box(
                         "Warning", "! Could not load video !:\n" + str(e)
                     )
+            finally:
+                if loading_dialog is not None:
+                    loading_dialog.close()
 
     def load_calibration(self):
         """
@@ -600,8 +639,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_frame_index()
 
     def plot_location(self, reset=False):
+        if self.video is None:
+            return
         n = self.ui.spinBox_FrameIndex.value()
-        if self._tplot_ref is None or reset:
+        current_axes = self.ui.Window3.canvas.axes
+        if (
+            self._tplot_ref is None
+            or reset
+            or getattr(self._tplot_ref, "axes", None) is not current_axes
+        ):
             self._tplot_ref = self.ui.Window3.canvas.axes.axvline(
                 x=n, color="red", linestyle="-"
             )
@@ -610,23 +656,49 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.Window3.canvas.draw()
 
     def plot_start_stop(self):
+        if self.video is None:
+            return
+
         start = self.ui.spinBox_FirstGoodFrame.value()
         stop = self.ui.spinBox_LastGoodFrame.value()
+        current_axes = self.ui.Window3.canvas.axes
 
-        if self.start_line is not None:
-            self.start_line.remove()
-            self.start_line = None
-        if self.stop_line is not None:
-            self.stop_line.remove()
-            self.stop_line = None
         if 0 <= start < self.video.nframes:
-            self.start_line = self.ui.Window3.canvas.axes.axvline(
-                x=start, color="green", linestyle="-"
-            )
+            if (
+                self.start_line is None
+                or getattr(self.start_line, "axes", None) is not current_axes
+            ):
+                self.start_line = current_axes.axvline(
+                    x=start, color="green", linestyle="-"
+                )
+            else:
+                self.start_line.set_xdata([start, start])
+        else:
+            if self.start_line is not None:
+                try:
+                    self.start_line.remove()
+                except (NotImplementedError, ValueError):
+                    pass
+            self.start_line = None
+
         if 0 <= stop < self.video.nframes:
-            self.stop_line = self.ui.Window3.canvas.axes.axvline(
-                x=stop, color="green", linestyle="-"
-            )
+            if (
+                self.stop_line is None
+                or getattr(self.stop_line, "axes", None) is not current_axes
+            ):
+                self.stop_line = current_axes.axvline(
+                    x=stop, color="green", linestyle="-"
+                )
+            else:
+                self.stop_line.set_xdata([stop, stop])
+        else:
+            if self.stop_line is not None:
+                try:
+                    self.stop_line.remove()
+                except (NotImplementedError, ValueError):
+                    pass
+            self.stop_line = None
+
         self.ui.Window3.canvas.draw()
 
     def process_all(self):
@@ -691,15 +763,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ✅ Start the new thread
         self.thread.start()
-
-        # ✅ Connect Signals
-        self.worker.progress_updated.connect(
-            self.ui.progressBar.setValue
-        )  # Update progress bar
-        self.worker.finished.connect(self.on_processing_complete)  # Handle completion
-
-        self.thread.started.connect(self.worker.run)  # Start worker when thread starts
-        self.thread.start()  # Start thread
 
     def on_processing_complete(self):
         """Handles UI updates when processing is completed."""

@@ -155,7 +155,7 @@ class ArcjetProcessor:
         self.h = videometa["HEIGHT"]
         self.w = videometa["WIDTH"]
         self.crop = videometa.crop_range()
-        self.cnn = CNN()
+        self.cnn = None
         self.pixels_per_mm = videometa.get(
             "PIXELS_PER_MM", 1.0
         )  # ✅ Default to 1.0 if missing
@@ -295,6 +295,14 @@ class ArcjetProcessor:
 
         elif argdict["SEGMENT_METHOD"] == "CNN":
             # If the method is CNN, call the contoursCNN function with the cropped image and the CNN model
+            if self.cnn is None:
+                try:
+                    self.cnn = CNN()
+                except Exception as exc:
+                    raise RuntimeError(
+                        "CNN segmentation model could not be loaded. "
+                        "Install valid CNN checkpoints and keep Filter Method='CNN'."
+                    ) from exc
             contour_dict, flags = contoursCNN(img_crop, self.cnn)
 
         else:

@@ -162,3 +162,8 @@ train_masks/
 api/
 test.py
 
+# Django wiki
+wiki_site/db.sqlite3
+wiki_site/static/
+wiki_site/media/
+wiki_site/.venv/
