@@ -6,7 +6,6 @@ import cv2 as cv
 import json
 from numbers import Number
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import Signal, QThread, Qt
 from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
@@ -1713,22 +1712,32 @@ class MainWindow(QtWidgets.QMainWindow):
                     )
 
     def arcjetcv_message_box(self, title, message):
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle(title)
+        dialog.setModal(True)
+        dialog.setWindowIcon(QIcon(self.logo_path))
 
-        msg_box = QMessageBox()
-        msg_box.setIconPixmap(QPixmap(self.logo_path))
-        msg_box.setWindowTitle(title)
-        msg_box.setText(message)
-        msg_box.setStandardButtons(QMessageBox.Ok)
+        layout = QtWidgets.QVBoxLayout(dialog)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(14)
 
-        # Reposition the icon row so the logo is centered above the message text.
-        icon_label = msg_box.findChild(QtWidgets.QLabel, "qt_msgboxex_icon_label")
-        text_label = msg_box.findChild(QtWidgets.QLabel, "qt_msgbox_label")
-        layout = msg_box.layout()
-        if icon_label is not None and text_label is not None and layout is not None:
-            icon_label.setAlignment(Qt.AlignCenter)
-            layout.removeWidget(icon_label)
-            layout.addWidget(icon_label, 0, 0, 1, 2, Qt.AlignHCenter)
-            layout.removeWidget(text_label)
-            layout.addWidget(text_label, 1, 0, 1, 2)
+        logo_label = QtWidgets.QLabel(dialog)
+        logo_label.setPixmap(
+            QPixmap(self.logo_path).scaled(
+                96, 96, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+        )
+        logo_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(logo_label, 0, Qt.AlignHCenter)
 
-        msg_box.exec_()
+        text_label = QtWidgets.QLabel(message, dialog)
+        text_label.setWordWrap(True)
+        text_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(text_label)
+
+        ok_button = QtWidgets.QPushButton("OK", dialog)
+        ok_button.setDefault(True)
+        ok_button.clicked.connect(dialog.accept)
+        layout.addWidget(ok_button)
+
+        dialog.exec()
