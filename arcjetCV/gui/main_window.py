@@ -556,10 +556,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             except Exception as e:
                 if self.testing:
-                    print("! Could not load video !:\n" + str(e))
+                    print("Could not load video:\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
-                        "Warning", "! Could not load video !:\n" + str(e)
+                        "Warning", "Could not load video:\n" + str(e)
                     )
             finally:
                 if loading_dialog is not None:
@@ -849,7 +849,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         except Exception as e:
             if self.testing:
-                print("! File loading failed !:\n" + str(e))
+                print("File loading failed:\n" + str(e))
             else:
                 self.arcjetcv_message_box("Warning", "File loading failed:\n" + str(e))
 
@@ -1527,16 +1527,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     self.arcjetcv_message_box(
                         "Warning",
-                        "! Not enough data to plot !: only %i points"
+                        "Not enough data to plot: only %i points"
                         % len(self.raw_outputs),
                     )
 
         except Exception as e:
-            self.ui.basebar.setText("! Plotting failed !")
+            self.ui.basebar.setText("Plotting failed !")
             if self.testing:
-                print("Warning", "! Plotting failed !:\n" + str(e))
+                print("Warning", "Plotting failed :\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e))
+                self.arcjetcv_message_box("Warning", "Plotting failed:\n" + str(e))
 
         self.ui.Window1.repaint()
         self.ui.Window2.repaint()
@@ -1582,12 +1582,12 @@ class MainWindow(QtWidgets.QMainWindow):
             plt.close(fig)
 
         except Exception as e:
-            self.ui.basebar.setText("! Plot saving failed !")
+            self.ui.basebar.setText("Plot saving failed !")
             if self.testing:
-                print("Warning", "! Plot saving failed !:\n" + str(e))
+                print("Warning", "Plot saving failed:\n" + str(e))
             else:
                 self.arcjetcv_message_box(
-                    "Warning", "! Plot saving failed !:\n" + str(e)
+                    "Warning", "Plot saving failed:\n" + str(e)
                 )
 
     def export_to_csv(self):
@@ -1641,12 +1641,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     df.to_csv(csv_file_path, index=False)
 
             except Exception as e:
-                self.ui.basebar.setText("! CSV export failed !")
+                self.ui.basebar.setText("CSV export failed !")
                 if self.testing:
-                    print("Warning", "! CSV export failed !:\n" + str(e))
+                    print("Warning", "CSV export failed:\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
-                        "Warning", "! CSV export failed !:\n" + str(e)
+                        "Warning", "CSV export failed:\n" + str(e)
                     )
 
     def fit_data(self):
@@ -1704,12 +1704,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.fit_dict = fit_dict
 
             except Exception as e:
-                self.ui.basebar.setText("! Fitting failed !")
+                self.ui.basebar.setText("Fitting failed !")
                 if self.testing:
-                    print("Warning", "! Fitting failed !:\n" + str(e))
+                    print("Warning", "Fitting failed :\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
-                        "Warning", "! Fitting failed !:\n" + str(e)
+                        "Warning", "Fitting failed :\n" + str(e)
                     )
 
     def arcjetcv_message_box(self, title, message):
@@ -1719,4 +1719,16 @@ class MainWindow(QtWidgets.QMainWindow):
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.Ok)
+
+        # Reposition the icon row so the logo is centered above the message text.
+        icon_label = msg_box.findChild(QtWidgets.QLabel, "qt_msgboxex_icon_label")
+        text_label = msg_box.findChild(QtWidgets.QLabel, "qt_msgbox_label")
+        layout = msg_box.layout()
+        if icon_label is not None and text_label is not None and layout is not None:
+            icon_label.setAlignment(Qt.AlignCenter)
+            layout.removeWidget(icon_label)
+            layout.addWidget(icon_label, 0, 0, 1, 2, Qt.AlignHCenter)
+            layout.removeWidget(text_label)
+            layout.addWidget(text_label, 1, 0, 1, 2)
+
         msg_box.exec_()
