@@ -1001,7 +1001,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Filter Method:", None)
         )
         self.label_display_shock.setText(
-            QCoreApplication.translate("MainWindow", "Display Shock?", None)
+            QCoreApplication.translate("MainWindow", "Detect Shock", None)
         )
         self.comboBox_flowDirection.setItemText(
             0, QCoreApplication.translate("MainWindow", "right", None)
@@ -1091,7 +1091,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Output filename:", None)
         )
         self.checkBox_writeVideo.setText(
-            QCoreApplication.translate("MainWindow", "Write video?", None)
+            QCoreApplication.translate("MainWindow", "Write video", None)
         )
         self.pushButton_process.setText(
             QCoreApplication.translate("MainWindow", "Process All", None)

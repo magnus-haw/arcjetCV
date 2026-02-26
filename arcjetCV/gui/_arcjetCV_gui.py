@@ -790,7 +790,7 @@ class Ui_MainWindow(object):
         self.label_17.setText(_translate("MainWindow", "Frame range:"))
         self.label_20.setText(_translate("MainWindow", "Output filename:"))
         self.label_10.setText(_translate("MainWindow", "Process every Nth:"))
-        self.checkBox_writeVideo.setText(_translate("MainWindow", "Write video?"))
+        self.checkBox_writeVideo.setText(_translate("MainWindow", "Write video"))
         self.pushButton_process.setText(_translate("MainWindow", "Process All"))
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Extract Edges")

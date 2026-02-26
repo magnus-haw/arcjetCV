@@ -6,6 +6,7 @@ import cv2 as cv
 import json
 from numbers import Number
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QMessageBox
 from PySide6.QtCore import Signal, QThread, Qt
 from PySide6.QtGui import QIcon, QPixmap
 import matplotlib.pyplot as plt
@@ -104,6 +105,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_kalman_filter.stateChanged.connect(self.plot_outputs)
         self.ui.comboBox_units.setCurrentText("[mm]")
+        self._set_tooltips()
 
         # init_plot_brightness
         self.ui.Window3.canvas.axes.clear()
@@ -124,6 +126,58 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Show the main window
         self.show()
+
+    def _set_tooltips(self):
+        """Set hover help for key UI controls."""
+        tooltips = {
+            "pushButton_loadCalibration": "Load a calibration file to convert pixels to physical units.",
+            "pushButton_loadVideo": "Open a video file for processing.",
+            "pushButton_save_frame": "Save the currently displayed frame as an image.",
+            "pushButton_process": "Process the selected frame range and extract time-series outputs.",
+            "pushButton_LoadFiles": "Load previously exported output files for plotting.",
+            "pushButton_export_csv": "Export current results to a CSV file.",
+            "pushButton_PlotData": "Plot selected quantities from loaded or processed data.",
+            "pushButton_fitData": "Fit the selected data over the chosen time interval.",
+            "applyCrop": "Apply the current crop bounds to the video processing region.",
+            "spinBox_FrameIndex": "Current frame index shown in the preview.",
+            "comboBox_flowDirection": "Direction of the flow used by the detector.",
+            "comboBox_filterType": "Segmentation method: HSV, GRAY, CNN, or AutoHSV.",
+            "checkBox_display_shock": "Enable/disable shock detection overlay on the preview frame.",
+            "checkBox_crop": "Show/hide crop rectangle and use crop bounds during processing.",
+            "checkBox_annotate": "Overlay computed values and labels on the preview frame.",
+            "spinBox_crop_xmin": "Left crop boundary (pixels).",
+            "spinBox_crop_xmax": "Right crop boundary (pixels).",
+            "spinBox_crop_ymin": "Top crop boundary (pixels).",
+            "spinBox_crop_ymax": "Bottom crop boundary (pixels).",
+            "spinBox_FirstGoodFrame": "First frame included in batch processing.",
+            "spinBox_LastGoodFrame": "Last frame included in batch processing.",
+            "spinBox_frame_skips": "Process every Nth frame to speed up analysis.",
+            "checkBox_writeVideo": "Write an output video with overlays while processing.",
+            "comboBox_units": "Unit system used in plots and derived quantities.",
+            "doubleSpinBox_fps": "Frame rate used for the time axis (frames per second).",
+            "spinBox_mask_frames": "Minimum number of valid points required for plotting/fitting masks.",
+            "checkBox_display_shock2": "Include shock position in the time-series plot.",
+            "checkBox_kalman_filter": "Apply Kalman smoothing to plotted signals.",
+            "comboBox_fit_type": "Model used for fitting (currently linear).",
+            "doubleSpinBox_fit_start_time": "Fit window start time (seconds).",
+            "doubleSpinBox_fit_last_time": "Fit window end time (seconds).",
+            "checkBox_m95_radius": "Plot model 95% radius.",
+            "checkBox_m50_radius": "Plot model 50% radius.",
+            "checkBox_model_center": "Plot model center position.",
+            "checkBox_50_radius": "Plot measured 50% radius.",
+            "checkBox_95_radius": "Plot measured 95% radius.",
+            "checkBox_shock_area": "Plot shock area.",
+            "checkBox_model_rad": "Plot model radius.",
+            "checkBox_shock_center": "Plot shock center position.",
+            "checkBox_shockmodel": "Plot shock model result.",
+            "checkBox_ypos": "Plot Y-position metric.",
+        }
+
+        for name, tip in tooltips.items():
+            widget = getattr(self.ui, name, None)
+            if widget is not None:
+                widget.setToolTip(tip)
+                widget.setStatusTip(tip)
 
     def closeEvent(self, event):
         """Handle window close event by stopping all running threads."""
@@ -1712,32 +1766,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     )
 
     def arcjetcv_message_box(self, title, message):
-        dialog = QtWidgets.QDialog(self)
-        dialog.setWindowTitle(title)
-        dialog.setModal(True)
-        dialog.setWindowIcon(QIcon(self.logo_path))
-
-        layout = QtWidgets.QVBoxLayout(dialog)
-        layout.setContentsMargins(24, 20, 24, 20)
-        layout.setSpacing(14)
-
-        logo_label = QtWidgets.QLabel(dialog)
-        logo_label.setPixmap(
-            QPixmap(self.logo_path).scaled(
-                96, 96, Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
-        )
-        logo_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(logo_label, 0, Qt.AlignHCenter)
-
-        text_label = QtWidgets.QLabel(message, dialog)
-        text_label.setWordWrap(True)
-        text_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(text_label)
-
-        ok_button = QtWidgets.QPushButton("OK", dialog)
-        ok_button.setDefault(True)
-        ok_button.clicked.connect(dialog.accept)
-        layout.addWidget(ok_button)
-
-        dialog.exec()
+        msg_box = QMessageBox(self)
+        msg_box.setIconPixmap(QPixmap(self.logo_path))
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec()

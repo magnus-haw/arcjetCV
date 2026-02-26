@@ -99,6 +99,22 @@ class ProcessorWorker(QObject):
 
                 # Handle video writing
                 if self.write_video:
+                    # Draw detected contours on output video frames.
+                    width = frame.shape[1]
+                    thickness = max(1, width // 500)
+
+                    model_contours = contour_dict.get("MODEL")
+                    if model_contours is not None:
+                        cv.drawContours(frame, model_contours, -1, (0, 255, 0), thickness)
+
+                    if self.display_shock:
+                        shock_contours = contour_dict.get("SHOCK")
+                        if shock_contours is not None:
+                            cv.drawContours(
+                                frame, shock_contours, -1, (255, 0, 255), thickness
+                            )
+
+                    annotate_image_with_frame_number(frame, frame_index)
                     frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                     self.video.writer.write(frame)
 
@@ -515,22 +531,20 @@ class ArcjetProcessor:
                 # Add pixels_per_mm to the output dictionary
                 argdict["PIXELS_PER_MM"] = self.pixels_per_mm
 
-                # Draw model and shock contours on the frame for visualization
-                color_map = {
-                    "MODEL": (0, 255, 0),
-                    "SHOCK": (255, 0, 255),
-                }  # Define colors for MODEL and SHOCK
+                # Draw model contour always; draw shock only when enabled.
+                width = frame.shape[1]
+                thickness = max(1, width // 500)
+
+                model_contours = contour_dict.get("MODEL")
+                if model_contours is not None:
+                    cv.drawContours(frame, model_contours, -1, (0, 255, 0), thickness)
 
                 if display_shock:
-                    for key, contours in contour_dict.items():
+                    shock_contours = contour_dict.get("SHOCK")
+                    if shock_contours is not None:
                         cv.drawContours(
-                            frame, contours, -1, color_map.get(key, (255, 0, 255)), 2
+                            frame, shock_contours, -1, (255, 0, 255), thickness
                         )
-                else:
-                    # Draw only the MODEL contours if display_shock is False
-                    cv.drawContours(
-                        frame, contour_dict["MODEL"], -1, color_map["MODEL"], 2
-                    )
 
                 # Annotate the frame with its index for reference
                 annotate_image_with_frame_number(frame, frame_index)

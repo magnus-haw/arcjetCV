@@ -160,7 +160,7 @@
                <item row="3" column="0">
                 <widget class="QLabel" name="label_display_shock">
                  <property name="text">
-                  <string>Display Shock?</string>
+                  <string>Detect Shock</string>
                  </property>
                 </widget>
                </item>
@@ -701,7 +701,7 @@
                <item>
                 <widget class="QCheckBox" name="checkBox_writeVideo">
                  <property name="text">
-                  <string>Write video?</string>
+                  <string>Write video</string>
                  </property>
                 </widget>
                </item>

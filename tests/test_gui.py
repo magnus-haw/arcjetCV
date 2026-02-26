@@ -313,7 +313,7 @@ def test_process_every_nth_frame(app, qtbot, mocker):
 
 def test_toggle_write_video(app, qtbot, mocker):
     """
-    Test toggling the 'Write video?' checkbox.
+    Test toggling the 'Write video' checkbox.
     """
     test_load_video(app, qtbot, mocker)
     initial_state = app.ui.checkBox_writeVideo.isChecked()
