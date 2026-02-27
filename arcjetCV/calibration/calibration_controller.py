@@ -9,7 +9,6 @@ import cv2
 import json
 import os
 from pathlib import Path
-import shutil
 
 
 class CalibrationController:
@@ -366,7 +365,7 @@ class CalibrationController:
 
     def calibrate_camera(self, img_path):
         """
-        Perform full 3D camera calibration and save results to JSON.
+        Perform full 3D camera calibration and keep results in memory.
 
         This method:
         - Detects a calibration pattern in the given image.
@@ -377,15 +376,13 @@ class CalibrationController:
         :param img_path: Path to the grayscale image containing the calibration pattern.
         :type img_path: str
 
-        :return: None. Results are stored in self.calibration_data and JSON.
-        :rtype: None
+        :return: True on success, else None.
+        :rtype: bool | None
         """
         pattern_size = (
             self.view.grid_cols_input.value(),
             self.view.grid_rows_input.value(),
         )
-        spacing = 1.0
-
         obj_points = []
         img_points = []
 
@@ -400,7 +397,9 @@ class CalibrationController:
             img_points.append(img_p)
         else:
             QMessageBox.warning(
-                self.view, "Error", f"No pattern detected in {img_path}"
+                self.view,
+                "Error",
+                f'No pattern detected in "{Path(img_path).name}", check the pattern size.',
             )
             return
 
@@ -456,55 +455,36 @@ class CalibrationController:
             "homography_inverse": H_inv.tolist(),
         }
 
-        success, save_error = self.save_to_json(calibration_data)
-        if success:
-            self.calibration_data = {
-                "camera_matrix": np.array(
-                    calibration_data["camera_matrix"], dtype=np.float32
-                ),
-                "dist_coeffs": np.array(
-                    calibration_data["dist_coeffs"], dtype=np.float32
-                ),
-                "rvec": (
-                    np.array(calibration_data["rvec"], dtype=np.float32)
-                    if calibration_data["rvec"]
-                    else None
-                ),
-                "tvec": (
-                    np.array(calibration_data["tvec"], dtype=np.float32)
-                    if calibration_data["tvec"]
-                    else None
-                ),
-                "affine_matrix": (
-                    np.array(calibration_data["affine_matrix"], dtype=np.float32)
-                    if calibration_data["affine_matrix"]
-                    else None
-                ),
-                "pixels_per_mm": calibration_data.get("pixels_per_mm", None),
-                "pattern_size": tuple(calibration_data["pattern_size"]),
-                "centers": np.array(calibration_data["centers"], dtype=np.float32),
-                "square_layout": np.array(
-                    calibration_data["square_layout"], dtype=np.float32
-                ),
-                "homography": np.array(
-                    calibration_data["homography"], dtype=np.float32
-                ),
-                "homography_inverse": np.array(
-                    calibration_data["homography_inverse"], dtype=np.float32
-                ),
-            }
-            self.calibrated = True
-            QMessageBox.information(
-                self.view,
-                "Success",
-                "3D and 2D Camera calibration successful and saved.",
-            )
-        else:
-            self.calibration_data = None
-            self.calibrated = False
-            QMessageBox.warning(
-                self.view, "Error", f"Failed to save calibration: {save_error}"
-            )
+        # Keep calibration in memory. Persist only when user clicks "Save Calibration".
+        self.calibration_data = {
+            "camera_matrix": np.array(calibration_data["camera_matrix"], dtype=np.float32),
+            "dist_coeffs": np.array(calibration_data["dist_coeffs"], dtype=np.float32),
+            "rvec": (
+                np.array(calibration_data["rvec"], dtype=np.float32)
+                if calibration_data["rvec"]
+                else None
+            ),
+            "tvec": (
+                np.array(calibration_data["tvec"], dtype=np.float32)
+                if calibration_data["tvec"]
+                else None
+            ),
+            "affine_matrix": (
+                np.array(calibration_data["affine_matrix"], dtype=np.float32)
+                if calibration_data["affine_matrix"]
+                else None
+            ),
+            "pixels_per_mm": calibration_data.get("pixels_per_mm", None),
+            "pattern_size": tuple(calibration_data["pattern_size"]),
+            "centers": np.array(calibration_data["centers"], dtype=np.float32),
+            "square_layout": np.array(calibration_data["square_layout"], dtype=np.float32),
+            "homography": np.array(calibration_data["homography"], dtype=np.float32),
+            "homography_inverse": np.array(
+                calibration_data["homography_inverse"], dtype=np.float32
+            ),
+        }
+        self.calibrated = True
+        return True
 
     def print_chessboard(self):
         """
@@ -514,27 +494,29 @@ class CalibrationController:
         :rtype: None
         """
         pdf_path = Path(__file__).resolve().parent / "calibration.pdf"
+        show_arcjet_box = hasattr(self.view, "arcjetcv_message_box")
+
         if not pdf_path.exists():
-            QMessageBox.warning(
-                self.view,
-                "Error",
-                f"Calibration PDF not found:\n{pdf_path}",
-            )
+            msg = f"Calibration PDF not found:\n{pdf_path}"
+            if show_arcjet_box:
+                self.view.arcjetcv_message_box("Error", msg)
+            else:
+                QMessageBox.warning(self.view, "Error", msg)
             return
 
         opened = QDesktopServices.openUrl(QUrl.fromLocalFile(str(pdf_path)))
         if opened:
-            QMessageBox.information(
-                self.view,
-                "Print Calibration Pattern",
-                "Opened calibration PDF.\nUse your PDF viewer print action.",
-            )
+            msg = "Opened calibration PDF.\nUse your PDF viewer print action."
+            if show_arcjet_box:
+                self.view.arcjetcv_message_box("Print Calibration Pattern", msg)
+            else:
+                QMessageBox.information(self.view, "Print Calibration Pattern", msg)
         else:
-            QMessageBox.warning(
-                self.view,
-                "Error",
-                f"Could not open calibration PDF:\n{pdf_path}",
-            )
+            msg = f"Could not open calibration PDF:\n{pdf_path}"
+            if show_arcjet_box:
+                self.view.arcjetcv_message_box("Error", msg)
+            else:
+                QMessageBox.warning(self.view, "Error", msg)
 
     def load_image(self):
         """Load an image for resolution measurement."""
@@ -655,7 +637,8 @@ class CalibrationController:
             return
 
         self.image = cv2.imread(file_path)
-        self.calibrate_camera(file_path)
+        if not self.calibrate_camera(file_path) or self.calibration_data is None:
+            return
         self.image = self.apply_calibration(self.image, self.calibration_data)
 
         if self.image is None:
@@ -809,20 +792,45 @@ class CalibrationController:
 
         :raises QMessageBox.critical: If copying or saving fails.
         """
-        default_filename = "calibration_copy.json"
+        if not self.calibration_data:
+            QMessageBox.warning(self.view, "Error", "No calibration data available to save.")
+            return
 
         file_path, _ = QFileDialog.getSaveFileName(
             None, "Save Calibration", "", "JSON Files (*.json);;All Files (*)"
         )
 
         if file_path:
-            source_file = os.path.join(
-                Path(__file__).parent.absolute(), "calibration_results.json"
-            )
             try:
-                shutil.copy(source_file, file_path)
-                with open(source_file, "w") as f:
-                    f.write("{}")
+                serializable = {
+                    "camera_matrix": self.calibration_data["camera_matrix"].tolist(),
+                    "dist_coeffs": self.calibration_data["dist_coeffs"].tolist(),
+                    "rvec": (
+                        self.calibration_data["rvec"].tolist()
+                        if self.calibration_data["rvec"] is not None
+                        else None
+                    ),
+                    "tvec": (
+                        self.calibration_data["tvec"].tolist()
+                        if self.calibration_data["tvec"] is not None
+                        else None
+                    ),
+                    "affine_matrix": (
+                        self.calibration_data["affine_matrix"].tolist()
+                        if self.calibration_data["affine_matrix"] is not None
+                        else None
+                    ),
+                    "pixels_per_mm": self.calibration_data.get("pixels_per_mm", None),
+                    "pattern_size": list(self.calibration_data["pattern_size"]),
+                    "centers": self.calibration_data["centers"].tolist(),
+                    "square_layout": self.calibration_data["square_layout"].tolist(),
+                    "homography": self.calibration_data["homography"].tolist(),
+                    "homography_inverse": self.calibration_data[
+                        "homography_inverse"
+                    ].tolist(),
+                }
+                with open(file_path, "w") as f:
+                    json.dump(serializable, f, indent=4)
                 QMessageBox.information(
                     self.view, "Success", f"Calibration saved as {file_path}"
                 )
