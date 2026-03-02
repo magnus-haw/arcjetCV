@@ -1,10 +1,17 @@
 from setuptools import setup, find_packages
+from pathlib import Path
 import sys
 import os
 
-# Read the README file for long description
-with open("README_pypi.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+# Read a long description file that is guaranteed to exist in sdist/wheel builds.
+root = Path(__file__).resolve().parent
+readme_candidates = [root / "README_pypi.md", root / "README.md"]
+for readme_path in readme_candidates:
+    if readme_path.exists():
+        long_description = readme_path.read_text(encoding="utf-8")
+        break
+else:
+    long_description = "arcjetCV"
 
 
 def check_linux_dependencies():
