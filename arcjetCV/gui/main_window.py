@@ -607,17 +607,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             except Exception as e:
                 if self.testing:
-<<<<<<< HEAD
-                    print("Could not load video :\n" + str(e))
-                else:
-                    self.arcjetcv_message_box(
-                        "Warning", "Could not load video :\n" + str(e)
-=======
                     print("Could not load video:\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
                         "Warning", "Could not load video:\n" + str(e)
->>>>>>> develop
                     )
             finally:
                 if loading_dialog is not None:
@@ -1769,25 +1762,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         "Warning", "Fitting failed :\n" + str(e)
                     )
 
-<<<<<<< HEAD
-    # def arcjetcv_message_box(self, title, message):
-
-    #     msg_box = QMessageBox()
-    #     msg_box.setIconPixmap(QPixmap(self.logo_path))
-    #     msg_box.setWindowTitle(title)
-    #     msg_box.setText(message)
-    #     msg_box.setStandardButtons(QMessageBox.Ok)
-    #     msg_box.exec_()
-
-    def arcjetcv_message_box(self, title, message):
-        msg_box = QMessageBox()
-        icon = QPixmap(self.logo_path).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        msg_box.setIconPixmap(icon)
-        msg_box.setWindowTitle(title)
-        msg_box.setText(message)
-        msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.exec()
-=======
     def arcjetcv_message_box(self, title, message):
         msg_box = QMessageBox(self)
         msg_box.setIconPixmap(QPixmap(self.logo_path))
@@ -1795,4 +1769,3 @@ class MainWindow(QtWidgets.QMainWindow):
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec()
->>>>>>> develop
