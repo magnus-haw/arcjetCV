@@ -1,18 +1,18 @@
 [![GitHub Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://magnus-haw.github.io/arcjetCV/)
-[![PyPI version](https://badge.fury.io/py/arcjetcv.svg)](https://pypi.org/project/arcjetcv/)
+[![pypi package](https://img.shields.io/pypi/v/arcjetcv?label=pypi%20package)](https://pypi.org/project/arcjetcv/)
 [![tutorial](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/magnus-haw/arcjetCV/blob/main/tutorial.ipynb)
 [![Downloads](https://pepy.tech/badge/arcjetcv)](https://pepy.tech/project/arcjetcv)
 -----
 
 <div align="center">
-  <img src="https://github.com/magnus-haw/arcjetCV/blob/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
+  <img src="https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
 </div>
 
 # arcjetCV
 
 Package to process arcjet videos and segment the edge of the shock and of the sample.
 
-![arcjetCV Functionality](https://github.com/magnus-haw/arcjetCV/blob/main/docs/source/arcjet_video.gif)
+![arcjetCV Functionality](https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/docs/source/arcjet_video.gif)
 
 ## Installation
 
