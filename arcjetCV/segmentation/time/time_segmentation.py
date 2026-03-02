@@ -51,10 +51,11 @@ def time_segmentation(video, progress_callback=None):
         try:
             _frame = video.get_frame(int(frame_index))
             h = _frame.shape[0]
-            w = _frame.shape[1]
             y0 = int(0.2 * h)
             y1 = int(0.8 * h)
-            roi = _frame[:, y0:y1]
+            roi = _frame[y0:y1, :]
+            if roi.size == 0:
+                continue
 
             # Downsample before computing brightness to speed up loading on large frames.
             max_dim = 256
@@ -69,8 +70,12 @@ def time_segmentation(video, progress_callback=None):
                     interpolation=cv2.INTER_AREA,
                 )
 
-            gray = cv2.cvtColor(roi, cv2.COLOR_RGB2GRAY)
-            Value.append(np.mean(gray))
+            # Keep feature extraction aligned with the checkpoint training pipeline:
+            # erode + HSV V-channel brightness.
+            kernel = np.ones((20, 20), np.uint8)
+            roi = cv2.erode(roi, kernel, cv2.BORDER_REFLECT)
+            hsv = cv2.cvtColor(roi, cv2.COLOR_RGB2HSV)
+            Value.append(np.mean(hsv[:, :, 2]))
             nFrame.append((frame_index / max(1, video.nframes - 1)) * 500.0)
             if progress_callback is not None:
                 progress = int((len(Value) / max(1, nsamples)) * 100)
