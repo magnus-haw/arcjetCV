@@ -23,6 +23,45 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set release version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          tag = "${{ github.ref_name }}"
+          if not tag.startswith("v"):
+            raise RuntimeError(f"Expected tag starting with 'v', got: {tag}")
+
+          release_version = tag[1:]
+          if not re.fullmatch(r"\d+\.\d+\.\d+(?:[A-Za-z0-9._+-]*)?", release_version):
+            raise RuntimeError(f"Tag version is not valid: {release_version}")
+
+          setup_path = Path("setup.py")
+          init_path = Path("arcjetCV/__init__.py")
+
+          setup_text = setup_path.read_text(encoding="utf-8")
+          init_text = init_path.read_text(encoding="utf-8")
+
+          setup_text = re.sub(
+              r'version="[^"]+"',
+              f'version="{release_version}"',
+              setup_text,
+              count=1,
+          )
+          init_text = re.sub(
+              r'__version__\s*=\s*"[^"]+"',
+              f'__version__ = "{release_version}"',
+              init_text,
+              count=1,
+          )
+
+          setup_path.write_text(setup_text, encoding="utf-8")
+          init_path.write_text(init_text, encoding="utf-8")
+          print(f"Using release version: {release_version}")
+          PY
+
       - name: Set dev version for main pushes
         if: github.ref == 'refs/heads/main'
         run: |
