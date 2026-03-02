@@ -1,16 +1,17 @@
-name: Publish to PyPI
+name: Publish Packages
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
   workflow_dispatch:
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
 
     steps:
@@ -22,11 +23,93 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set dev version for main pushes
+        if: github.ref == 'refs/heads/main'
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          run_number = "${{ github.run_number }}"
+
+          setup_path = Path("setup.py")
+          init_path = Path("arcjetCV/__init__.py")
+
+          setup_text = setup_path.read_text(encoding="utf-8")
+          init_text = init_path.read_text(encoding="utf-8")
+
+          setup_match = re.search(r'version="([^"]+)"', setup_text)
+          init_match = re.search(r'__version__\s*=\s*"([^"]+)"', init_text)
+          if not setup_match or not init_match:
+            raise RuntimeError("Could not locate version strings in setup.py/__init__.py")
+
+          base = setup_match.group(1).split(".dev")[0]
+          dev_version = f"{base}.dev{run_number}"
+
+          setup_text = re.sub(
+              r'version="[^"]+"',
+              f'version="{dev_version}"',
+              setup_text,
+              count=1,
+          )
+          init_text = re.sub(
+              r'__version__\s*=\s*"[^"]+"',
+              f'__version__ = "{dev_version}"',
+              init_text,
+              count=1,
+          )
+
+          setup_path.write_text(setup_text, encoding="utf-8")
+          init_path.write_text(init_text, encoding="utf-8")
+          print(f"Using dev version: {dev_version}")
+          PY
+
       - name: Build package
         run: |
           python -m pip install --upgrade pip
           python -m pip install build
           python -m build
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+
+  publish-testpypi:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish package to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
