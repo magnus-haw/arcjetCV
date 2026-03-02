@@ -1,19 +1,28 @@
 import cv2 as cv
 import numpy as np
 import os, sys
-from arcjetCV.segmentation.contour.contour import (
-    contoursHSV,
-    contoursGRAY,
-    contoursCNN,
-    getEdgeFromContour,
-    contoursAutoHSV,
-    getPoints,
-)
 from PySide6.QtCore import QMetaObject, Qt, QTimer, QThread, Signal, QObject
-from arcjetCV.segmentation.contour.cnn import CNN
 from arcjetCV.utils.utils import clahe_normalize, annotate_image_with_frame_number
 from arcjetCV.utils.output import OutputListJSON
 from arcjetCV.utils.video import Video
+
+try:
+    from arcjetCV.segmentation.contour.contour import (
+        contoursHSV,
+        contoursGRAY,
+        contoursCNN,
+        getEdgeFromContour,
+        contoursAutoHSV,
+        getPoints,
+    )
+    from arcjetCV.segmentation.contour.cnn import CNN
+
+    _contour_import_error = None
+except ModuleNotFoundError as exc:
+    contoursHSV = contoursGRAY = contoursCNN = getEdgeFromContour = None
+    contoursAutoHSV = getPoints = None
+    CNN = None
+    _contour_import_error = exc
 
 
 class ProcessorWorker(QObject):
@@ -90,6 +99,22 @@ class ProcessorWorker(QObject):
 
                 # Handle video writing
                 if self.write_video:
+                    # Draw detected contours on output video frames.
+                    width = frame.shape[1]
+                    thickness = max(1, width // 500)
+
+                    model_contours = contour_dict.get("MODEL")
+                    if model_contours is not None:
+                        cv.drawContours(frame, model_contours, -1, (0, 255, 0), thickness)
+
+                    if self.display_shock:
+                        shock_contours = contour_dict.get("SHOCK")
+                        if shock_contours is not None:
+                            cv.drawContours(
+                                frame, shock_contours, -1, (255, 0, 255), thickness
+                            )
+
+                    annotate_image_with_frame_number(frame, frame_index)
                     frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                     self.video.writer.write(frame)
 
@@ -135,11 +160,18 @@ class ArcjetProcessor:
 
         :param videometa: dictionary containing video metadata
         """
+        if _contour_import_error is not None:
+            raise ModuleNotFoundError(
+                "arcjetCV.segmentation.contour is unavailable. "
+                "Install the contour segmentation optional dependencies "
+                f"({type(_contour_import_error).__name__}: {_contour_import_error})."
+            )
+
         self.flow_dir = videometa["FLOW_DIRECTION"]
         self.h = videometa["HEIGHT"]
         self.w = videometa["WIDTH"]
         self.crop = videometa.crop_range()
-        self.cnn = CNN()
+        self.cnn = None
         self.pixels_per_mm = videometa.get(
             "PIXELS_PER_MM", 1.0
         )  # ✅ Default to 1.0 if missing
@@ -279,6 +311,14 @@ class ArcjetProcessor:
 
         elif argdict["SEGMENT_METHOD"] == "CNN":
             # If the method is CNN, call the contoursCNN function with the cropped image and the CNN model
+            if self.cnn is None:
+                try:
+                    self.cnn = CNN()
+                except Exception as exc:
+                    raise RuntimeError(
+                        "CNN segmentation model could not be loaded. "
+                        "Install valid CNN checkpoints and keep Filter Method='CNN'."
+                    ) from exc
             contour_dict, flags = contoursCNN(img_crop, self.cnn)
 
         else:
@@ -491,22 +531,20 @@ class ArcjetProcessor:
                 # Add pixels_per_mm to the output dictionary
                 argdict["PIXELS_PER_MM"] = self.pixels_per_mm
 
-                # Draw model and shock contours on the frame for visualization
-                color_map = {
-                    "MODEL": (0, 255, 0),
-                    "SHOCK": (255, 0, 255),
-                }  # Define colors for MODEL and SHOCK
+                # Draw model contour always; draw shock only when enabled.
+                width = frame.shape[1]
+                thickness = max(1, width // 500)
+
+                model_contours = contour_dict.get("MODEL")
+                if model_contours is not None:
+                    cv.drawContours(frame, model_contours, -1, (0, 255, 0), thickness)
 
                 if display_shock:
-                    for key, contours in contour_dict.items():
+                    shock_contours = contour_dict.get("SHOCK")
+                    if shock_contours is not None:
                         cv.drawContours(
-                            frame, contours, -1, color_map.get(key, (255, 0, 255)), 2
+                            frame, shock_contours, -1, (255, 0, 255), thickness
                         )
-                else:
-                    # Draw only the MODEL contours if display_shock is False
-                    cv.drawContours(
-                        frame, contour_dict["MODEL"], -1, color_map["MODEL"], 2
-                    )
 
                 # Annotate the frame with its index for reference
                 annotate_image_with_frame_number(frame, frame_index)

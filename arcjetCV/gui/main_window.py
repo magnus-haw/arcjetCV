@@ -103,7 +103,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_shock_center.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shockmodel.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
+        self.ui.checkBox_kalman_filter.stateChanged.connect(self.plot_outputs)
         self.ui.comboBox_units.setCurrentText("[mm]")
+        self._set_tooltips()
 
         # init_plot_brightness
         self.ui.Window3.canvas.axes.clear()
@@ -124,6 +126,58 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Show the main window
         self.show()
+
+    def _set_tooltips(self):
+        """Set hover help for key UI controls."""
+        tooltips = {
+            "pushButton_loadCalibration": "Load a calibration file to convert pixels to physical units.",
+            "pushButton_loadVideo": "Open a video file for processing.",
+            "pushButton_save_frame": "Save the currently displayed frame as an image.",
+            "pushButton_process": "Process the selected frame range and extract time-series outputs.",
+            "pushButton_LoadFiles": "Load previously exported output files for plotting.",
+            "pushButton_export_csv": "Export current results to a CSV file.",
+            "pushButton_PlotData": "Plot selected quantities from loaded or processed data.",
+            "pushButton_fitData": "Fit the selected data over the chosen time interval.",
+            "applyCrop": "Apply the current crop bounds to the video processing region.",
+            "spinBox_FrameIndex": "Current frame index shown in the preview.",
+            "comboBox_flowDirection": "Direction of the flow used by the detector.",
+            "comboBox_filterType": "Segmentation method: HSV, GRAY, CNN, or AutoHSV.",
+            "checkBox_display_shock": "Enable/disable shock detection overlay on the preview frame.",
+            "checkBox_crop": "Show/hide crop rectangle and use crop bounds during processing.",
+            "checkBox_annotate": "Overlay computed values and labels on the preview frame.",
+            "spinBox_crop_xmin": "Left crop boundary (pixels).",
+            "spinBox_crop_xmax": "Right crop boundary (pixels).",
+            "spinBox_crop_ymin": "Top crop boundary (pixels).",
+            "spinBox_crop_ymax": "Bottom crop boundary (pixels).",
+            "spinBox_FirstGoodFrame": "First frame included in batch processing.",
+            "spinBox_LastGoodFrame": "Last frame included in batch processing.",
+            "spinBox_frame_skips": "Process every Nth frame to speed up analysis.",
+            "checkBox_writeVideo": "Write an output video with overlays while processing.",
+            "comboBox_units": "Unit system used in plots and derived quantities.",
+            "doubleSpinBox_fps": "Frame rate used for the time axis (frames per second).",
+            "spinBox_mask_frames": "Minimum number of valid points required for plotting/fitting masks.",
+            "checkBox_display_shock2": "Include shock position in the time-series plot.",
+            "checkBox_kalman_filter": "Apply Kalman smoothing to plotted signals.",
+            "comboBox_fit_type": "Model used for fitting (currently linear).",
+            "doubleSpinBox_fit_start_time": "Fit window start time (seconds).",
+            "doubleSpinBox_fit_last_time": "Fit window end time (seconds).",
+            "checkBox_m95_radius": "Plot model 95% radius.",
+            "checkBox_m50_radius": "Plot model 50% radius.",
+            "checkBox_model_center": "Plot model center position.",
+            "checkBox_50_radius": "Plot measured 50% radius.",
+            "checkBox_95_radius": "Plot measured 95% radius.",
+            "checkBox_shock_area": "Plot shock area.",
+            "checkBox_model_rad": "Plot model radius.",
+            "checkBox_shock_center": "Plot shock center position.",
+            "checkBox_shockmodel": "Plot shock model result.",
+            "checkBox_ypos": "Plot Y-position metric.",
+        }
+
+        for name, tip in tooltips.items():
+            widget = getattr(self.ui, name, None)
+            if widget is not None:
+                widget.setToolTip(tip)
+                widget.setStatusTip(tip)
 
     def closeEvent(self, event):
         print("🔴 Closing application...")
@@ -435,6 +489,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self._plot_ref = None
         if self.path != "":
             self.folder, self.filename, self.ext = splitfn(self.path)
+            loading_dialog = None
+
+            if not self.testing:
+                loading_dialog = QtWidgets.QProgressDialog(
+                    "Loading video...", "Cancel", 0, 100, self
+                )
+                loading_dialog.setWindowTitle("Loading Video")
+                loading_dialog.setWindowModality(Qt.WindowModal)
+                loading_dialog.setMinimumDuration(0)
+                loading_dialog.setAutoClose(False)
+                loading_dialog.setValue(0)
+                loading_dialog.show()
+
+            def update_loading_progress(value, message):
+                if loading_dialog is None:
+                    return
+                loading_dialog.setValue(int(max(0, min(100, value))))
+                if message:
+                    loading_dialog.setLabelText(message)
+                QtWidgets.QApplication.processEvents()
+                if loading_dialog.wasCanceled():
+                    raise RuntimeError("Video loading canceled by user.")
+
+            # Old matplotlib artists become invalid after axes.clear(); drop refs.
+            self.start_line = None
+            self.stop_line = None
+            self._tplot_ref = None
 
             self.ui.spinBox_FrameIndex.setDisabled(False)
             self.ui.comboBox_flowDirection.setDisabled(False)
@@ -446,9 +527,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.Window0.canvas.draw()
 
             try:  # Create video object
+                update_loading_progress(2, "Opening video file...")
                 self.video = Video(self.path)
                 self.videometa = VideoMeta(
-                    self.video, os.path.join(self.folder, self.filename + ".meta")
+                    self.video,
+                    os.path.join(self.folder, self.filename + ".meta"),
+                    progress_callback=update_loading_progress,
                 )
 
                 if hasattr(self, "pixels_per_mm"):  # Ensure it's defined
@@ -495,12 +579,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 self.ui.Window3.canvas.draw()
 
-                self.ui.Window3.canvas.clicked.connect(self.brightness_click_slot)
-                self.ui.spinBox_FirstGoodFrame.valueChanged.connect(
-                    self.plot_start_stop
+                self.ui.Window3.canvas.clicked.connect(
+                    self.brightness_click_slot, Qt.UniqueConnection
                 )
-                self.ui.spinBox_LastGoodFrame.valueChanged.connect(self.plot_start_stop)
+                self.ui.spinBox_FirstGoodFrame.valueChanged.connect(
+                    self.plot_start_stop, Qt.UniqueConnection
+                )
+                self.ui.spinBox_LastGoodFrame.valueChanged.connect(
+                    self.plot_start_stop, Qt.UniqueConnection
+                )
                 if self.processor is None:
+                    update_loading_progress(99, "Initializing processor...")
                     self.processor = ArcjetProcessor(
                         self.videometa, progress_bar=self.ui.progressBar
                     )
@@ -514,14 +603,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     self.update_frame_index()
                     self.NEW_VIDEO = False
+                update_loading_progress(100, "Video loaded.")
 
             except Exception as e:
                 if self.testing:
+<<<<<<< HEAD
                     print("Could not load video :\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
                         "Warning", "Could not load video :\n" + str(e)
+=======
+                    print("Could not load video:\n" + str(e))
+                else:
+                    self.arcjetcv_message_box(
+                        "Warning", "Could not load video:\n" + str(e)
+>>>>>>> develop
                     )
+            finally:
+                if loading_dialog is not None:
+                    loading_dialog.close()
 
     def load_calibration(self):
         """
@@ -597,8 +697,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_frame_index()
 
     def plot_location(self, reset=False):
+        if self.video is None:
+            return
         n = self.ui.spinBox_FrameIndex.value()
-        if self._tplot_ref is None or reset:
+        current_axes = self.ui.Window3.canvas.axes
+        if (
+            self._tplot_ref is None
+            or reset
+            or getattr(self._tplot_ref, "axes", None) is not current_axes
+        ):
             self._tplot_ref = self.ui.Window3.canvas.axes.axvline(
                 x=n, color="red", linestyle="-"
             )
@@ -607,23 +714,49 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.Window3.canvas.draw()
 
     def plot_start_stop(self):
+        if self.video is None:
+            return
+
         start = self.ui.spinBox_FirstGoodFrame.value()
         stop = self.ui.spinBox_LastGoodFrame.value()
+        current_axes = self.ui.Window3.canvas.axes
 
-        if self.start_line is not None:
-            self.start_line.remove()
-            self.start_line = None
-        if self.stop_line is not None:
-            self.stop_line.remove()
-            self.stop_line = None
         if 0 <= start < self.video.nframes:
-            self.start_line = self.ui.Window3.canvas.axes.axvline(
-                x=start, color="green", linestyle="-"
-            )
+            if (
+                self.start_line is None
+                or getattr(self.start_line, "axes", None) is not current_axes
+            ):
+                self.start_line = current_axes.axvline(
+                    x=start, color="green", linestyle="-"
+                )
+            else:
+                self.start_line.set_xdata([start, start])
+        else:
+            if self.start_line is not None:
+                try:
+                    self.start_line.remove()
+                except (NotImplementedError, ValueError):
+                    pass
+            self.start_line = None
+
         if 0 <= stop < self.video.nframes:
-            self.stop_line = self.ui.Window3.canvas.axes.axvline(
-                x=stop, color="green", linestyle="-"
-            )
+            if (
+                self.stop_line is None
+                or getattr(self.stop_line, "axes", None) is not current_axes
+            ):
+                self.stop_line = current_axes.axvline(
+                    x=stop, color="green", linestyle="-"
+                )
+            else:
+                self.stop_line.set_xdata([stop, stop])
+        else:
+            if self.stop_line is not None:
+                try:
+                    self.stop_line.remove()
+                except (NotImplementedError, ValueError):
+                    pass
+            self.stop_line = None
+
         self.ui.Window3.canvas.draw()
 
     def process_all(self):
@@ -773,7 +906,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         except Exception as e:
             if self.testing:
-                print("! File loading failed !:\n" + str(e))
+                print("File loading failed:\n" + str(e))
             else:
                 self.arcjetcv_message_box("Warning", "File loading failed:\n" + str(e))
 
@@ -789,6 +922,55 @@ class MainWindow(QtWidgets.QMainWindow):
         last_part = path[-(max_visible_length - len(first_part)) :]
         return first_part + "..." + last_part
 
+    def _apply_kalman_filter(self, series):
+        if series is None:
+            return series
+
+        is_masked = isinstance(series, np.ma.MaskedArray)
+        if is_masked:
+            data = np.array(series.filled(np.nan), dtype=float)
+            mask = np.ma.getmaskarray(series).copy()
+        else:
+            data = np.array(series, dtype=float)
+            mask = np.zeros_like(data, dtype=bool)
+
+        non_finite_mask = ~np.isfinite(data)
+        if non_finite_mask.any():
+            mask = mask | non_finite_mask
+            data[non_finite_mask] = np.nan
+
+        valid_mask = ~mask
+        if np.count_nonzero(valid_mask) <= 1:
+            return series
+
+        valid_values = data[valid_mask]
+        measurement_var = np.nanvar(valid_values)
+        if not np.isfinite(measurement_var) or measurement_var <= 1e-12:
+            measurement_var = 1.0
+
+        process_var = measurement_var * 0.05
+        if not np.isfinite(process_var) or process_var <= 0:
+            process_var = 1e-3
+
+        error_cov = measurement_var
+        filtered = data.copy()
+        valid_indices = np.flatnonzero(valid_mask)
+        estimate = data[valid_indices[0]]
+        filtered[valid_indices[0]] = estimate
+
+        for idx in valid_indices[1:]:
+            error_cov += process_var
+            kalman_gain = error_cov / (error_cov + measurement_var)
+            estimate = estimate + kalman_gain * (data[idx] - estimate)
+            error_cov = (1.0 - kalman_gain) * error_cov
+            filtered[idx] = estimate
+
+        if is_masked:
+            return np.ma.masked_array(filtered, mask=mask)
+
+        filtered[~valid_mask] = data[~valid_mask]
+        return filtered
+
     def plot_outputs(self):
         self.ui.basebar.setText("Setting up plots...")
 
@@ -803,7 +985,29 @@ class MainWindow(QtWidgets.QMainWindow):
         index, m95, m50, mc, p50, p95, radius = [], [], [], [], [], [], []
         time, sarea, marea, sc, sm, ypos = [], [], [], [], [], []
 
-        units = self.ui.comboBox_units.currentText()
+        units_selected = self.ui.comboBox_units.currentText()
+        units_lower = units_selected.lower()
+        use_mm_requested = "mm" in units_lower
+
+        pixels_per_mm_default = None
+        if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
+            pixels_per_mm_default = self.raw_outputs[0]["PIXELS_PER_MM"]
+
+        default_pixel_length = (
+            1 / pixels_per_mm_default
+            if pixels_per_mm_default not in (None, 0, float("inf"))
+            else None
+        )
+
+        use_mm = use_mm_requested and default_pixel_length is not None
+        units = "[mm]" if use_mm else ("[px]" if use_mm_requested else units_selected)
+        xy_scale_default = default_pixel_length if use_mm else 1.0
+        length_unit_label = units.strip()
+        if length_unit_label.startswith("[") and length_unit_label.endswith("]"):
+            length_unit_label = length_unit_label[1:-1]
+        if not length_unit_label:
+            length_unit_label = units
+
         fps = self.ui.doubleSpinBox_fps.value()
         maskn = self.ui.spinBox_mask_frames.value()
 
@@ -812,18 +1016,44 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(self.raw_outputs) > 10:
                 numframes = len(self.raw_outputs)
                 max_traces = 10
-                nskip = int(numframes / max_traces)
-                for i in range(0, len(self.raw_outputs), maskn):
+                first_color = "red"
+                swell_color = "#2e8b57"
+                last_color = "#1f77b4"
+                mid_color = "#999999"
+
+                model_traces = []
+                shock_traces = {}
+                swell_trace_index = None
+
+                for loop_idx, i in enumerate(range(0, len(self.raw_outputs), maskn)):
                     # Save frame index, time
                     index.append(self.raw_outputs[i]["INDEX"])
                     time.append(self.raw_outputs[i]["INDEX"] / fps)
+
+                    frame_scale = xy_scale_default
+                    frame_pixels_per_mm = self.raw_outputs[i].get(
+                        "PIXELS_PER_MM", pixels_per_mm_default
+                    )
+                    if use_mm and frame_pixels_per_mm not in (None, 0, float("inf")):
+                        frame_scale = 1 / frame_pixels_per_mm
 
                     # Model positions (-95%, -50%, center, 50%, 95% radius)
                     if self.raw_outputs[i]["MODEL"] is not None:
                         xpos = self.raw_outputs[i]["MODEL_INTERP_XPOS"]
                         center = self.raw_outputs[i]["MODEL_YCENTER"]
-                        self.raw_outputs[i]["MODEL"] = np.array(
-                            self.raw_outputs[i]["MODEL"]
+                        model_array = np.array(self.raw_outputs[i]["MODEL"])
+                        self.raw_outputs[i]["MODEL"] = model_array
+                        model_coords = np.array(model_array[:, 0, :], dtype=float)
+                        if use_mm:
+                            model_coords *= frame_scale
+                        model_traces.append(
+                            {
+                                "loop_idx": loop_idx,
+                                "coords": model_coords,
+                                "centroid": self.raw_outputs[i].get(
+                                    "MODEL_CENTROID_X"
+                                ),
+                            }
                         )
                         m95.append(xpos[0])
                         m50.append(xpos[1])
@@ -844,9 +1074,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     # Shock center x-position
                     if self.raw_outputs[i]["SHOCK"] is not None:
                         sc.append(self.raw_outputs[i]["SHOCK_INTERP_XPOS"][0])
-                        self.raw_outputs[i]["SHOCK"] = np.array(
-                            self.raw_outputs[i]["SHOCK"]
-                        )
+                        shock_array = np.array(self.raw_outputs[i]["SHOCK"])
+                        self.raw_outputs[i]["SHOCK"] = shock_array
+                        shock_coords = np.array(shock_array[:, 0, :], dtype=float)
+                        if use_mm:
+                            shock_coords *= frame_scale
+                        shock_traces[loop_idx] = shock_coords
                     else:
                         sc.append(np.nan)
 
@@ -870,29 +1103,127 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:
                         sm.append(np.nan)
 
-                    # Plot XY contours
-                    if nskip > 1 and i % nskip == 0:
+                if model_traces:
+                    # Determine swell index based on minimum centroid value
+                    valid_centroids = [
+                        (idx, trace["centroid"])
+                        for idx, trace in enumerate(model_traces)
+                        if trace["centroid"] is not None
+                    ]
+                    if valid_centroids:
+                        swell_trace_index = min(valid_centroids, key=lambda x: x[1])[0]
 
-                        if self.raw_outputs[i]["MODEL"] is not None:
-                            self.ax1.plot(
-                                np.array(self.raw_outputs[i]["MODEL"][:, 0, 0]),
-                                np.array(self.raw_outputs[i]["MODEL"][:, 0, 1]),
-                                "g-",
-                                label="model_%i" % index[-1],
+                    num_model_traces = len(model_traces)
+                    stride = max(1, num_model_traces // max_traces)
+                    selected_indices = set(range(0, num_model_traces, stride))
+                    selected_indices.add(0)
+                    selected_indices.add(num_model_traces - 1)
+                    if swell_trace_index is not None:
+                        selected_indices.add(swell_trace_index)
+                    selected_indices = sorted(selected_indices)
+
+                    used_labels = set()
+
+                    def style_for_trace(trace_idx):
+                        if trace_idx == 0:
+                            return first_color, 2.5, "Initial Profile"
+                        if (
+                            swell_trace_index is not None
+                            and trace_idx == swell_trace_index
+                        ):
+                            return swell_color, 1.0, "Growth Profile"
+                        if trace_idx == num_model_traces - 1:
+                            return last_color, 1.0, "Final Profile"
+                        return mid_color, 1.0, "Model Profile"
+
+                    for trace_idx in selected_indices:
+                        trace = model_traces[trace_idx]
+                        coords = trace["coords"]
+                        if self.ui.checkBox_kalman_filter.isChecked():
+                            model_x = self._apply_kalman_filter(coords[:, 0])
+                            model_y = self._apply_kalman_filter(coords[:, 1])
+                            coords = np.column_stack(
+                                (np.asarray(model_x, dtype=float), np.asarray(model_y, dtype=float))
                             )
+                        color, linewidth, label = style_for_trace(trace_idx)
+                        display_label = (
+                            label if label and label not in used_labels else None
+                        )
+                        if display_label:
+                            used_labels.add(display_label)
+
+                        self.ax1.plot(
+                            coords[:, 0],
+                            coords[:, 1],
+                            color=color,
+                            linewidth=linewidth,
+                            alpha=0.9 if display_label else 0.5,
+                            label=display_label,
+                        )
 
                         if (
-                            self.raw_outputs[i]["SHOCK"] is not None
-                            and self.ui.checkBox_display_shock2.isChecked()
+                            self.ui.checkBox_display_shock2.isChecked()
+                            and trace["loop_idx"] in shock_traces
                         ):
-                            self.ax1.plot(
-                                np.array(self.raw_outputs[i]["SHOCK"][:, 0, 0]),
-                                np.array(self.raw_outputs[i]["SHOCK"][:, 0, 1]),
-                                "r--",
-                                label="shock_%i" % index[-1],
+                            shock_coords = shock_traces[trace["loop_idx"]]
+                            if self.ui.checkBox_kalman_filter.isChecked():
+                                shock_x = self._apply_kalman_filter(shock_coords[:, 0])
+                                shock_y = self._apply_kalman_filter(shock_coords[:, 1])
+                                shock_coords = np.column_stack(
+                                    (
+                                        np.asarray(shock_x, dtype=float),
+                                        np.asarray(shock_y, dtype=float),
+                                    )
+                                )
+                            shock_label = (
+                                "Shock Profile"
+                                if "Shock Profile" not in used_labels
+                                else None
                             )
-                self.ax1.set_xlabel("X (px)")
-                self.ax1.set_ylabel("Y (px)")
+                            if shock_label:
+                                used_labels.add(shock_label)
+                            self.ax1.plot(
+                                shock_coords[:, 0],
+                                shock_coords[:, 1],
+                                color="black",
+                                linewidth=0.8,
+                                linestyle="--",
+                                alpha=0.5,
+                                label=shock_label,
+                            )
+
+                    self.swell_loop_idx = (
+                        model_traces[swell_trace_index]["loop_idx"]
+                        if swell_trace_index is not None
+                        else None
+                    )
+                    self.swell_time = (
+                        time[self.swell_loop_idx]
+                        if self.swell_loop_idx is not None
+                        and self.swell_loop_idx < len(time)
+                        else None
+                    )
+                else:
+                    self.swell_loop_idx = None
+                    self.swell_time = None
+
+                handles, labels = self.ax1.get_legend_handles_labels()
+                if labels:
+                    legend_map = {}
+                    for handle, label in zip(handles, labels):
+                        if not label or label in legend_map:
+                            continue
+                        legend_map[label] = handle
+
+                    legend = self.ax1.legend(
+                        list(legend_map.values()),
+                        list(legend_map.keys()),
+                        loc="best",
+                    )
+                    legend.get_title().set_fontweight("bold")
+
+                self.ax1.set_xlabel(f"X ({length_unit_label})")
+                self.ax1.set_ylabel(f"Y ({length_unit_label})")
                 self.ax1.invert_yaxis()
                 self.ax1.figure.canvas.draw()
 
@@ -903,72 +1234,253 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 # Infer pixel length from raw outputs
                 radius_masked = np.ma.masked_where(mask < 0, radius)
-                if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
-                    pixel_length = 1 / self.raw_outputs[0]["PIXELS_PER_MM"]
+                if default_pixel_length is not None:
+                    pixel_length = default_pixel_length
                 else:
-                    self.arcjetcv_message_box(
-                        "Warning",
-                        "Pixels per mm not available in raw outputs. Defaulting pixel length to 1.",
-                    )
-                    pixel_length = 1  # Default value if calibration data is missing
+                    pixel_length = 1  # Default to pixel units if calibration missing
+                    if use_mm_requested:
+                        self.arcjetcv_message_box(
+                            "Warning",
+                            "Pixels per mm not available in raw outputs. "
+                            "Spatial data will be shown in pixels.",
+                        )
                 self.pixel_length = pixel_length
+                series_scale = pixel_length if use_mm else 1.0
+                radius_series = radius_masked * series_scale
 
                 # Plot XT series
-                ym95 = np.ma.masked_where(mask < 0, m95) * pixel_length
-                ym50 = np.ma.masked_where(mask < 0, m50) * pixel_length
-                ymc = np.ma.masked_where(mask < 0, mc) * pixel_length
-                yp50 = np.ma.masked_where(mask < 0, p50) * pixel_length
-                yp95 = np.ma.masked_where(mask < 0, p95) * pixel_length
+                ym95 = np.ma.masked_where(mask < 0, m95) * series_scale
+                ym50 = np.ma.masked_where(mask < 0, m50) * series_scale
+                ymc = np.ma.masked_where(mask < 0, mc) * series_scale
+                yp50 = np.ma.masked_where(mask < 0, p50) * series_scale
+                yp95 = np.ma.masked_where(mask < 0, p95) * series_scale
                 ysarea = np.ma.masked_where(mask < 0, sarea)
                 ymarea = np.ma.masked_where(mask < 0, marea)
-                ysc = np.ma.masked_where(mask < 0, sc) * pixel_length
-                ysm = np.ma.masked_where(mask < 0, sm) * pixel_length
-                yypos = np.ma.masked_where(mask < 0, ypos) * pixel_length
+                ysc = np.ma.masked_where(mask < 0, sc) * series_scale
+                ysm = np.ma.masked_where(mask < 0, sm) * series_scale
+                yypos = np.ma.masked_where(mask < 0, ypos) * series_scale
+
+                if self.ui.checkBox_kalman_filter.isChecked():
+                    ym95 = self._apply_kalman_filter(ym95)
+                    ym50 = self._apply_kalman_filter(ym50)
+                    ymc = self._apply_kalman_filter(ymc)
+                    yp50 = self._apply_kalman_filter(yp50)
+                    yp95 = self._apply_kalman_filter(yp95)
+                    ysarea = self._apply_kalman_filter(ysarea)
+                    ymarea = self._apply_kalman_filter(ymarea)
+                    ysc = self._apply_kalman_filter(ysc)
+                    ysm = self._apply_kalman_filter(ysm)
+                    yypos = self._apply_kalman_filter(yypos)
+                    radius_series = self._apply_kalman_filter(radius_series)
 
                 self.PLOTKEYS = []
+                self.max_expansion_info = None
+                self.max_recession_info = None
 
                 if self.ui.checkBox_m95_radius.isChecked():
-                    self.ax2.plot(time, ym95, "ms", label="Model -95%R")
+                    self.ax2.plot(
+                        time,
+                        ym95,
+                        color="magenta",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model -95%R",
+                    )
                     self.PLOTKEYS.append("MODEL_-0.95R " + units)
 
                 if self.ui.checkBox_m50_radius.isChecked():
-                    self.ax2.plot(time, ym50, "bx", label="Model -50%R")
+                    self.ax2.plot(
+                        time,
+                        ym50,
+                        color="blue",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model -50%R",
+                    )
                     self.PLOTKEYS.append("MODEL_-0.50R " + units)
 
                 if self.ui.checkBox_model_center.isChecked():
-                    self.ax2.plot(time, ymc, "go", label="Model center")
+                    time_arr = np.asarray(time, dtype=float)
+                    center_mask = ~np.ma.getmaskarray(ymc)
+                    time_valid = time_arr[center_mask]
+                    center_valid = np.asarray(ymc)[center_mask]
+
+                    if center_valid.size > 0:
+                        center_zeroed = center_valid - center_valid[0]
+                        exp_idx = int(np.argmin(center_zeroed))
+                        rec_idx = int(np.argmax(center_zeroed))
+                        self.max_expansion_info = (
+                            float(center_zeroed[exp_idx]),
+                            float(time_valid[exp_idx]),
+                        )
+                        self.max_recession_info = (
+                            float(center_zeroed[rec_idx]),
+                            float(time_valid[rec_idx]),
+                        )
+                        swell_idx = int(np.argmin(center_zeroed))
+                        swell_time_value = time_valid[swell_idx]
+
+                        self.ax2.axvline(
+                            swell_time_value,
+                            ymin=0.0,
+                            ymax=1.0,
+                            linestyle="--",
+                            color="black",
+                            linewidth=1,
+                            label=f"Recess Start: {swell_time_value:.2f} [s]",
+                        )
+
+                        if swell_idx >= 0:
+                            self.ax2.plot(
+                                time_valid[: swell_idx + 1],
+                                center_zeroed[: swell_idx + 1],
+                                color=swell_color,
+                                linewidth=0,
+                                marker="o",
+                                markersize=5,
+                                label="Growth",
+                            )
+
+                        if swell_idx + 1 < center_zeroed.size:
+                            recession_time = time_valid[swell_idx + 1 :]
+                            recession_values = center_zeroed[swell_idx + 1 :]
+                            self.ax2.plot(
+                                recession_time,
+                                recession_values,
+                                color=last_color,
+                                linewidth=0,
+                                marker="o",
+                                markersize=5,
+                                label="Recess",
+                            )
+                            if recession_time.size >= 2:
+                                coeffs = np.polyfit(
+                                    recession_time, recession_values, 1
+                                )
+                                fit_line = np.polyval(coeffs, recession_time)
+                                self.ax2.plot(
+                                    recession_time,
+                                    fit_line,
+                                    color="red",
+                                    linewidth=1,
+                                    label=f"Fit: y = {coeffs[0]:.2f}x+{coeffs[1]:.2f}",
+                                )
+
+                        valid_indices = np.flatnonzero(center_mask)
+                        if swell_idx < valid_indices.size:
+                            self.swell_loop_idx = int(valid_indices[swell_idx])
+                            self.swell_time = time[self.swell_loop_idx]
+
+                        time_span = time_valid.max() - time_valid.min()
+                        if time_span > 0:
+                            xtick_candidates = [0, 25, 50, 75, 100, 125, 150, 175, 200]
+                            xticks = [
+                                val
+                                for val in xtick_candidates
+                                if time_valid.min() <= val <= time_valid.max()
+                            ]
+                            if xticks:
+                                self.ax2.set_xticks(xticks)
+
+                        y_max = max(center_zeroed.max(), 0.0)
+                        yticks = [0, 2, 4, 6, 8]
+                        yticks_in_range = [
+                            val for val in yticks if 0 <= val <= max(y_max, 8)
+                        ]
+                        if yticks_in_range:
+                            self.ax2.set_yticks(yticks_in_range)
+
                     self.PLOTKEYS.append("MODEL_CENTER " + units)
 
                 if self.ui.checkBox_50_radius.isChecked():
-                    self.ax2.plot(time, yp50, "cx", label="Model +50%R")
+                    self.ax2.plot(
+                        time,
+                        yp50,
+                        color="cyan",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model +50%R",
+                    )
                     self.PLOTKEYS.append("MODEL_0.50R " + units)
 
                 if self.ui.checkBox_95_radius.isChecked():
-                    self.ax2.plot(time, yp95, "rs", label="Model +95%R")
+                    self.ax2.plot(
+                        time,
+                        yp95,
+                        color="red",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Model +95%R",
+                    )
                     self.PLOTKEYS.append("MODEL_0.95R " + units)
 
                 if self.ui.checkBox_shock_area.isChecked():
-                    self.ax2.plot(time, ysarea, "y^", label="Shock area (px)")
+                    self.ax2.plot(
+                        time,
+                        ysarea,
+                        color="gold",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Shock area (px)",
+                    )
                     self.PLOTKEYS.append("SHOCK_AREA [px]")
 
                 if self.ui.checkBox_model_rad.isChecked():
-                    self.ax2.plot(time, radius_masked, "bx", label="Model radius (px)")
-                    self.PLOTKEYS.append("MODEL_RADIUS [px]")
+                    self.ax2.plot(
+                        time,
+                        radius_series,
+                        color="navy",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label=f"Model radius ({length_unit_label})",
+                    )
+                    self.PLOTKEYS.append("MODEL_RADIUS " + units)
 
                 if self.ui.checkBox_shock_center.isChecked():
-                    self.ax2.plot(time, ysc, "cs", label="Shock center")
+                    self.ax2.plot(
+                        time,
+                        ysc,
+                        color="darkcyan",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Shock center",
+                    )
                     self.PLOTKEYS.append("SHOCK_CENTER " + units)
 
                 if self.ui.checkBox_shockmodel.isChecked():
-                    self.ax2.plot(time, ysm, "r--", label="Shock-model distance")
+                    self.ax2.plot(
+                        time,
+                        ysm,
+                        color="darkred",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        linestyle="--",
+                        label="Shock-model distance",
+                    )
                     self.PLOTKEYS.append("SHOCK_TO_MODEL " + units)
 
                 if self.ui.checkBox_ypos.isChecked():
-                    self.ax2.plot(time, yypos, "ks", label="Axis position")
+                    self.ax2.plot(
+                        time,
+                        yypos,
+                        color="black",
+                        linewidth=0,
+                        marker="o",
+                        markersize=4,
+                        label="Axis position",
+                    )
                     self.PLOTKEYS.append("MODEL_YPOS " + units)
 
                 self.ax2.set_xlabel("Time (s)")
-                self.ax2.set_ylabel("%s" % (self.ui.comboBox_units.currentText()))
+                self.ax2.set_ylabel(units)
 
                 legend = self.ax2.legend()
                 legend.set_draggable(True)
@@ -992,11 +1504,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.length_units[k]
                     )
 
-                self.px_units = [ymarea, ysarea, radius_masked]
+                self.px_units = [ymarea, ysarea, radius_series]
                 self.px_labels = [
                     "MODEL_AREA [px]",
                     "SHOCK_AREA [px]",
-                    "MODEL_RADIUS [px]",
+                    "MODEL_RADIUS " + units,
                 ]
                 for k in range(0, len(self.px_units)):
                     output_dict[self.px_labels[k]] = self.px_units[k]
@@ -1016,32 +1528,54 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.doubleSpinBox_fit_start_time.setValue(min(time))
                 self.ui.doubleSpinBox_fit_last_time.setValue(max(time))
 
-                # Update data summary with pixel length
-                summary = self.ui.label_data_summary.text()
-                lines = summary.strip().split("\n")
+                # Update data summary with pixel length and displacement statistics
+                summary = self.ui.label_data_summary.text().strip()
+                lines = summary.split("\n") if summary else []
                 px_per_mm = (
                     1 / pixel_length if pixel_length != 0 else float("inf")
                 )  # Avoid division by zero
 
-                if lines[-1].startswith("Pixel length"):
-                    lines[-1] = "Pixel length %s: %.4f mm/px | %.4f px/mm" % (
+                def upsert_line(prefix, text):
+                    for idx, line in enumerate(lines):
+                        if line.startswith(prefix):
+                            lines[idx] = text
+                            return
+                    lines.append(text)
+
+                def remove_line(prefix):
+                    lines[:] = [line for line in lines if not line.startswith(prefix)]
+
+                upsert_line(
+                    "Pixel length",
+                    "Pixel length %s: %.4f mm/px | %.4f px/mm"
+                    % (
                         self.ui.comboBox_units.currentText(),
                         pixel_length,
                         px_per_mm,
+                    ),
+                )
+
+                if self.max_expansion_info is not None:
+                    exp_val, exp_time = self.max_expansion_info
+                    upsert_line(
+                        "Max expansion",
+                        "Max expansion: %+0.3f %s at %.2f s"
+                        % (exp_val, length_unit_label, exp_time),
                     )
                 else:
-                    lines.append(
-                        "Pixel length %s: %.4f mm/px | %.4f px/mm"
-                        % (
-                            self.ui.comboBox_units.currentText(),
-                            pixel_length,
-                            px_per_mm,
-                        )
+                    remove_line("Max expansion")
+
+                if self.max_recession_info is not None:
+                    rec_val, rec_time = self.max_recession_info
+                    upsert_line(
+                        "Max recession",
+                        "Max recession: %+0.3f %s at %.2f s"
+                        % (rec_val, length_unit_label, rec_time),
                     )
-                newsummary = ""
-                for line in lines:
-                    newsummary += line + "\n"
-                self.ui.label_data_summary.setText(newsummary.strip())
+                else:
+                    remove_line("Max recession")
+
+                self.ui.label_data_summary.setText("\n".join(lines))
                 self.ui.basebar.setText("Finished plotting data")
             else:
                 self.ui.basebar.setText("Not enough data to plot")
@@ -1050,16 +1584,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     self.arcjetcv_message_box(
                         "Warning",
-                        "! Not enough data to plot !: only %i points"
+                        "Not enough data to plot: only %i points"
                         % len(self.raw_outputs),
                     )
 
         except Exception as e:
-            self.ui.basebar.setText("! Plotting failed !")
+            self.ui.basebar.setText("Plotting failed !")
             if self.testing:
-                print("Warning", "! Plotting failed !:\n" + str(e))
+                print("Warning", "Plotting failed :\n" + str(e))
             else:
-                self.arcjetcv_message_box("Warning", "! Plotting failed !:\n" + str(e))
+                self.arcjetcv_message_box("Warning", "Plotting failed:\n" + str(e))
 
         self.ui.Window1.repaint()
         self.ui.Window2.repaint()
@@ -1105,12 +1639,12 @@ class MainWindow(QtWidgets.QMainWindow):
             plt.close(fig)
 
         except Exception as e:
-            self.ui.basebar.setText("! Plot saving failed !")
+            self.ui.basebar.setText("Plot saving failed !")
             if self.testing:
-                print("Warning", "! Plot saving failed !:\n" + str(e))
+                print("Warning", "Plot saving failed:\n" + str(e))
             else:
                 self.arcjetcv_message_box(
-                    "Warning", "! Plot saving failed !:\n" + str(e)
+                    "Warning", "Plot saving failed:\n" + str(e)
                 )
 
     def export_to_csv(self):
@@ -1164,12 +1698,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     df.to_csv(csv_file_path, index=False)
 
             except Exception as e:
-                self.ui.basebar.setText("! CSV export failed !")
+                self.ui.basebar.setText("CSV export failed !")
                 if self.testing:
-                    print("Warning", "! CSV export failed !:\n" + str(e))
+                    print("Warning", "CSV export failed:\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
-                        "Warning", "! CSV export failed !:\n" + str(e)
+                        "Warning", "CSV export failed:\n" + str(e)
                     )
 
     def fit_data(self):
@@ -1227,14 +1761,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.fit_dict = fit_dict
 
             except Exception as e:
-                self.ui.basebar.setText("! Fitting failed !")
+                self.ui.basebar.setText("Fitting failed !")
                 if self.testing:
-                    print("Warning", "! Fitting failed !:\n" + str(e))
+                    print("Warning", "Fitting failed :\n" + str(e))
                 else:
                     self.arcjetcv_message_box(
-                        "Warning", "! Fitting failed !:\n" + str(e)
+                        "Warning", "Fitting failed :\n" + str(e)
                     )
 
+<<<<<<< HEAD
     # def arcjetcv_message_box(self, title, message):
 
     #     msg_box = QMessageBox()
@@ -1252,3 +1787,12 @@ class MainWindow(QtWidgets.QMainWindow):
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec()
+=======
+    def arcjetcv_message_box(self, title, message):
+        msg_box = QMessageBox(self)
+        msg_box.setIconPixmap(QPixmap(self.logo_path))
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec()
+>>>>>>> develop

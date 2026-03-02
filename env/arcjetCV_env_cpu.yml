@@ -16,5 +16,6 @@ dependencies:
   - pyarrow
   - scikit-learn
   - segmentation-models-pytorch
+  - pretrainedmodels
   - pytorch
   - torchvision
