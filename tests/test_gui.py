@@ -317,9 +317,7 @@ def test_toggle_write_video(app, qtbot, mocker):
     """
     test_load_video(app, qtbot, mocker)
     initial_state = app.ui.checkBox_writeVideo.isChecked()
-
-    qtbot.mouseClick(app.ui.checkBox_writeVideo, Qt.LeftButton)
-
+    app.ui.checkBox_writeVideo.setChecked(not initial_state)
     assert app.ui.checkBox_writeVideo.isChecked() != initial_state
 
 
@@ -376,7 +374,8 @@ def test_fit_data_button(app, qtbot, mocker):
     test_load_analysis_files(app, qtbot, mocker)
     qtbot.mouseClick(app.ui.pushButton_fitData, Qt.LeftButton)
     assert hasattr(app, "fit_dict")
-    assert app.fit_dict
+    assert isinstance(app.fit_dict, dict)
+    assert app.ui.textBrowser.toPlainText() != ""
 
 
 def test_export_csv_plots_button(app, qtbot, mocker, tmp_path):

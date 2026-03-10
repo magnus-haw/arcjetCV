@@ -1731,7 +1731,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 t1 = self.ui.doubleSpinBox_fit_last_time.value()
 
                 # identify relevant indicies
-                inds = (time > t0) * (time < t1) * (mask > 0)
+                # Include interval endpoints to avoid dropping valid edge samples.
+                inds = (time >= t0) * (time <= t1) * (mask > 0)
 
                 # Initialize data structure
                 fit_dict = {}
