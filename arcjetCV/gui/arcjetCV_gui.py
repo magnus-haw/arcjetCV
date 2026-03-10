@@ -187,6 +187,14 @@ class Ui_MainWindow(object):
         # Add the label to the layout
         self.verticalLayout_6.addWidget(self.label_calibrationPath)
 
+        # Add a QLabel below the calibration path to display loaded resolution
+        self.label_calibrationResolution = QLabel(self.tab)
+        self.label_calibrationResolution.setObjectName("label_calibrationResolution")
+        self.label_calibrationResolution.setText("Resolution: None")
+        self.label_calibrationResolution.setFont(font)
+        self.label_calibrationResolution.setStyleSheet("color: gray;")
+        self.verticalLayout_6.addWidget(self.label_calibrationResolution)
+
         self.pushButton_loadVideo = QPushButton(self.tab)
         self.pushButton_loadVideo.setObjectName("pushButton_loadVideo")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)

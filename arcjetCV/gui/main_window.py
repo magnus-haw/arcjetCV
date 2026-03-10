@@ -53,6 +53,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Initialize frame and plotting windows
         self.calibrated = None
+        self.calibration_data = None
+        self.pixels_per_mm = None
         self._plot_ref = None
         self._tplot_ref = None
         self._brightness_ref = None
@@ -178,6 +180,20 @@ class MainWindow(QtWidgets.QMainWindow):
             if widget is not None:
                 widget.setToolTip(tip)
                 widget.setStatusTip(tip)
+
+    def _set_calibration_resolution_label(self):
+        """Display loaded calibration resolution as mm/px and px/mm in the UI."""
+        label = getattr(self.ui, "label_calibrationResolution", None)
+        if label is None:
+            return
+
+        ppm = getattr(self, "pixels_per_mm", None)
+        if ppm in (None, 0):
+            label.setText("Resolution: None")
+            return
+
+        mm_per_px = 1.0 / ppm
+        label.setText(f"Resolution: {mm_per_px:.6f} mm/px | {ppm:.6f} px/mm")
 
     def closeEvent(self, event):
         print("🔴 Closing application...")
@@ -667,9 +683,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pixels_per_mm = self.calibration_data.get("pixels_per_mm", None)
             self.calibrated = True
 
+            # Propagate scaling immediately when a video/processor is already active.
+            if self.pixels_per_mm is not None:
+                if self.videometa is not None:
+                    self.videometa["PIXELS_PER_MM"] = self.pixels_per_mm
+                    self.videometa.write()
+                if self.processor is not None:
+                    self.processor.pixels_per_mm = self.pixels_per_mm
+
             # Update label
             shortpath = self.shorten_path(file_path, 60)
             self.ui.label_calibrationPath.setText(f"Calibration Path: {shortpath}")
+            self._set_calibration_resolution_label()
 
             print("✅ Calibration data loaded:", list(self.calibration_data.keys()))
 
@@ -679,15 +704,10 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             self.calibration_data = None
             self.calibrated = False
-            # Update pixels_per_mm in both the processor and videometa
-            if self.pixels_per_mm:
-                self.videometa["PIXELS_PER_MM"] = self.pixels_per_mm
-                self.videometa.write()  # Save the updated value in the meta file
-                self.processor.pixels_per_mm = (
-                    self.pixels_per_mm
-                )  # Ensure the processor has the updated value
-
-        self.update_frame_index()
+            self.pixels_per_mm = None
+            self._set_calibration_resolution_label()
+        if self.VIDEO_LOADED:
+            self.update_frame_index()
 
     def plot_location(self, reset=False):
         if self.video is None:

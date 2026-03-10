@@ -27,6 +27,9 @@ class CalibrationController:
         # Initialize variables
         self.image_paths = []
         self.image = None
+        self.calibration_data = {}
+        self.calibrated = False
+        self.ppm = None
         self.start_point = None
         self.line = None
         self.line_artist = None
@@ -741,7 +744,10 @@ class CalibrationController:
             QMessageBox.warning(self.view, "Error", "Unknown tab selected.")
             return
 
-        self.save_ppm_to_json()
+        # Keep metric calibration in memory even when intrinsic parameters are absent.
+        # Persistence should happen only when the user explicitly clicks "Save Calibration".
+        self.calibration_data["pixels_per_mm"] = float(self.ppm)
+        self.calibrated = True
 
     def save_ppm_to_json(
         self,
@@ -776,7 +782,9 @@ class CalibrationController:
                 json.dump(existing_data, json_file, indent=4)
 
             QMessageBox.information(
-                self.view, "Success", "Pixels per mm saved successfully to JSON."
+                self.view,
+                "Success",
+                f"Pixels per mm saved successfully to JSON:\n{os.path.abspath(file_path)}",
             )
         except Exception as e:
             QMessageBox.warning(
@@ -795,7 +803,10 @@ class CalibrationController:
 
         :raises QMessageBox.critical: If copying or saving fails.
         """
-        if not self.calibration_data:
+        calibration_data = getattr(self, "calibration_data", {}) or {}
+        ppm_value_fallback = getattr(self, "ppm", None)
+
+        if not calibration_data and ppm_value_fallback is None:
             QMessageBox.warning(self.view, "Error", "No calibration data available to save.")
             return
 
@@ -805,33 +816,40 @@ class CalibrationController:
 
         if file_path:
             try:
-                serializable = {
-                    "camera_matrix": self.calibration_data["camera_matrix"].tolist(),
-                    "dist_coeffs": self.calibration_data["dist_coeffs"].tolist(),
-                    "rvec": (
-                        self.calibration_data["rvec"].tolist()
-                        if self.calibration_data["rvec"] is not None
-                        else None
-                    ),
-                    "tvec": (
-                        self.calibration_data["tvec"].tolist()
-                        if self.calibration_data["tvec"] is not None
-                        else None
-                    ),
-                    "affine_matrix": (
-                        self.calibration_data["affine_matrix"].tolist()
-                        if self.calibration_data["affine_matrix"] is not None
-                        else None
-                    ),
-                    "pixels_per_mm": self.calibration_data.get("pixels_per_mm", None),
-                    "pattern_size": list(self.calibration_data["pattern_size"]),
-                    "centers": self.calibration_data["centers"].tolist(),
-                    "square_layout": self.calibration_data["square_layout"].tolist(),
-                    "homography": self.calibration_data["homography"].tolist(),
-                    "homography_inverse": self.calibration_data[
-                        "homography_inverse"
-                    ].tolist(),
-                }
+                serializable = {}
+
+                def maybe_list(value):
+                    if value is None:
+                        return None
+                    return value.tolist() if hasattr(value, "tolist") else value
+
+                for key in [
+                    "camera_matrix",
+                    "dist_coeffs",
+                    "rvec",
+                    "tvec",
+                    "affine_matrix",
+                    "centers",
+                    "square_layout",
+                    "homography",
+                    "homography_inverse",
+                ]:
+                    if key in calibration_data:
+                        serializable[key] = maybe_list(calibration_data[key])
+
+                if "pattern_size" in calibration_data:
+                    serializable["pattern_size"] = list(calibration_data["pattern_size"])
+
+                ppm_value = calibration_data.get("pixels_per_mm", ppm_value_fallback)
+                if ppm_value is not None:
+                    serializable["pixels_per_mm"] = float(ppm_value)
+
+                if not serializable:
+                    QMessageBox.warning(
+                        self.view, "Error", "No calibration fields available to save."
+                    )
+                    return
+
                 with open(file_path, "w") as f:
                     json.dump(serializable, f, indent=4)
                 QMessageBox.information(
