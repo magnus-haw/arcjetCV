@@ -60,7 +60,11 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#how-to-run">How to Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-run">How to Run</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pypi-users">PyPI Users</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#developer-users">Developer Users</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#citing">Citing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#legal-license">Legal / License</a></li>
 </ul>
@@ -165,12 +169,12 @@
 <li><p><a class="reference external" href="https://docs.anaconda.com/free/anaconda/install/index.html">Anaconda</a></p></li>
 </ul>
 </li>
-<li><p>For <strong>macOS</strong> users make sure the Xcode Command Line Tools are installed:</p></li>
+<li><p>For <strong>macOS</strong> users, make sure the Xcode Command Line Tools are installed:</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xcode-select<span class="w"> </span>--install
 </pre></div>
 </div>
-<p>To install <strong>arcjetCV</strong> for development purposes, follow these steps:</p>
+<p>To install <strong>arcjetCV</strong> for development, follow these steps:</p>
 <ol class="arabic">
 <li><p>Install <code class="docutils literal notranslate"><span class="pre">git-lfs</span></code>:</p>
 <p>Download and install it from <a class="reference external" href="https://git-lfs.github.com/">here</a>.</p>
@@ -179,32 +183,55 @@
 </ol>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/magnus-haw/arcjetCV.git
 <span class="nb">cd</span><span class="w"> </span>arcjetCV
-conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env/arcjetCV_env_<span class="o">[</span>cpu/gpu<span class="o">]</span>.yml
+
+<span class="c1"># CPU environment (recommended default)</span>
+conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env/arcjetCV_env_cpu.yml
+
+<span class="c1"># GPU environment (NVIDIA GPU + CUDA required)</span>
+<span class="c1"># conda env create -f env/arcjetCV_env_gpu.yml</span>
+
 conda<span class="w"> </span>activate<span class="w"> </span>arcjetcv
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">-e</span></code> flag stands for ‘editable’ and means that any changes to the local source code will immediately affect the <strong>arcjetCV</strong> package and GUI.</p>
+<p>Choose the environment file based on your hardware:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">env/arcjetCV_env_cpu.yml</span></code>: works on any machine (recommended default).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env/arcjetCV_env_gpu.yml</span></code>: use this only when you have a compatible NVIDIA GPU and drivers/CUDA stack configured.</p></li>
+</ul>
 </section>
 </section>
 </section>
 <section id="how-to-run">
 <h2>How to Run<a class="headerlink" href="#how-to-run" title="Link to this heading"></a></h2>
-<p>You can now launch the GUI by running:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetcv<span class="w"> </span><span class="c1"># (if using conda)</span>
-arcjetCV
+<section id="pypi-users">
+<h3>PyPI Users<a class="headerlink" href="#pypi-users" title="Link to this heading"></a></h3>
+<p>Launch the GUI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>arcjetcv
 </pre></div>
 </div>
-<p>Alternatively, you can use <strong>arcjetCV’s Python API</strong> inside a Python script, e.g., <code class="docutils literal notranslate"><span class="pre">test.py</span></code>:</p>
+</section>
+<section id="developer-users">
+<h3>Developer Users<a class="headerlink" href="#developer-users" title="Link to this heading"></a></h3>
+<p>Activate your conda environment first:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetcv
+</pre></div>
+</div>
+<p>Then launch the GUI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>arcjetcv
+</pre></div>
+</div>
+<p>Or use <strong>arcjetCV’s Python API</strong> inside a Python script, e.g., <code class="docutils literal notranslate"><span class="pre">test.py</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">arcjetCV</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">arcv</span>
 <span class="n">video</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">Video</span><span class="p">(</span><span class="s2">&quot;tests/arcjet_test.mp4&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Run the script with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>arcjetcv<span class="w"> </span><span class="c1"># (if using conda)</span>
-python<span class="w"> </span>test.py
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>test.py
 </pre></div>
 </div>
+</section>
 </section>
 <section id="citing">
 <h2>Citing<a class="headerlink" href="#citing" title="Link to this heading"></a></h2>
