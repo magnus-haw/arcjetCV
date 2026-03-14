@@ -54,7 +54,6 @@ For **Arch Linux**:
 ```bash
 sudo pacman -S libxcb
 ```
-
 ### Developer Installation
 
 #### Prerequisites:
@@ -62,8 +61,12 @@ sudo pacman -S libxcb
 - **Miniconda** or **Anaconda** for environment and package management:
   - [Miniconda](https://docs.anaconda.com/free/miniconda/miniconda-install/)
   - [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html)
+- For **macOS** users, make sure the Xcode Command Line Tools are installed:
+```bash
+xcode-select --install
+```
 
-To install **arcjetCV** for development purposes, follow these steps:
+To install **arcjetCV** for development, follow these steps:
 
 1. Install `git-lfs`:
 
@@ -74,40 +77,57 @@ To install **arcjetCV** for development purposes, follow these steps:
 ```bash
 git clone https://github.com/magnus-haw/arcjetCV.git
 cd arcjetCV
-conda env create -f env/arcjetCV_env_[cpu/gpu].yml
+
+# CPU environment (recommended default)
+conda env create -f env/arcjetCV_env_cpu.yml
+
+# GPU environment (NVIDIA GPU + CUDA required)
+# conda env create -f env/arcjetCV_env_gpu.yml
+
 conda activate arcjetcv
 python -m pip install -e .
 ```
 
 The `-e` flag stands for 'editable' and means that any changes to the local source code will immediately affect the **arcjetCV** package and GUI.
 
-#### Note for macOS Users:
-You might need to install Xcode Command Line Tools:
-
-```bash
-xcode-select --install
-```
+Choose the environment file based on your hardware:
+- `env/arcjetCV_env_cpu.yml`: works on any machine (recommended default).
+- `env/arcjetCV_env_gpu.yml`: use this only when you have a compatible NVIDIA GPU and drivers/CUDA stack configured.
 
 ## How to Run
 
-You can now launch the GUI by running:
+### PyPI Users
+
+Launch the GUI:
 
 ```bash
-conda activate arcjetCV
-arcjetCV
+arcjetcv
 ```
 
-or you can import arcjetCV's python API inside a python script, e.g. test.py:
+### Developer Users
+
+Activate your conda environment first:
+
+```bash
+conda activate arcjetcv
+```
+
+Then launch the GUI:
+
+```bash
+arcjetcv
+```
+
+Or use arcjetCV's Python API inside a Python script, e.g. `test.py`:
 
 ```python
 import arcjetCV as arcv
 video = arcv.Video("tests/arcjet_test.mp4")
 ```
 
-and then run it as:
+Run it with:
 
 ```bash
-conda activate arcjetCV
 python test.py
 ```
 
