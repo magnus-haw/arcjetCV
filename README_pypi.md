@@ -1,3 +1,4 @@
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repo-black?logo=github)](https://github.com/magnus-haw/arcjetCV)
 [![GitHub Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://magnus-haw.github.io/arcjetCV/)
 [![pypi package](https://img.shields.io/pypi/v/arcjetcv?label=pypi%20package)](https://pypi.org/project/arcjetcv/)
 [![Downloads](https://pepy.tech/badge/arcjetcv)](https://pepy.tech/project/arcjetcv)
@@ -5,6 +6,8 @@
 
 
 -----
+
+[![Documentation](https://img.shields.io/badge/Documentation-Online-blue)](https://magnus-haw.github.io/arcjetCV/)
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">

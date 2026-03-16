@@ -14,7 +14,7 @@ Root directory for the arcjetCV package.
 # - git push origin main
 # - git tag -a v$(python setup.py --version) -m 'INPUT DESCRIPTION'
 # - gh release create v$(python setup.py --version) --target main
-__version__ = "1.1.12"
+__version__ = "1.1.16"
 
 from arcjetCV.utils.video import Video, VideoMeta
 from arcjetCV.utils.processor import ArcjetProcessor

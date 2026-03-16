@@ -4,6 +4,8 @@
 [![Downloads](https://pepy.tech/badge/arcjetcv)](https://pepy.tech/project/arcjetcv)
 -----
 
+[![Documentation](https://img.shields.io/badge/Documentation-Online-blue)](https://magnus-haw.github.io/arcjetCV/)
+
 <div align="center">
   <img src="https://raw.githubusercontent.com/magnus-haw/arcjetCV/main/arcjetCV/gui/logo/arcjetCV_logo_.png" alt="arcjetCV Logo" width="30%">
 </div>
