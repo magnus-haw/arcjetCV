@@ -593,7 +593,7 @@ class Ui_MainWindow(object):
         self.spinBox_mask_frames.setMinimumSize(QtCore.QSize(0, 0))
         self.spinBox_mask_frames.setMinimum(1)
         self.spinBox_mask_frames.setMaximum(1000)
-        self.spinBox_mask_frames.setProperty("value", 2)
+        self.spinBox_mask_frames.setProperty("value", 1)
         self.spinBox_mask_frames.setObjectName("spinBox_mask_frames")
         self.formLayout_3.setWidget(
             6, QtWidgets.QFormLayout.FieldRole, self.spinBox_mask_frames

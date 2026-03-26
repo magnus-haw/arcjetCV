@@ -195,6 +195,14 @@ class MainWindow(QtWidgets.QMainWindow):
         mm_per_px = 1.0 / ppm
         label.setText(f"Resolution: {mm_per_px:.6f} mm/px | {ppm:.6f} px/mm")
 
+    @staticmethod
+    def _flow_axis_sign(flow_direction):
+        """
+        Return a sign that makes downstream motion positive across flow directions.
+        """
+        flow = str(flow_direction).strip().lower()
+        return -1.0 if flow in {"left", "up"} else 1.0
+
     def closeEvent(self, event):
         print("🔴 Closing application...")
         try:
@@ -1023,6 +1031,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         fps = self.ui.doubleSpinBox_fps.value()
         maskn = self.ui.spinBox_mask_frames.value()
+        flow_sign = self._flow_axis_sign(self.ui.comboBox_flowDirection.currentText())
 
         self.ui.basebar.setText("Plotting data...")
         try:
@@ -1052,7 +1061,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     # Model positions (-95%, -50%, center, 50%, 95% radius)
                     if self.raw_outputs[i]["MODEL"] is not None:
-                        xpos = self.raw_outputs[i]["MODEL_INTERP_XPOS"]
+                        xpos = np.asarray(
+                            self.raw_outputs[i]["MODEL_INTERP_XPOS"], dtype=float
+                        )
+                        signed_xpos = flow_sign * xpos
                         center = self.raw_outputs[i]["MODEL_YCENTER"]
                         model_array = np.array(self.raw_outputs[i]["MODEL"])
                         self.raw_outputs[i]["MODEL"] = model_array
@@ -1068,11 +1080,11 @@ class MainWindow(QtWidgets.QMainWindow):
                                 ),
                             }
                         )
-                        m95.append(xpos[0])
-                        m50.append(xpos[1])
-                        mc.append(xpos[2])
-                        p50.append(xpos[3])
-                        p95.append(xpos[4])
+                        m95.append(signed_xpos[0])
+                        m50.append(signed_xpos[1])
+                        mc.append(signed_xpos[2])
+                        p50.append(signed_xpos[3])
+                        p95.append(signed_xpos[4])
                         ypos.append(center)
                         radius.append(self.raw_outputs[i]["MODEL_RADIUS"])
                     else:
@@ -1086,7 +1098,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     # Shock center x-position
                     if self.raw_outputs[i]["SHOCK"] is not None:
-                        sc.append(self.raw_outputs[i]["SHOCK_INTERP_XPOS"][0])
+                        sc.append(
+                            flow_sign
+                            * float(self.raw_outputs[i]["SHOCK_INTERP_XPOS"][0])
+                        )
                         shock_array = np.array(self.raw_outputs[i]["SHOCK"])
                         self.raw_outputs[i]["SHOCK"] = shock_array
                         shock_coords = np.array(shock_array[:, 0, :], dtype=float)
@@ -1386,24 +1401,17 @@ class MainWindow(QtWidgets.QMainWindow):
                             self.swell_loop_idx = int(valid_indices[swell_idx])
                             self.swell_time = time[self.swell_loop_idx]
 
-                        time_span = time_valid.max() - time_valid.min()
-                        if time_span > 0:
-                            xtick_candidates = [0, 25, 50, 75, 100, 125, 150, 175, 200]
-                            xticks = [
-                                val
-                                for val in xtick_candidates
-                                if time_valid.min() <= val <= time_valid.max()
-                            ]
-                            if xticks:
-                                self.ax2.set_xticks(xticks)
-
-                        y_max = max(center_zeroed.max(), 0.0)
-                        yticks = [0, 2, 4, 6, 8]
-                        yticks_in_range = [
-                            val for val in yticks if 0 <= val <= max(y_max, 8)
-                        ]
-                        if yticks_in_range:
-                            self.ax2.set_yticks(yticks_in_range)
+                        # Keep dynamic plot limits; fixed ticks can force misleading ranges.
+                        y_min = float(np.min(center_zeroed))
+                        y_max = float(np.max(center_zeroed))
+                        if np.isfinite(y_min) and np.isfinite(y_max):
+                            lower_data = min(y_min, 0.0)
+                            upper_data = max(y_max, 0.0)
+                            span = upper_data - lower_data
+                            pad = max(0.25, 0.1 * span) if span > 0 else 0.5
+                            self.ax2.set_ylim(lower_data - pad, upper_data + pad)
+                        self.ax2.locator_params(axis="x", nbins=6)
+                        self.ax2.locator_params(axis="y", nbins=6)
 
                     self.PLOTKEYS.append("MODEL_CENTER " + units)
 

@@ -770,7 +770,7 @@ class Ui_MainWindow(object):
         self.spinBox_mask_frames.setMaximumSize(QSize(150, 30))
         self.spinBox_mask_frames.setMinimum(1)
         self.spinBox_mask_frames.setMaximum(1000)
-        self.spinBox_mask_frames.setValue(10)
+        self.spinBox_mask_frames.setValue(1)
 
         self.gridLayout_2.addWidget(self.spinBox_mask_frames, 3, 1, 1, 1)
 
