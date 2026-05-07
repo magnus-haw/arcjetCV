@@ -4,6 +4,7 @@ import cv2 as cv
 import numpy as np
 import threading
 from arcjetCV.utils.utils import splitfn
+
 try:
     from arcjetCV.segmentation.time.time_segmentation import (
         time_segmentation,
@@ -14,6 +15,31 @@ except ModuleNotFoundError as exc:
     time_segmentation = None
     extract_interest = None
     _time_segmentation_error = exc
+
+
+IMAGE_EXTENSIONS = {".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff"}
+
+
+def _normalize_image_for_video(frame):
+    """Return an 8-bit BGR image suitable for the video processing pipeline."""
+    if frame is None:
+        return None
+
+    if frame.dtype != np.uint8:
+        frame_min = float(np.min(frame))
+        frame_max = float(np.max(frame))
+        if frame_max > frame_min:
+            scale = 255.0 / (frame_max - frame_min)
+            frame = ((frame.astype(np.float32) - frame_min) * scale).astype(np.uint8)
+        else:
+            frame = np.zeros(frame.shape, dtype=np.uint8)
+
+    if len(frame.shape) == 2:
+        frame = cv.cvtColor(frame, cv.COLOR_GRAY2BGR)
+    elif frame.shape[2] == 4:
+        frame = cv.cvtColor(frame, cv.COLOR_BGRA2BGR)
+
+    return frame
 
 
 class Video(object):
@@ -56,12 +82,28 @@ class Video(object):
         self.folder = folder
         self.ext = ext
         self._lock = threading.Lock()
+        self.is_still_image = self.ext.lower() in IMAGE_EXTENSIONS
+        self._image_frame = None
 
         ### opencv video file object
-        self.cap = cv.VideoCapture(self.fpath)
-        self.nframes = int(self.cap.get(cv.CAP_PROP_FRAME_COUNT))
-        self.fps = self.cap.get(cv.CAP_PROP_FPS)
-        ret, frame = self.cap.read()
+        if self.is_still_image:
+            self.cap = None
+            frame = _normalize_image_for_video(
+                cv.imread(self.fpath, cv.IMREAD_UNCHANGED)
+            )
+            if frame is None:
+                raise ValueError(f"Could not load image file: {self.fpath}")
+            self._image_frame = frame
+            self.nframes = 1
+            self.fps = 1
+        else:
+            self.cap = cv.VideoCapture(self.fpath)
+            self.nframes = int(self.cap.get(cv.CAP_PROP_FRAME_COUNT))
+            self.fps = self.cap.get(cv.CAP_PROP_FPS)
+            ret, frame = self.cap.read()
+            if not ret or frame is None:
+                raise ValueError(f"Could not load video file: {self.fpath}")
+
         self.shape = np.shape(frame)
         self.h, self.w, self.chan = self.shape
         self.last_frame = frame
@@ -93,6 +135,10 @@ class Video(object):
 
         :returns: next frame
         """
+        if self.is_still_image:
+            self.last_frame = self._image_frame.copy()
+            return self.last_frame
+
         with self._lock:
             _, self.last_frame = self.cap.read()
             return self.last_frame
@@ -103,6 +149,10 @@ class Video(object):
 
         :param index: index of the frame to set
         """
+        if self.is_still_image:
+            self.last_frame = self._image_frame.copy()
+            return
+
         with self._lock:
             self.cap.set(cv.CAP_PROP_POS_FRAMES, index)
             return
@@ -114,6 +164,12 @@ class Video(object):
         :param index: index of the frame to retrieve
         :returns: RGB frame at the specified index
         """
+        if self.is_still_image:
+            if index != 0:
+                return None
+            self.last_frame = self._image_frame.copy()
+            return cv.cvtColor(self.last_frame, cv.COLOR_BGR2RGB)
+
         with self._lock:
             self.cap.set(cv.CAP_PROP_POS_FRAMES, index)
             _, self.last_frame = self.cap.read()
@@ -125,7 +181,8 @@ class Video(object):
         """
         if self.writer is not None:
             self.writer.release()
-        self.cap.release()
+        if self.cap is not None:
+            self.cap.release()
 
     def get_writer(self, video_output_name):
         """
@@ -213,7 +270,15 @@ class VideoMeta(dict):
             self["CHANNELS"] = video.chan
             self["NFRAMES"] = video.nframes
 
-            if time_segmentation is not None and extract_interest is not None:
+            if getattr(video, "is_still_image", False):
+                self["FIRST_GOOD_FRAME"] = 0
+                self["LAST_GOOD_FRAME"] = 0
+                gray_frame = cv.cvtColor(video.get_next_frame(), cv.COLOR_BGR2GRAY)
+                _, _, _, max_loc = cv.minMaxLoc(gray_frame)
+                self["FLOW_DIRECTION"] = (
+                    "left" if max_loc[0] / max(1, video.w) > 0.5 else "right"
+                )
+            elif time_segmentation is not None and extract_interest is not None:
                 try:  # Infer meta parameters
                     print("Inferring first and last frames ... ", end="")
                     _emit_progress(10, "Inferring first/last valid frames...")
@@ -254,9 +319,12 @@ class VideoMeta(dict):
             video.set_frame(0)
             progress_stride = max(1, video.nframes // 100)
             for idx in range(video.nframes):
-                ret, frame = video.cap.read()
-                if not ret:
-                    break
+                if getattr(video, "is_still_image", False):
+                    frame = video.get_next_frame()
+                else:
+                    ret, frame = video.cap.read()
+                    if not ret:
+                        break
                 gray_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
                 brightness = np.mean(gray_frame)
                 self["BRIGHTNESS"].append(round(brightness, 2))

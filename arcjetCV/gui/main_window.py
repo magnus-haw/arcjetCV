@@ -457,7 +457,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         file_dialog = QtWidgets.QFileDialog()
         file_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-        file_dialog.setNameFilter("Images (*.png *.jpg *.bmp *.tif)")
+        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)")
         try:
             if file_dialog.exec():
                 fpath = file_dialog.selectedFiles()[0]
@@ -502,9 +502,9 @@ class MainWindow(QtWidgets.QMainWindow):
         options = QtWidgets.QFileDialog.Options()
         pathmask = dialog.getOpenFileName(
             None,
-            "Select Video",
+            "Select Video or Image",
             "",
-            "Video Files (*.mp4 *.avi *.mov *.m4v);;All Files (*)",
+            "Video/Image Files (*.mp4 *.avi *.mov *.m4v *.png *.jpg *.jpeg *.bmp *.tif *.tiff);;Video Files (*.mp4 *.avi *.mov *.m4v);;Image Files (*.png *.jpg *.jpeg *.bmp *.tif *.tiff);;All Files (*)",
             options=options,
         )
         self.NEW_VIDEO = True
@@ -1793,7 +1793,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def arcjetcv_message_box(self, title, message):
         msg_box = QMessageBox(self)
-        msg_box.setIconPixmap(QPixmap(self.logo_path))
+        logo = QPixmap(self.logo_path)
+        if not logo.isNull():
+            msg_box.setIconPixmap(
+                logo.scaled(
+                    48,
+                    48,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation,
+                )
+            )
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
         msg_box.setStandardButtons(QMessageBox.Ok)

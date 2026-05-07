@@ -11,6 +11,9 @@ import os
 from pathlib import Path
 
 
+CALIBRATION_IMAGE_FILTER = "Images (*.png *.jpg *.jpeg *.tif *.tiff)"
+
+
 class CalibrationController:
     def __init__(self, view: CalibrationView):
         self.view = view
@@ -37,6 +40,19 @@ class CalibrationController:
         # Connect Matplotlib canvas events
         self.cid_press = None
         self.cid_release = None
+        self.cid_motion = None
+        self.cid_scroll = None
+
+    @staticmethod
+    def _load_calibration_image(file_path, flags=cv2.IMREAD_COLOR):
+        """
+        Load a calibration image using OpenCV-supported formats.
+
+        OpenCV can decode TIFF when the installed build includes TIFF support.
+        Keeping image reads behind this helper gives calibration workflows one
+        consistent failure path for unsupported or unreadable files.
+        """
+        return cv2.imread(file_path, flags)
 
     def _generate_object_points(self, pattern_size, pattern_type, spacing=1.0):
         """
@@ -389,7 +405,7 @@ class CalibrationController:
         obj_points = []
         img_points = []
 
-        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+        img = self._load_calibration_image(img_path, cv2.IMREAD_GRAYSCALE)
         if img is None:
             QMessageBox.warning(self.view, "Error", f"Failed to load image: {img_path}")
             return
@@ -524,10 +540,15 @@ class CalibrationController:
     def load_image(self):
         """Load an image for resolution measurement."""
         file_path, _ = QFileDialog.getOpenFileName(
-            self.view, "Load Image", "", "Images (*.png *.jpg *.jpeg)"
+            self.view, "Load Image", "", CALIBRATION_IMAGE_FILTER
         )
         if file_path:
-            self.image = cv2.imread(file_path)
+            self.image = self._load_calibration_image(file_path)
+            if self.image is None:
+                QMessageBox.warning(
+                    self.view, "Error", f"Failed to load image: {file_path}"
+                )
+                return
             self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
             self.display_image()
         else:
@@ -549,6 +570,7 @@ class CalibrationController:
 
         self.line_artist = None
 
+        self._disconnect_canvas_events()
         self.cid_press = self.view.canvas.mpl_connect(
             "button_press_event", self.on_mouse_press
         )
@@ -558,6 +580,53 @@ class CalibrationController:
         self.cid_motion = self.view.canvas.mpl_connect(
             "motion_notify_event", self.on_mouse_motion
         )
+        self.cid_scroll = self.view.canvas.mpl_connect(
+            "scroll_event", self.on_mouse_scroll
+        )
+
+    def _disconnect_canvas_events(self):
+        """Disconnect existing Matplotlib callbacks before wiring a new image."""
+        for attr_name in ["cid_press", "cid_release", "cid_motion", "cid_scroll"]:
+            cid = getattr(self, attr_name, None)
+            if cid is not None:
+                try:
+                    self.view.canvas.mpl_disconnect(cid)
+                except Exception:
+                    pass
+                setattr(self, attr_name, None)
+
+    def on_mouse_scroll(self, event):
+        """
+        Zoom the calibration image in or out around the mouse cursor.
+
+        Mouse-wheel up zooms in; mouse-wheel down zooms out. The current line
+        annotation remains in data coordinates, so zooming does not change the
+        measured pixel distance.
+        """
+        if event.inaxes != getattr(self, "ax", None) or event.xdata is None:
+            return
+        if event.ydata is None:
+            return
+
+        zoom_factor = 1 / 1.25 if event.button == "up" else 1.25
+        x_min, x_max = self.ax.get_xlim()
+        y_min, y_max = self.ax.get_ylim()
+
+        new_width = (x_max - x_min) * zoom_factor
+        new_height = (y_max - y_min) * zoom_factor
+
+        rel_x = (event.xdata - x_min) / (x_max - x_min)
+        rel_y = (event.ydata - y_min) / (y_max - y_min)
+
+        self.ax.set_xlim(
+            event.xdata - new_width * rel_x,
+            event.xdata + new_width * (1 - rel_x),
+        )
+        self.ax.set_ylim(
+            event.ydata - new_height * rel_y,
+            event.ydata + new_height * (1 - rel_y),
+        )
+        self.view.canvas.draw_idle()
 
     def on_mouse_press(self, event):
         """
@@ -636,13 +705,16 @@ class CalibrationController:
             self.view,
             "Load Image for Pattern Detection",
             "",
-            "Images (*.png *.jpg *.jpeg)",
+            CALIBRATION_IMAGE_FILTER,
         )
         if not file_path:
             QMessageBox.warning(self.view, "Error", "No image selected.")
             return
 
-        self.image = cv2.imread(file_path)
+        self.image = self._load_calibration_image(file_path)
+        if self.image is None:
+            QMessageBox.warning(self.view, "Error", f"Failed to load image: {file_path}")
+            return
         if not self.calibrate_camera(file_path) or self.calibration_data is None:
             return
         self.image = self.apply_calibration(self.image, self.calibration_data)
@@ -686,6 +758,10 @@ class CalibrationController:
         )
         self.ax.set_title(f"Detected {pattern_type.capitalize()} and Diagonal")
         self.ax.legend()
+        self._disconnect_canvas_events()
+        self.cid_scroll = self.view.canvas.mpl_connect(
+            "scroll_event", self.on_mouse_scroll
+        )
         self.view.canvas.draw()
 
         self.diagonal_distance = np.linalg.norm(top_left - bottom_right)
