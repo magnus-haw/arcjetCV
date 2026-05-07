@@ -119,6 +119,25 @@ def test_detect_pattern(calibration_controller, qtbot):
     assert img_points is not None, "Image points not generated."
 
 
+def test_load_calibration_image_accepts_tiff(calibration_controller, tmp_path):
+    """Test that calibration image loading accepts TIFF files."""
+    image_path = tmp_path / "calibration_image.tiff"
+    image = np.zeros((12, 16, 3), dtype=np.uint8)
+    image[:, :, 1] = 128
+
+    assert cv2.imwrite(str(image_path), image), "Failed to create TIFF test image."
+
+    color_image = calibration_controller._load_calibration_image(str(image_path))
+    gray_image = calibration_controller._load_calibration_image(
+        str(image_path), cv2.IMREAD_GRAYSCALE
+    )
+
+    assert color_image is not None, "Failed to load TIFF calibration image."
+    assert color_image.shape == image.shape
+    assert gray_image is not None, "Failed to load grayscale TIFF calibration image."
+    assert gray_image.shape == image.shape[:2]
+
+
 # def test_calibrate_camera(calibration_controller, qtbot):
 #     """Test the full camera calibration process using the calibration image."""
 #     controller = calibration_controller

@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
+import cv2 as cv
 from pathlib import Path
-from arcjetCV.utils.video import VideoMeta
+from arcjetCV.utils.video import Video, VideoMeta
 from arcjetCV.utils.output import OutputListJSON
 
 
@@ -55,6 +56,37 @@ from arcjetCV.utils.output import OutputListJSON
 #         # Test the crop_range method
 #         expected_range = [[10, 100], [20, 200]]
 #         self.assertEqual(video_meta.crop_range(), expected_range)
+
+
+class TestVideoImageInput(unittest.TestCase):
+
+    def test_tiff_loads_as_single_frame_video(self):
+        image_path = Path("segmentation_input_test.tiff")
+        meta_path = Path("segmentation_input_test.meta")
+        image = np.zeros((12, 16, 3), dtype=np.uint8)
+        image[:, 9:] = (255, 255, 255)
+
+        success, encoded = cv.imencode(".tiff", image)
+        self.assertTrue(success)
+        image_path.write_bytes(encoded.tobytes())
+
+        try:
+            video = Video(str(image_path))
+            videometa = VideoMeta(video, str(meta_path))
+            frame = video.get_frame(0)
+
+            self.assertTrue(video.is_still_image)
+            self.assertEqual(video.nframes, 1)
+            self.assertEqual(frame.shape, image.shape)
+            self.assertEqual(videometa["FIRST_GOOD_FRAME"], 0)
+            self.assertEqual(videometa["LAST_GOOD_FRAME"], 0)
+            self.assertEqual(len(videometa["BRIGHTNESS"]), 1)
+        finally:
+            if image_path.exists():
+                image_path.unlink()
+            if meta_path.exists():
+                meta_path.unlink()
+
 
 class TestOutputListJSON(unittest.TestCase):
 
