@@ -1,0 +1,30 @@
+name: arcjetCV
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - matplotlib
+  - numpy
+  - opencv
+  - pandas
+  - pyarrow
+  - pyside6
+  - pytest
+  - pytest-qt
+  - pytorch::pytorch=2.5.1=py3.12_cuda12.4_cudnn9.1.0_0
+  - pytorch::torchvision
+  - pytorch::pytorch-cuda=12.4
+  - scikit-learn
+  - segmentation-models-pytorch
+  - pip
+  - pip:
+    - arcjetcv
+    - efficientnet-pytorch
+    - pretrainedmodels
+    - timm
+    - munch
+    - mkdocs
+    - mkdocs-material

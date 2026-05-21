@@ -22,6 +22,7 @@ from arcjetCV.utils.utils import (
     annotate_image_with_frame_number,
 )
 from arcjetCV.calibration.calibration_controller import CalibrationController
+from arcjetCV.gui.tour import ArcjetCVTour
 from PySide6.QtWidgets import QFileDialog
 import json
 
@@ -108,6 +109,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_kalman_filter.stateChanged.connect(self.plot_outputs)
         self.ui.comboBox_units.setCurrentText("[mm]")
         self._set_tooltips()
+
+        # Interactive tour (Help → Start Tour)
+        self._tour = ArcjetCVTour(self)
+        self.ui.actionStartTour.triggered.connect(self._tour.start)
 
         # init_plot_brightness
         self.ui.Window3.canvas.axes.clear()

@@ -949,6 +949,10 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QRect(0, 0, 1175, 24))
         self.menuMenu = QMenu(self.menubar)
         self.menuMenu.setObjectName("menuMenu")
+        self.menuHelp = QMenu(self.menubar)
+        self.menuHelp.setObjectName("menuHelp")
+        self.actionStartTour = QAction(MainWindow)
+        self.actionStartTour.setObjectName("actionStartTour")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -958,8 +962,10 @@ class Ui_MainWindow(object):
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolBar)
 
         self.menubar.addAction(self.menuMenu.menuAction())
+        self.menubar.addAction(self.menuHelp.menuAction())
         self.menuMenu.addAction(self.actionLoad_video)
         self.menuMenu.addAction(self.actionExit_2)
+        self.menuHelp.addAction(self.actionStartTour)
 
         self.retranslateUi(MainWindow)
 
@@ -991,6 +997,15 @@ class Ui_MainWindow(object):
         )
         self.actionExit_2.setText(
             QCoreApplication.translate("MainWindow", "Exit", None)
+        )
+        self.menuMenu.setTitle(
+            QCoreApplication.translate("MainWindow", "Menu", None)
+        )
+        self.menuHelp.setTitle(
+            QCoreApplication.translate("MainWindow", "Help", None)
+        )
+        self.actionStartTour.setText(
+            QCoreApplication.translate("MainWindow", "Start Tour", None)
         )
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab_8),
