@@ -201,6 +201,14 @@ class MainWindow(QtWidgets.QMainWindow):
         label.setText(f"Resolution: {mm_per_px:.6f} mm/px | {ppm:.6f} px/mm")
 
     @staticmethod
+    def _mm_per_unit(units_text):
+        """
+        Return millimetres per selected length unit, or None for pixel units.
+        """
+        key = units_text.strip().strip("[]").strip().lower()
+        return {"mm": 1.0, "cm": 10.0, "in": 25.4}.get(key)
+
+    @staticmethod
     def _flow_axis_sign(flow_direction):
         """
         Return a sign that makes downstream motion positive across flow directions.
@@ -1012,8 +1020,11 @@ class MainWindow(QtWidgets.QMainWindow):
         time, sarea, marea, sc, sm, ypos = [], [], [], [], [], []
 
         units_selected = self.ui.comboBox_units.currentText()
-        units_lower = units_selected.lower()
-        use_mm_requested = "mm" in units_lower
+        # Millimetres per selected unit; None means plot in raw pixels.
+        mm_per_unit = self._mm_per_unit(units_selected)
+        use_mm_requested = mm_per_unit is not None
+        if mm_per_unit is None:
+            mm_per_unit = 1.0
 
         pixels_per_mm_default = None
         if self.raw_outputs and "PIXELS_PER_MM" in self.raw_outputs[0]:
@@ -1026,8 +1037,11 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         use_mm = use_mm_requested and default_pixel_length is not None
-        units = "[mm]" if use_mm else ("[px]" if use_mm_requested else units_selected)
-        xy_scale_default = default_pixel_length if use_mm else 1.0
+        units = (
+            units_selected if use_mm else ("[px]" if use_mm_requested else units_selected)
+        )
+        self.plot_units = units
+        xy_scale_default = default_pixel_length / mm_per_unit if use_mm else 1.0
         length_unit_label = units.strip()
         if length_unit_label.startswith("[") and length_unit_label.endswith("]"):
             length_unit_label = length_unit_label[1:-1]
@@ -1062,7 +1076,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         "PIXELS_PER_MM", pixels_per_mm_default
                     )
                     if use_mm and frame_pixels_per_mm not in (None, 0, float("inf")):
-                        frame_scale = 1 / frame_pixels_per_mm
+                        frame_scale = 1 / frame_pixels_per_mm / mm_per_unit
 
                     # Model positions (-95%, -50%, center, 50%, 95% radius)
                     if self.raw_outputs[i]["MODEL"] is not None:
@@ -1278,7 +1292,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             "Spatial data will be shown in pixels.",
                         )
                 self.pixel_length = pixel_length
-                series_scale = pixel_length if use_mm else 1.0
+                series_scale = pixel_length / mm_per_unit if use_mm else 1.0
                 radius_series = radius_masked * series_scale
 
                 # Plot XT series
@@ -1573,12 +1587,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 upsert_line(
                     "Pixel length",
-                    "Pixel length %s: %.4f mm/px | %.4f px/mm"
-                    % (
-                        self.ui.comboBox_units.currentText(),
-                        pixel_length,
-                        px_per_mm,
-                    ),
+                    "Pixel length: %.4f mm/px | %.4f px/mm"
+                    % (pixel_length, px_per_mm),
                 )
 
                 if self.max_expansion_info is not None:
@@ -1629,7 +1639,7 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             # Extract necessary data from self.time_series
             time = self.time_series["TIME [s]"]
-            units = self.ui.comboBox_units.currentText()
+            units = getattr(self, "plot_units", self.ui.comboBox_units.currentText())
 
             # Plot each dataset in a separate graph
             for data, label in zip(self.length_units[5:], self.length_labels[5:]):
@@ -1737,7 +1747,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             try:
                 # Retrieve user inputs for time/units
-                units = self.ui.comboBox_units.currentText()
+                units = getattr(self, "plot_units", self.ui.comboBox_units.currentText())
                 time = np.array(self.time_series["TIME [s]"])
                 mask = np.array(self.XT_MASK)
                 t0 = self.ui.doubleSpinBox_fit_start_time.value()
