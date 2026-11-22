@@ -36,6 +36,14 @@ arcjetCV.gui.main\_window module
    :undoc-members:
    :show-inheritance:
 
+arcjetCV.gui.tour module
+------------------------
+
+.. automodule:: arcjetCV.gui.tour
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

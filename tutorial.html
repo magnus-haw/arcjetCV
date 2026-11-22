@@ -125,8 +125,8 @@
 </pre></div>
 </div>
 <div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># crop example video and display it</span>
-<span class="n">convert_and_crop_video</span><span class="p">(</span><span class="s2">&quot;arcjet_test.mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;arcjet_test_crop.mp4&quot;</span><span class="p">,</span> <span class="n">max_frames</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
-<span class="n">display_video</span><span class="p">(</span><span class="s2">&quot;arcjet_test_crop.mp4&quot;</span><span class="p">)</span>
+<span class="n">convert_and_crop_video</span><span class="p">(</span><span class="s2">"arcjet_test.mp4"</span><span class="p">,</span> <span class="s2">"arcjet_test_crop.mp4"</span><span class="p">,</span> <span class="n">max_frames</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<span class="n">display_video</span><span class="p">(</span><span class="s2">"arcjet_test_crop.mp4"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -136,22 +136,22 @@
 </div>
 <div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">arcjetCV</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">arcv</span>
 
-<span class="n">video</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">Video</span><span class="p">(</span><span class="s2">&quot;arcjet_test.mp4&quot;</span><span class="p">)</span>
+<span class="n">video</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">Video</span><span class="p">(</span><span class="s2">"arcjet_test.mp4"</span><span class="p">)</span>
 
-<span class="n">videometa</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">VideoMeta</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="s2">&quot;arcjet_test.meta&quot;</span><span class="p">)</span>
-<span class="n">videometa</span><span class="p">[</span><span class="s2">&quot;FLOW_DIRECTION&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;right&quot;</span>
+<span class="n">videometa</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">VideoMeta</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="s2">"arcjet_test.meta"</span><span class="p">)</span>
+<span class="n">videometa</span><span class="p">[</span><span class="s2">"FLOW_DIRECTION"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"right"</span>
 <span class="n">videometa</span><span class="o">.</span><span class="n">set_frame_crop</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">700</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">425</span><span class="p">)</span>
-<span class="n">videometa</span><span class="p">[</span><span class="s2">&quot;FIRST_GOOD_FRAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">videometa</span><span class="p">[</span><span class="s2">&quot;LAST_GOOD_FRAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">400</span>
+<span class="n">videometa</span><span class="p">[</span><span class="s2">"FIRST_GOOD_FRAME"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">videometa</span><span class="p">[</span><span class="s2">"LAST_GOOD_FRAME"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">400</span>
 
 <span class="n">processor</span> <span class="o">=</span> <span class="n">arcv</span><span class="o">.</span><span class="n">ArcjetProcessor</span><span class="p">(</span><span class="n">videometa</span><span class="p">)</span>
 <span class="n">output</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">process_all</span><span class="p">(</span>
     <span class="n">video</span><span class="p">,</span>
-    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;SEGMENT_METHOD&quot;</span><span class="p">:</span> <span class="s2">&quot;CNN&quot;</span><span class="p">},</span>
-    <span class="n">first_frame</span><span class="o">=</span><span class="n">videometa</span><span class="p">[</span><span class="s2">&quot;FIRST_GOOD_FRAME&quot;</span><span class="p">],</span>
-    <span class="n">last_frame</span><span class="o">=</span><span class="n">videometa</span><span class="p">[</span><span class="s2">&quot;LAST_GOOD_FRAME&quot;</span><span class="p">],</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"SEGMENT_METHOD"</span><span class="p">:</span> <span class="s2">"CNN"</span><span class="p">},</span>
+    <span class="n">first_frame</span><span class="o">=</span><span class="n">videometa</span><span class="p">[</span><span class="s2">"FIRST_GOOD_FRAME"</span><span class="p">],</span>
+    <span class="n">last_frame</span><span class="o">=</span><span class="n">videometa</span><span class="p">[</span><span class="s2">"LAST_GOOD_FRAME"</span><span class="p">],</span>
     <span class="n">frame_stride</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-    <span class="n">output_prefix</span><span class="o">=</span><span class="s2">&quot;arcjet_test&quot;</span><span class="p">,</span>
+    <span class="n">output_prefix</span><span class="o">=</span><span class="s2">"arcjet_test"</span><span class="p">,</span>
     <span class="n">write_json</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">write_video</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span>
@@ -163,8 +163,8 @@
 </pre></div>
 </div>
 <div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># convert annotated video from m4v to mp4 and display it</span>
-<span class="n">convert_and_crop_video</span><span class="p">(</span><span class="s2">&quot;video_out_arcjet_test_100_400.m4v&quot;</span><span class="p">,</span> <span class="s2">&quot;video_out_arcjet_test.mp4&quot;</span><span class="p">)</span>
-<span class="n">display_video</span><span class="p">(</span><span class="s1">&#39;video_out_arcjet_test.mp4&#39;</span><span class="p">)</span>
+<span class="n">convert_and_crop_video</span><span class="p">(</span><span class="s2">"video_out_arcjet_test_100_400.m4v"</span><span class="p">,</span> <span class="s2">"video_out_arcjet_test.mp4"</span><span class="p">)</span>
+<span class="n">display_video</span><span class="p">(</span><span class="s1">'video_out_arcjet_test.mp4'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

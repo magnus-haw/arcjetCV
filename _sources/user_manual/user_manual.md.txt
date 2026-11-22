@@ -159,5 +159,5 @@ The **Analyze** tab contains tools for visualizing and fitting the processed edg
 
 5. **Export**
 
-   Export the plotted and fitted data to CSV using the "Export CSV/Plots" button.
+   Export the plotted and fitted data to CSV using the "Export results" button (time series CSV, fit parameters CSV and plot images).
 
