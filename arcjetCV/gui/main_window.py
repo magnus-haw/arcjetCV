@@ -107,6 +107,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_shockmodel.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
         self.ui.comboBox_units.setCurrentText("[mm]")
+        self.ui.comboBox_units.currentTextChanged.connect(self._on_units_changed)
         self._set_tooltips()
 
         # Interactive tour (Help → Start Tour)
@@ -1554,6 +1555,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.ui.Window1.repaint()
         self.ui.Window2.repaint()
+        self.fit_data()
+
+    def _on_units_changed(self, _units=None):
+        """Redraw plots and refit in the newly selected units, if data is plotted."""
+        if self.time_series is None or len(self.raw_outputs) <= 10:
+            return
+        # plot_outputs resets the fit window to the full time range; keep the user's.
+        t0 = self.ui.doubleSpinBox_fit_start_time.value()
+        t1 = self.ui.doubleSpinBox_fit_last_time.value()
+        self.plot_outputs()
+        self.ui.doubleSpinBox_fit_start_time.setValue(t0)
+        self.ui.doubleSpinBox_fit_last_time.setValue(t1)
         self.fit_data()
 
     def save_plots(self, name):

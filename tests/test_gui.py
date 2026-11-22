@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import pytest
 from arcjetCV.gui.main_window import MainWindow
 from PySide6.QtTest import QTest
@@ -445,6 +446,30 @@ def test_set_length_units(app, qtbot):
     expected_units = "[mm]"
     app.ui.comboBox_units.setCurrentText(expected_units)
     assert app.ui.comboBox_units.currentText() == expected_units
+
+
+def test_changing_units_replots_data(app, qtbot, mocker):
+    """Switching length units redraws the plots and refits in the new units."""
+    test_load_analysis_files(app, qtbot, mocker)
+    app.ui.comboBox_units.setCurrentText("[mm]")
+    qtbot.mouseClick(app.ui.pushButton_PlotData, Qt.LeftButton)
+    key_mm = next(k for k in app.time_series if k.startswith("MODEL_CENTER"))
+    center_mm = np.ma.asarray(app.time_series[key_mm], dtype=float)
+
+    app.ui.doubleSpinBox_fit_start_time.setValue(
+        app.ui.doubleSpinBox_fit_start_time.minimum() + 0.1
+    )
+    t0 = app.ui.doubleSpinBox_fit_start_time.value()
+
+    app.ui.comboBox_units.setCurrentText("[cm]")
+
+    assert app.plot_units == "[cm]"
+    assert "MODEL_CENTER [cm]" in app.time_series
+    center_cm = np.ma.asarray(app.time_series["MODEL_CENTER [cm]"], dtype=float)
+    np.testing.assert_allclose(center_cm.compressed(), center_mm.compressed() / 10.0)
+    assert app.ax2.get_ylabel() == "[cm]"
+    assert any(k.startswith("MODEL_CENTER [cm]") for k in app.fit_dict)
+    assert app.ui.doubleSpinBox_fit_start_time.value() == pytest.approx(t0)
 
 
 def test_set_frames_per_second(app, qtbot):
