@@ -802,7 +802,7 @@
             <item>
              <widget class="QPushButton" name="pushButton_export_csv">
               <property name="text">
-               <string>Export CSV</string>
+               <string>Export results</string>
               </property>
              </widget>
             </item>

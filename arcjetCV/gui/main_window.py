@@ -106,7 +106,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.checkBox_shock_center.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_shockmodel.stateChanged.connect(self.plot_outputs)
         self.ui.checkBox_ypos.stateChanged.connect(self.plot_outputs)
-        self.ui.checkBox_kalman_filter.stateChanged.connect(self.plot_outputs)
         self.ui.comboBox_units.setCurrentText("[mm]")
         self._set_tooltips()
 
@@ -142,7 +141,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "pushButton_save_frame": "Save the currently displayed frame as an image.",
             "pushButton_process": "Process the selected frame range and extract time-series outputs.",
             "pushButton_LoadFiles": "Load previously exported output files for plotting.",
-            "pushButton_export_csv": "Export current results to a CSV file.",
+            "pushButton_export_csv": "Save time-series CSV, fit parameters and plot images to a folder.",
             "pushButton_PlotData": "Plot selected quantities from loaded or processed data.",
             "pushButton_fitData": "Fit the selected data over the chosen time interval.",
             "applyCrop": "Apply the current crop bounds to the video processing region.",
@@ -164,7 +163,6 @@ class MainWindow(QtWidgets.QMainWindow):
             "doubleSpinBox_fps": "Frame rate used for the time axis (frames per second).",
             "spinBox_mask_frames": "Minimum number of valid points required for plotting/fitting masks.",
             "checkBox_display_shock2": "Include shock position in the time-series plot.",
-            "checkBox_kalman_filter": "Apply Kalman smoothing to plotted signals.",
             "comboBox_fit_type": "Model used for fitting (currently linear).",
             "doubleSpinBox_fit_start_time": "Fit window start time (seconds).",
             "doubleSpinBox_fit_last_time": "Fit window end time (seconds).",
@@ -956,55 +954,6 @@ class MainWindow(QtWidgets.QMainWindow):
         last_part = path[-(max_visible_length - len(first_part)) :]
         return first_part + "..." + last_part
 
-    def _apply_kalman_filter(self, series):
-        if series is None:
-            return series
-
-        is_masked = isinstance(series, np.ma.MaskedArray)
-        if is_masked:
-            data = np.array(series.filled(np.nan), dtype=float)
-            mask = np.ma.getmaskarray(series).copy()
-        else:
-            data = np.array(series, dtype=float)
-            mask = np.zeros_like(data, dtype=bool)
-
-        non_finite_mask = ~np.isfinite(data)
-        if non_finite_mask.any():
-            mask = mask | non_finite_mask
-            data[non_finite_mask] = np.nan
-
-        valid_mask = ~mask
-        if np.count_nonzero(valid_mask) <= 1:
-            return series
-
-        valid_values = data[valid_mask]
-        measurement_var = np.nanvar(valid_values)
-        if not np.isfinite(measurement_var) or measurement_var <= 1e-12:
-            measurement_var = 1.0
-
-        process_var = measurement_var * 0.05
-        if not np.isfinite(process_var) or process_var <= 0:
-            process_var = 1e-3
-
-        error_cov = measurement_var
-        filtered = data.copy()
-        valid_indices = np.flatnonzero(valid_mask)
-        estimate = data[valid_indices[0]]
-        filtered[valid_indices[0]] = estimate
-
-        for idx in valid_indices[1:]:
-            error_cov += process_var
-            kalman_gain = error_cov / (error_cov + measurement_var)
-            estimate = estimate + kalman_gain * (data[idx] - estimate)
-            error_cov = (1.0 - kalman_gain) * error_cov
-            filtered[idx] = estimate
-
-        if is_masked:
-            return np.ma.masked_array(filtered, mask=mask)
-
-        filtered[~valid_mask] = data[~valid_mask]
-        return filtered
-
     def plot_outputs(self):
         self.ui.basebar.setText("Setting up plots...")
 
@@ -1186,12 +1135,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     for trace_idx in selected_indices:
                         trace = model_traces[trace_idx]
                         coords = trace["coords"]
-                        if self.ui.checkBox_kalman_filter.isChecked():
-                            model_x = self._apply_kalman_filter(coords[:, 0])
-                            model_y = self._apply_kalman_filter(coords[:, 1])
-                            coords = np.column_stack(
-                                (np.asarray(model_x, dtype=float), np.asarray(model_y, dtype=float))
-                            )
                         color, linewidth, label = style_for_trace(trace_idx)
                         display_label = (
                             label if label and label not in used_labels else None
@@ -1213,15 +1156,6 @@ class MainWindow(QtWidgets.QMainWindow):
                             and trace["loop_idx"] in shock_traces
                         ):
                             shock_coords = shock_traces[trace["loop_idx"]]
-                            if self.ui.checkBox_kalman_filter.isChecked():
-                                shock_x = self._apply_kalman_filter(shock_coords[:, 0])
-                                shock_y = self._apply_kalman_filter(shock_coords[:, 1])
-                                shock_coords = np.column_stack(
-                                    (
-                                        np.asarray(shock_x, dtype=float),
-                                        np.asarray(shock_y, dtype=float),
-                                    )
-                                )
                             shock_label = (
                                 "Shock Profile"
                                 if "Shock Profile" not in used_labels
@@ -1306,19 +1240,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 ysc = np.ma.masked_where(mask < 0, sc) * series_scale
                 ysm = np.ma.masked_where(mask < 0, sm) * series_scale
                 yypos = np.ma.masked_where(mask < 0, ypos) * series_scale
-
-                if self.ui.checkBox_kalman_filter.isChecked():
-                    ym95 = self._apply_kalman_filter(ym95)
-                    ym50 = self._apply_kalman_filter(ym50)
-                    ymc = self._apply_kalman_filter(ymc)
-                    yp50 = self._apply_kalman_filter(yp50)
-                    yp95 = self._apply_kalman_filter(yp95)
-                    ysarea = self._apply_kalman_filter(ysarea)
-                    ymarea = self._apply_kalman_filter(ymarea)
-                    ysc = self._apply_kalman_filter(ysc)
-                    ysm = self._apply_kalman_filter(ysm)
-                    yypos = self._apply_kalman_filter(yypos)
-                    radius_series = self._apply_kalman_filter(radius_series)
 
                 self.PLOTKEYS = []
                 self.max_expansion_info = None
@@ -1684,63 +1605,73 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
 
     def export_to_csv(self):
-        if self.time_series is not None:
-            try:
-                dialog = QtWidgets.QFileDialog()
-                pathmask = dialog.getExistingDirectory(None, "Export CSV/plots", "")
-                os.makedirs(pathmask, exist_ok=True)
-                folder_path = os.path.abspath(pathmask)
-                folder_name = os.path.basename(pathmask)
+        """Export time series CSV, fit parameters CSV and plot images to a folder."""
+        if self.time_series is None:
+            return
+        try:
+            pathmask = QtWidgets.QFileDialog.getExistingDirectory(
+                None, "Export results", ""
+            )
+            if not pathmask:
+                # User cancelled the dialog: nothing to do.
+                return
+            os.makedirs(pathmask, exist_ok=True)
+            folder_path = os.path.abspath(pathmask)
+            folder_name = os.path.basename(folder_path)
+            base = os.path.join(folder_path, folder_name)
 
-                self.ax1.figure.savefig(
-                    os.path.join(folder_path, folder_name + "_xy.png")
-                )
-                self.ax2.figure.savefig(
-                    os.path.join(folder_path, folder_name + "_xt.png")
-                )
-                self.save_plots(os.path.join(folder_path, folder_name))
+            self.ax1.figure.savefig(base + "_xy.png")
+            self.ax2.figure.savefig(base + "_xt.png")
+            self.save_plots(base)
 
-                # Convert time series into dataframe
-                df = pd.DataFrame(
-                    dict([(k, pd.Series(v)) for k, v in self.time_series.items()])
-                )
+            # Raw time series, always written.
+            df = pd.DataFrame(
+                dict([(k, pd.Series(v)) for k, v in self.time_series.items()])
+            )
+            df.to_csv(base + ".csv", index=False)
+            written = [folder_name + ".csv"]
 
-                # Convert fits into dataframe
-                if self.fit_dict is not None:
-                    param_dict = {"Pixel length": self.pixel_length}
-                    # Create pandas Series from fitparam dictionary
-                    keys, vals, errs = [], [], []
-                    for key, val in self.fit_dict.items():
-                        if "LINEAR_FIT" in key:
-                            keys.append(key + "_slope")
-                            keys.append(key + "_intercept")
-                            vals.append(val[0][0])
-                            vals.append(val[0][1])
-                            errs.append(val[1][0])
-                            errs.append(val[1][1])
-
-                    # Create pandas Series from fitparam dictionary
-                    keys_series = pd.Series(keys)
-                    values_series = pd.Series(vals)
-                    err_series = pd.Series(errs)
-                    param_dict.update(self.fit_dict)
-
-                    # Assign the Series as new columns to the DataFrame
-                    df = df.assign(
-                        Keys=keys_series, Values=values_series, Error=err_series
+            # Fit parameters in their own file, one row per parameter.
+            if self.fit_dict:
+                rows = []
+                for key, val in self.fit_dict.items():
+                    if "LINEAR_FIT" not in key:
+                        continue
+                    (slope, intercept), (slope_err, intercept_err) = val[0], val[1]
+                    # Series names end with their unit, e.g. "MODEL_CENTER [mm]".
+                    unit = key.split("[")[-1].split("]")[0] if "[" in key else ""
+                    rows.append(
+                        {
+                            "Parameter": key + "_slope",
+                            "Value": slope,
+                            "Error": slope_err,
+                            "Units": unit + "/s" if unit else "1/s",
+                        }
                     )
-
-                    csv_file_path = os.path.join(folder_path, f"{folder_name}.csv")
-                    df.to_csv(csv_file_path, index=False)
-
-            except Exception as e:
-                self.ui.basebar.setText("CSV export failed !")
-                if self.testing:
-                    print("Warning", "CSV export failed:\n" + str(e))
-                else:
-                    self.arcjetcv_message_box(
-                        "Warning", "CSV export failed:\n" + str(e)
+                    rows.append(
+                        {
+                            "Parameter": key + "_intercept",
+                            "Value": intercept,
+                            "Error": intercept_err,
+                            "Units": unit,
+                        }
                     )
+                if rows:
+                    fits = pd.DataFrame(rows)
+                    fits["Pixel length"] = getattr(self, "pixel_length", None)
+                    fits.to_csv(base + "_fits.csv", index=False)
+                    written.append(folder_name + "_fits.csv")
+
+            self.ui.basebar.setText(
+                "Exported %s and plots to %s" % (", ".join(written), folder_path)
+            )
+
+        except Exception as e:
+            self.ui.basebar.setText("Export failed !")
+            if self.testing:
+                print("Warning", "Export failed:\n" + str(e))
+            else:
+                self.arcjetcv_message_box("Warning", "Export failed:\n" + str(e))
 
     def fit_data(self):
         if self.time_series is not None:

@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from arcjetCV.gui.main_window import MainWindow
 from PySide6.QtTest import QTest
@@ -380,7 +381,7 @@ def test_fit_data_button(app, qtbot, mocker):
 
 def test_export_csv_plots_button(app, qtbot, mocker, tmp_path):
     """
-    Test the 'Export CSV/plots' button functionality in the 'Analysis' tab.
+    Test the 'Export results' button functionality in the 'Analysis' tab.
     """
     test_load_analysis_files(app, qtbot, mocker)
     mocker.patch(
@@ -390,6 +391,35 @@ def test_export_csv_plots_button(app, qtbot, mocker, tmp_path):
     qtbot.mouseClick(app.ui.pushButton_export_csv, Qt.LeftButton)
     exported_files = list(tmp_path.glob("*"))
     assert len(exported_files) > 0
+    # The raw time series CSV is written even without running a fit (#61).
+    assert (tmp_path / f"{tmp_path.name}.csv").exists()
+
+
+def test_export_writes_fit_csv(app, qtbot, mocker, tmp_path):
+    """After a fit, export also writes a separate _fits.csv."""
+    test_load_analysis_files(app, qtbot, mocker)
+    qtbot.mouseClick(app.ui.pushButton_fitData, Qt.LeftButton)
+    mocker.patch(
+        "PySide6.QtWidgets.QFileDialog.getExistingDirectory",
+        return_value=str(tmp_path),
+    )
+    qtbot.mouseClick(app.ui.pushButton_export_csv, Qt.LeftButton)
+    fits_csv = tmp_path / f"{tmp_path.name}_fits.csv"
+    assert fits_csv.exists()
+    fits = pd.read_csv(fits_csv)
+    assert list(fits.columns) == ["Parameter", "Value", "Error", "Units", "Pixel length"]
+    assert len(fits) > 0
+
+
+def test_export_cancelled_dialog(app, qtbot, mocker, tmp_path):
+    """Cancelling the folder dialog exports nothing and reports no failure."""
+    test_load_analysis_files(app, qtbot, mocker)
+    mocker.patch(
+        "PySide6.QtWidgets.QFileDialog.getExistingDirectory", return_value=""
+    )
+    app.ui.basebar.setText("")
+    qtbot.mouseClick(app.ui.pushButton_export_csv, Qt.LeftButton)
+    assert "failed" not in app.ui.basebar.text().lower()
 
 
 def test_switch_to_plotting_params_tab(app, qtbot):

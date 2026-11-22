@@ -41,4 +41,4 @@ Export intrinsic and metric parameters to a `.json` file with **Save Calibration
 1. **Load Processed Edges** produced by the processing tab.
 2. **Plot Data** in the top plots; configure units and scale in **Plotting Parameters**.
 3. **Fit Data** by setting options in **Fitting Parameters** once curves are plotted.
-4. **Export** plots and fitted data as CSV with **Export CSV/Plots**.
+4. **Export** the time series, fit parameters and plots to a folder with **Export results**.

@@ -553,7 +553,6 @@ class ArcjetCVTour:
                 title="Plot Options",
                 body=(
                     "Toggle which quantities appear in the time-series plot. "
-                    "'Kalman Filter' smooths noisy signals. "
                     "The units combo switches between pixels and millimetres "
                     "(requires a calibration file to have been loaded).\n\n"
                     "Use the Fit tab to restrict the linear fit to a sub-interval."
@@ -563,10 +562,11 @@ class ArcjetCVTour:
                 position="left",
             ),
             TourStep(
-                title="Export to CSV",
+                title="Export Results",
                 body=(
-                    "Click 'Export CSV' to save all time-series data, linear fit "
-                    "parameters, and PNG plot images to a folder of your choice."
+                    "Click 'Export results' and pick a folder. arcjetCV saves "
+                    "the time-series data (CSV), the linear fit parameters "
+                    "(_fits.csv, if you ran a fit) and PNG images of the plots."
                 ),
                 widget_getter=lambda: ui.pushButton_export_csv,
                 tab_switcher=tab_analysis,
