@@ -1,3 +1,4 @@
 include README.md
 include README_pypi.md
 include LICENSE
+recursive-include arcjetCV/webapp/static *

@@ -87,6 +87,11 @@ setup(
             "gui/logo/*.png",
             "gui/logo/*.ico",
             "gui/logo/*.icns",
+            "calibration/calibration.pdf",
+            "webapp/static/*.html",
+            "webapp/static/css/*.css",
+            "webapp/static/js/*.js",
+            "webapp/static/img/*",
         ],  # Include specific logo images
     },
     exclude_package_data={
@@ -109,10 +114,14 @@ setup(
         "torch",
         "torchvision",
     ],
+    extras_require={
+        "web": ["flask>=2.2"],
+    },
     entry_points={
         "console_scripts": [
             "arcjetCV=arcjetCV.gui.main:main",
             "arcjetcv=arcjetCV.gui.main:main",
+            "arcjetcv-web=arcjetCV.webapp.server:main",
         ],
     },
     project_urls={

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>arcjetCV Web</title>
+  <meta name="arcjetcv-mode" content="local">
+  <link rel="icon" href="static/img/favicon.ico">
+  <link rel="stylesheet" href="static/css/arcjet.css">
+</head>
+<body id="page-top">
+
+<!-- Icon sprite (stroke icons, works offline) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="2.5" y="5" width="14" height="14" rx="2.5"/><path d="m16.5 10 5-3v10l-5-3"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V4.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 12h4M3 16h4M17 8h4M17 12h4M17 16h4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12"/><path d="m7 11 5 5 5-5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M2 6h14a2 2 0 0 1 2 2v14"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 22c4 0 7-2.8 7-6.8 0-3.6-2.5-6-4.2-8.2-.6 2-1.6 3.2-3 3.7.4-3.3-.8-6.3-3.3-8.7C8.9 6 5 9.2 5 15.2 5 19.2 8 22 12 22z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-trend-down" viewBox="0 0 24 24"><path d="m3 7 7 7 4-4 7 7"/><path d="M15 17h6v-6"/></symbol>
+    <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8"/><rect x="7" y="13" width="10" height="8"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/></symbol>
+    <symbol id="i-step-back" viewBox="0 0 24 24"><path d="M6 5v14"/><path d="m18 5-9 7 9 7z"/></symbol>
+    <symbol id="i-step-fwd" viewBox="0 0 24 24"><path d="M18 5v14"/><path d="m6 5 9 7-9 7z"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol>
+  </defs>
+</svg>
+
+<div id="wrapper">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand" data-go="home">
+      <img src="static/img/logo-mark.png" alt="arcjetCV logo">
+      <div class="brand-text">arcjetCV <sup id="brand-version">WEB</sup></div>
+    </div>
+    <hr class="mt-0">
+    <nav>
+      <a class="nav-link" data-go="home" href="#home"><svg class="icon"><use href="#i-home"/></svg><span class="label">Home</span></a>
+    </nav>
+    <div class="sidebar-heading">Analysis</div>
+    <nav>
+      <a class="nav-link" data-go="calibration" href="#calibration"><svg class="icon"><use href="#i-ruler"/></svg><span class="label">Calibration</span><i class="badge-dot hidden" id="nav-calib-dot"></i></a>
+      <a class="nav-link" data-go="video" href="#video"><svg class="icon"><use href="#i-video"/></svg><span class="label">Video Analysis</span><i class="badge-dot hidden" id="nav-video-dot"></i></a>
+      <a class="nav-link" data-go="results" href="#results"><svg class="icon"><use href="#i-chart"/></svg><span class="label">Results &amp; Plots</span></a>
+    </nav>
+    <div class="sidebar-heading">Resources</div>
+    <nav>
+      <a class="nav-link" data-go="help" href="#help"><svg class="icon"><use href="#i-book"/></svg><span class="label">Documentation</span></a>
+      <a class="nav-link" href="https://github.com/magnus-haw/arcjetCV" target="_blank" rel="noopener"><svg class="icon"><use href="#i-github"/></svg><span class="label">Source code</span></a>
+    </nav>
+    <hr>
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Collapse sidebar"><svg class="icon"><use href="#i-chev-left"/></svg></button>
+    <div class="sidebar-footer">
+      Runs locally on this computer.<br>Your videos never leave your machine.
+    </div>
+  </aside>
+
+  <!-- ============ Content ============ -->
+  <div id="content-wrapper">
+    <header class="topbar">
+      <button class="btn btn-ghost btn-icon menu-btn" id="menu-btn"><svg class="icon"><use href="#i-menu"/></svg></button>
+      <div>
+        <div class="topbar-title" id="topbar-title">Home</div>
+      </div>
+      <form class="topbar-search" id="open-path-form">
+        <input id="open-path-input" type="text" placeholder="Paste a video or output path to open..." spellcheck="false">
+        <button class="btn btn-primary btn-sm" type="submit"><svg class="icon"><use href="#i-search"/></svg></button>
+      </form>
+      <div class="topbar-right">
+        <span class="status-pill" id="server-status">Local server</span>
+        <img class="topbar-nasa" src="static/img/nasa.svg" alt="NASA" title="NASA Ames Research Center" onerror="this.remove()">
+        <a class="topbar-link" href="https://github.com/magnus-haw/arcjetCV/issues" target="_blank" rel="noopener"><svg class="icon"><use href="#i-info"/></svg><span class="label">Report issue</span></a>
+      </div>
+    </header>
+
+    <main>
+      <!-- ===================== HOME ===================== -->
+      <section class="page" id="page-home">
+        <div class="hero">
+          <div class="hero-glow"></div>
+          <div class="hero-inner">
+            <div class="hero-main">
+              <div class="hero-eyebrow">NASA Ames &middot; Arc Jet Video Analysis</div>
+              <h1 class="hero-title">Welcome to arcjetCV</h1>
+              <p class="hero-subtitle">Segment the sample and shock in arc jet test videos, track leading-edge recession frame by frame, and turn the results into publication-ready time series. Everything runs on your own computer.</p>
+              <div class="hero-actions">
+                <button class="btn btn-light-pill" data-go="calibration"><svg class="icon"><use href="#i-ruler"/></svg>Start with calibration</button>
+                <button class="btn btn-outline-light" data-action="open-video"><svg class="icon"><use href="#i-video"/></svg>Open a video</button>
+                <button class="btn btn-outline-light" data-action="open-results"><svg class="icon"><use href="#i-chart"/></svg>Load results</button>
+              </div>
+            </div>
+            <div class="hero-panel">
+              <div class="hero-stat"><div class="v" id="stat-version">-</div><div class="k">Version</div></div>
+              <div class="hero-stat"><div class="v" id="stat-sessions">0</div><div class="k">Open videos</div></div>
+              <div class="hero-stat"><div class="v" id="stat-jobs">0</div><div class="k">Jobs running</div></div>
+              <div class="hero-stat"><div class="v" id="stat-cnn">-</div><div class="k">CNN model</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-5 mb-2">
+          <div class="card step-card" data-go="calibration"><div class="step-num">1</div><h4>Calibrate</h4><p>Load a calibration file, or measure pixels per mm from a calibration pattern or a known length.</p></div>
+          <div class="card step-card" data-go="video"><div class="step-num">2</div><h4>Load a video</h4><p>Open an arc jet video or still image from disk. Brightness and good frames are detected automatically.</p></div>
+          <div class="card step-card" data-go="video"><div class="step-num">3</div><h4>Tune segmentation</h4><p>Crop the region, set flow direction and pick CNN, AutoHSV, HSV or GRAY. Preview updates live.</p></div>
+          <div class="card step-card" data-go="video"><div class="step-num">4</div><h4>Process frames</h4><p>Run the full frame range in the background and write the edge output JSON next to the video.</p></div>
+          <div class="card step-card" data-go="results"><div class="step-num">5</div><h4>Analyze results</h4><p>Plot recession, shock standoff and profiles, fit rates over any interval and export CSV.</p></div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-header"><svg class="icon"><use href="#i-film"/></svg>Recent videos<div class="right"><button class="btn btn-sm" data-action="open-video"><svg class="icon"><use href="#i-folder"/></svg>Browse</button></div></div>
+            <div class="card-body tight"><ul class="list" id="recent-videos"></ul></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><svg class="icon"><use href="#i-file"/></svg>Recent outputs<div class="right"><button class="btn btn-sm" data-action="open-results"><svg class="icon"><use href="#i-folder"/></svg>Browse</button></div></div>
+            <div class="card-body tight"><ul class="list" id="recent-outputs"></ul></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== VIDEO ===================== -->
+      <section class="page" id="page-video">
+        <div class="hero compact">
+          <div class="hero-inner items-center">
+            <div class="hero-main">
+              <div class="hero-eyebrow">Video Analysis</div>
+              <h2 class="hero-title" id="video-title">No video loaded</h2>
+              <p class="hero-subtitle" id="video-subtitle">Open a video to start tuning the segmentation.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-light-pill" data-action="open-video"><svg class="icon"><use href="#i-folder"/></svg>Open video</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="layout-split">
+          <!-- Left: viewer -->
+          <div class="stack">
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-target"/></svg>Frame preview
+                <div class="right">
+                  <span class="card-sub" id="preview-time"></span>
+                  <button class="btn btn-sm" id="btn-crop-mode" title="Drag on the image to set the crop region" disabled><svg class="icon"><use href="#i-crop"/></svg>Draw crop</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="viewer" id="viewer">
+                  <div class="empty" id="viewer-empty"><svg class="icon"><use href="#i-video"/></svg><div><b>No video loaded</b></div><div class="small">Use "Open video" to pick a file from this computer.</div></div>
+                  <img id="viewer-img" class="hidden" alt="Processed frame" draggable="false">
+                  <div class="crop-box" id="crop-box"></div>
+                  <div class="busy"><span class="spinner"></span>Segmenting</div>
+                  <div class="legend hidden" id="viewer-legend"><span><i style="background:#00ff00"></i>Model</span><span><i style="background:#ff00ff"></i>Shock</span><span><i style="background:#fff"></i>Crop</span></div>
+                </div>
+                <div class="frame-bar">
+                  <button class="btn btn-icon btn-sm" id="frame-prev" title="Previous frame (←)" disabled><svg class="icon"><use href="#i-step-back"/></svg></button>
+                  <input type="range" class="slider" id="frame-slider" min="0" max="0" value="0" disabled>
+                  <button class="btn btn-icon btn-sm" id="frame-next" title="Next frame (→)" disabled><svg class="icon"><use href="#i-step-fwd"/></svg></button>
+                  <input type="number" class="input" id="frame-index" min="0" value="0" disabled>
+                </div>
+                <div class="flags mt-1" id="preview-flags"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-flame"/></svg>Brightness trace<div class="right card-sub">Click to jump to a frame. Shaded band = frames to process.</div></div>
+              <div class="card-body"><div class="chart short" id="chart-brightness"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-cpu"/></svg>Process video</div>
+              <div class="card-body">
+                <div class="form-row cols-4">
+                  <div><label class="lbl">First frame</label><input type="number" class="input" id="proc-first" min="0" value="0" disabled></div>
+                  <div><label class="lbl">Last frame</label><input type="number" class="input" id="proc-last" min="0" value="0" disabled></div>
+                  <div><label class="lbl">Frame stride</label><input type="number" class="input" id="proc-stride" min="1" value="1" disabled></div>
+                  <div><label class="lbl">Output name</label><input type="text" class="input" id="proc-prefix" disabled></div>
+                </div>
+                <div class="flex items-center wrap gap-2">
+                  <label class="check"><input type="checkbox" id="proc-write-video" disabled>Also write annotated video</label>
+                  <span class="muted small" id="proc-estimate"></span>
+                  <div class="right flex gap-1">
+                    <button class="btn" id="btn-set-first" disabled title="Use the current frame as the first frame">Set first = current</button>
+                    <button class="btn" id="btn-set-last" disabled title="Use the current frame as the last frame">Set last = current</button>
+                    <button class="btn btn-success" id="btn-process" disabled><svg class="icon"><use href="#i-play"/></svg>Process all</button>
+                  </div>
+                </div>
+                <div id="proc-progress" class="hidden mt-2">
+                  <div class="progress striped"><div id="proc-bar"></div></div>
+                  <div class="progress-msg"><span id="proc-msg">Starting...</span><span><span id="proc-pct">0%</span> <button class="btn btn-xs btn-danger" id="btn-cancel">Cancel</button></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: controls -->
+          <div class="stack">
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-info"/></svg>Video details</div>
+              <div class="card-body">
+                <dl class="kv" id="video-kv"><dt>File</dt><dd>-</dd></dl>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-crop"/></svg>Geometry</div>
+              <div class="card-body">
+                <label class="lbl">Flow direction</label>
+                <div class="seg mb-2" id="flow-seg"><button data-v="right" class="on" disabled>Flow &rarr; right</button><button data-v="left" disabled>&larr; Flow left</button></div>
+                <label class="lbl">Crop region (px)</label>
+                <div class="form-row cols-2 mb-1">
+                  <div><input type="number" class="input geo" id="crop-xmin" placeholder="x min" disabled></div>
+                  <div><input type="number" class="input geo" id="crop-xmax" placeholder="x max" disabled></div>
+                  <div><input type="number" class="input geo" id="crop-ymin" placeholder="y min" disabled></div>
+                  <div><input type="number" class="input geo" id="crop-ymax" placeholder="y max" disabled></div>
+                </div>
+                <div class="flex gap-1 mb-2"><button class="btn btn-sm" id="btn-crop-reset" disabled>Reset crop</button><button class="btn btn-sm" id="btn-save-meta" disabled><svg class="icon"><use href="#i-save"/></svg>Save to .meta</button></div>
+                <label class="lbl">Pixels per mm (optional)</label>
+                <input type="number" step="any" class="input" id="ppm" placeholder="From calibration, e.g. 12.5" disabled>
+                <p class="hint">Stored in the output so plots can switch to millimetres. <a href="#calibration" data-go="calibration">Calibrate or load a calibration file</a>.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-sliders"/></svg>Segmentation</div>
+              <div class="card-body">
+                <label class="lbl">Method</label>
+                <div class="seg mb-2" id="method-seg">
+                  <button data-v="CNN" disabled>CNN</button><button data-v="AutoHSV" class="on" disabled>AutoHSV</button><button data-v="HSV" disabled>HSV</button><button data-v="GRAY" disabled>GRAY</button>
+                </div>
+                <p class="hint mb-1" id="method-hint"></p>
+                <div id="hsv-panel" class="hidden">
+                  <div class="tabs"><button class="on" data-tab="tab-model">Model filter</button><button data-tab="tab-shock">Shock filter</button></div>
+                  <div class="tab-panel on" id="tab-model">
+                    <div class="range-row"><span></span><label class="lbl mb-0">Min</label><label class="lbl mb-0">Max</label></div>
+                    <div class="range-row" data-ch="h"><span>Hue</span><input type="number" class="input hsv" data-r="model" data-i="0" data-b="0" min="0" max="180" value="0"><input type="number" class="input hsv" data-r="model" data-i="0" data-b="1" min="0" max="180" value="121"></div>
+                    <div class="range-row" data-ch="s"><span>Saturation</span><input type="number" class="input hsv" data-r="model" data-i="1" data-b="0" min="0" max="255" value="0"><input type="number" class="input hsv" data-r="model" data-i="1" data-b="1" min="0" max="255" value="125"></div>
+                    <div class="range-row" data-ch="v"><span>Intensity</span><input type="number" class="input hsv" data-r="model" data-i="2" data-b="0" min="0" max="254" value="150"><input type="number" class="input hsv" data-r="model" data-i="2" data-b="1" min="0" max="255" value="255"></div>
+                  </div>
+                  <div class="tab-panel" id="tab-shock">
+                    <div class="range-row"><span></span><label class="lbl mb-0">Min</label><label class="lbl mb-0">Max</label></div>
+                    <div class="range-row" data-ch="h"><span>Hue</span><input type="number" class="input hsv" data-r="shock" data-i="0" data-b="0" min="0" max="180" value="125"><input type="number" class="input hsv" data-r="shock" data-i="0" data-b="1" min="0" max="180" value="170"></div>
+                    <div class="range-row" data-ch="s"><span>Saturation</span><input type="number" class="input hsv" data-r="shock" data-i="1" data-b="0" min="0" max="255" value="40"><input type="number" class="input hsv" data-r="shock" data-i="1" data-b="1" min="0" max="255" value="80"></div>
+                    <div class="range-row" data-ch="v"><span>Intensity</span><input type="number" class="input hsv" data-r="shock" data-i="2" data-b="0" min="0" max="254" value="85"><input type="number" class="input hsv" data-r="shock" data-i="2" data-b="1" min="0" max="255" value="230"></div>
+                  </div>
+                  <button class="btn btn-xs btn-ghost" id="btn-hsv-reset">Reset to defaults</button>
+                </div>
+                <hr style="border:0;border-top:1px solid #eef1f8;margin:0.9rem 0">
+                <label class="check"><input type="checkbox" id="opt-shock" checked disabled>Show shock contour</label>
+                <label class="check"><input type="checkbox" id="opt-crop" checked disabled>Show crop box</label>
+                <label class="check"><input type="checkbox" id="opt-annotate" disabled>Annotate exposure flags</label>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-layers"/></svg>Outputs for this video<div class="right"><button class="btn btn-xs btn-ghost" id="btn-refresh-outputs" title="Refresh"><svg class="icon"><use href="#i-refresh"/></svg></button></div></div>
+              <div class="card-body tight"><ul class="list" id="video-outputs"><li class="empty-state">No outputs yet.</li></ul></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== CALIBRATION ===================== -->
+      <section class="page" id="page-calibration">
+        <div class="hero compact">
+          <div class="hero-inner items-center">
+            <div class="hero-main">
+              <div class="hero-eyebrow">Calibration</div>
+              <h2 class="hero-title" id="cal-title">No calibration</h2>
+              <p class="hero-subtitle" id="cal-subtitle">Load a calibration file, or measure pixels per mm from a calibration pattern or a known length.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-light-pill" id="cal-load"><svg class="icon"><use href="#i-folder"/></svg>Load calibration file</button>
+              <a class="btn btn-outline-light" id="cal-print" href="/api/calibration/pattern.pdf" target="_blank" rel="noopener"><svg class="icon"><use href="#i-file"/></svg>Print pattern</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="layout-split">
+          <div class="stack">
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-target"/></svg>Calibration image
+                <div class="right">
+                  <span class="card-sub" id="cal-img-sub"></span>
+                  <button class="btn btn-sm" id="cal-open-image"><svg class="icon"><use href="#i-folder"/></svg>Open image</button>
+                  <button class="btn btn-sm" id="cal-use-frame" title="Measure on the frame shown in Video Analysis"><svg class="icon"><use href="#i-video"/></svg>Use video frame</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="viewer" id="cal-viewer">
+                  <div class="empty" id="cal-empty"><svg class="icon"><use href="#i-ruler"/></svg><div><b>No image</b></div><div class="small">Open a photo of the calibration pattern or ruler, or use the current video frame.</div></div>
+                  <div class="cal-stage hidden" id="cal-stage">
+                    <img id="cal-img" alt="Calibration image" draggable="false">
+                    <svg class="cal-overlay" id="cal-overlay"></svg>
+                  </div>
+                  <div class="busy"><span class="spinner"></span>Detecting pattern</div>
+                </div>
+                <p class="hint" id="cal-img-hint">In Ruler mode, click two points on the image to draw the reference line.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-info"/></svg>Current calibration</div>
+              <div class="card-body">
+                <dl class="kv" id="cal-kv"><dt>Source</dt><dd>-</dd></dl>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-ruler"/></svg>Measure resolution</div>
+              <div class="card-body">
+                <div class="seg mb-2" id="cal-mode-seg"><button data-v="pattern" class="on">Pattern</button><button data-v="ruler">Ruler</button></div>
+                <div id="cal-pattern-panel">
+                  <label class="lbl">Pattern size (inner points)</label>
+                  <div class="form-row cols-2 mb-1">
+                    <div><label class="lbl">Columns</label><input type="number" class="input" id="cal-cols" min="2" value="4"></div>
+                    <div><label class="lbl">Rows</label><input type="number" class="input" id="cal-rows" min="2" value="9"></div>
+                  </div>
+                  <label class="lbl">Diagonal distance (mm)</label>
+                  <input type="number" step="any" min="0" class="input mb-1" id="cal-diag-mm" placeholder="Real length of the red diagonal">
+                  <button class="btn btn-primary btn-block" id="cal-detect" disabled><svg class="icon"><use href="#i-target"/></svg>Detect pattern</button>
+                  <p class="hint">Undistorts and rectifies the image with the detected pattern, then measures the diagonal from the first to the last point, like the desktop app.</p>
+                </div>
+                <div id="cal-ruler-panel" class="hidden">
+                  <label class="lbl">Real length of the line (mm)</label>
+                  <input type="number" step="any" min="0" class="input mb-1" id="cal-ruler-mm" placeholder="e.g. 25.4">
+                  <div class="flex gap-1"><button class="btn btn-sm" id="cal-ruler-clear">Clear line</button></div>
+                  <p class="hint">Click two points on the image. Pixels per mm updates as you type the length.</p>
+                </div>
+                <hr style="border:0;border-top:1px solid #eef1f8;margin:0.9rem 0">
+                <dl class="kv" id="cal-measure-kv"><dt>Measured length</dt><dd>-</dd><dt>Pixels per mm</dt><dd>-</dd></dl>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-check"/></svg>Use calibration</div>
+              <div class="card-body">
+                <label class="lbl">Pixels per mm</label>
+                <input type="number" step="any" min="0" class="input mb-1" id="cal-ppm" placeholder="Measure, load a file or type a value">
+                <button class="btn btn-success btn-block mb-1" id="cal-apply" disabled><svg class="icon"><use href="#i-check"/></svg>Apply to video and plots</button>
+                <label class="lbl">Save as</label>
+                <div class="flex gap-1">
+                  <input type="text" class="input" id="cal-save-path" placeholder="/path/to/calibration.json" spellcheck="false">
+                  <button class="btn" id="cal-save" disabled><svg class="icon"><use href="#i-save"/></svg>Save</button>
+                </div>
+                <p class="hint">Saved in the same JSON format as the desktop app, so either tool can load it.</p>
+                <hr style="border:0;border-top:1px solid #eef1f8;margin:0.9rem 0">
+                <button class="btn btn-primary btn-block" data-go="video"><svg class="icon"><use href="#i-video"/></svg>Next: Video Analysis</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== RESULTS ===================== -->
+      <section class="page" id="page-results">
+        <div class="hero compact">
+          <div class="hero-inner items-center">
+            <div class="hero-main">
+              <div class="hero-eyebrow">Results &amp; Plots</div>
+              <h2 class="hero-title" id="results-title">No outputs loaded</h2>
+              <p class="hero-subtitle" id="results-subtitle">Load one or more arcjetCV output JSON files to plot recession and shock data.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-light-pill" data-action="open-results"><svg class="icon"><use href="#i-folder"/></svg>Load outputs</button>
+              <button class="btn btn-outline-light" id="btn-csv" disabled><svg class="icon"><use href="#i-download"/></svg>Export CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-4 mb-2" id="res-metrics">
+          <div class="metric-card"><div class="metric-icon blue"><svg class="icon"><use href="#i-film"/></svg></div><div><div class="metric-label">Frames</div><div class="metric-value" id="m-frames">-</div></div></div>
+          <div class="metric-card"><div class="metric-icon purple"><svg class="icon"><use href="#i-clock"/></svg></div><div><div class="metric-label">Recession start</div><div class="metric-value" id="m-swell">-</div></div></div>
+          <div class="metric-card"><div class="metric-icon amber"><svg class="icon"><use href="#i-ruler"/></svg></div><div><div class="metric-label">Max recession</div><div class="metric-value" id="m-maxrec">-</div></div></div>
+          <div class="metric-card"><div class="metric-icon green"><svg class="icon"><use href="#i-trend-down"/></svg></div><div><div class="metric-label">Recession rate</div><div class="metric-value" id="m-rate">-</div></div></div>
+        </div>
+
+        <div class="layout-split-wide">
+          <div class="stack">
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-file"/></svg>Output files</div>
+              <div class="card-body tight"><ul class="list" id="res-files"><li class="empty-state">No files selected.</li></ul></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-sliders"/></svg>Plot settings</div>
+              <div class="card-body">
+                <div class="form-row cols-2">
+                  <div><label class="lbl">Frame rate (fps)</label><input type="number" step="any" class="input res-opt" id="res-fps" value="30"></div>
+                  <div><label class="lbl">Use every Nth</label><input type="number" class="input res-opt" id="res-mask" min="1" value="1"></div>
+                </div>
+                <label class="lbl">Units</label>
+                <div class="seg mb-2" id="units-seg"><button data-v="px" class="on">Pixels</button><button data-v="mm">Millimetres</button></div>
+                <div class="form-row"><div><label class="lbl">Pixels per mm (override)</label><input type="number" step="any" class="input res-opt" id="res-ppm" placeholder="Read from output if present"></div></div>
+                <label class="lbl">Flow direction</label>
+                <div class="seg mb-2" id="res-flow-seg"><button data-v="auto" class="on">Auto</button><button data-v="right">Right</button><button data-v="left">Left</button></div>
+                <label class="check"><input type="checkbox" class="res-opt" id="res-outliers" checked>Mask outliers (LOF)</label>
+                <label class="check"><input type="checkbox" class="res-opt" id="res-kalman">Kalman smoothing</label>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-trend-down"/></svg>Linear fit</div>
+              <div class="card-body">
+                <div class="form-row cols-2">
+                  <div><label class="lbl">Start time (s)</label><input type="number" step="any" class="input" id="fit-t0" value="0"></div>
+                  <div><label class="lbl">End time (s)</label><input type="number" step="any" class="input" id="fit-t1" value="10"></div>
+                </div>
+                <button class="btn btn-primary btn-block" id="btn-fit" disabled><svg class="icon"><use href="#i-check"/></svg>Fit selected series</button>
+                <p class="hint">Fits y = m&middot;t + b to each series shown in the time-series chart, using only unmasked frames inside the interval (endpoints included).</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-trend-down"/></svg>Model center recession<div class="right card-sub" id="rec-sub"></div></div>
+              <div class="card-body"><div class="chart" id="chart-recession"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-chart"/></svg>Time series</div>
+              <div class="card-body">
+                <div class="chip-row mb-1" id="series-chips"></div>
+                <div class="chart" id="chart-series"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><svg class="icon"><use href="#i-layers"/></svg>Edge profiles<div class="right card-sub">First (red), recession start (green), last (blue). Dashed = shock.</div></div>
+              <div class="card-body"><div class="chart tall" id="chart-profiles"></div></div>
+            </div>
+            <div class="card hidden" id="fit-card">
+              <div class="card-header"><svg class="icon"><use href="#i-check"/></svg>Fit results<div class="right card-sub" id="fit-sub"></div></div>
+              <div class="card-body table-wrap"><table class="table" id="fit-table"></table></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== HELP ===================== -->
+      <section class="page" id="page-help">
+        <div class="hero compact">
+          <div class="hero-inner"><div class="hero-main">
+            <div class="hero-eyebrow">Documentation</div>
+            <h2 class="hero-title">Using arcjetCV Web</h2>
+            <p class="hero-subtitle">A browser front end for the same arcjetCV processing engine used by the desktop GUI.</p>
+          </div></div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card"><div class="card-body prose">
+            <h3 class="mt-0">Launching</h3>
+            <p>After installing arcjetCV, start the web interface from a terminal:</p>
+            <pre><code>pip install "arcjetcv[web]"
+arcjetcv-web</code></pre>
+            <p>Your browser opens at <code>http://localhost:5050</code>. Leave the terminal open while you work and press <code>Ctrl+C</code> to stop. Useful options:</p>
+            <ul>
+              <li><code>--port 8080</code> use another port</li>
+              <li><code>--no-browser</code> do not open a browser tab</li>
+              <li><code>--host 0.0.0.0</code> allow other machines on your network (trusted networks only)</li>
+            </ul>
+            <h3>Using the page from a website</h3>
+            <p>The same page can be hosted on a website while all processing stays on your computer. Start the engine for that page once:</p>
+            <pre><code>arcjetcv-web --site https://your-site/arcjetcv/</code></pre>
+            <p>The browser opens the website already connected to arcjetCV on this computer. The site is remembered, and only that website, with your private access token, can use the engine. Site owners create the files to upload with <code>arcjetcv-web --export-site FOLDER</code>.</p>
+            <h3>Where files go</h3>
+            <p>Videos are read in place. The <code>.meta</code> file and the output <code>NAME_FIRST_LAST.json</code> are written next to the video, exactly like the desktop GUI, so both tools can share results. Files dropped into the browser are copied to <code>~/arcjetCV_workspace</code>.</p>
+          </div></div>
+          <div class="card"><div class="card-body prose">
+            <h3 class="mt-0">Segmentation methods</h3>
+            <ul>
+              <li><b>CNN</b>: U-Net model, most robust. Needs PyTorch and the model checkpoint.</li>
+              <li><b>AutoHSV</b>: automatic colour thresholds. Good default without a GPU.</li>
+              <li><b>HSV</b>: manual hue, saturation and intensity ranges for model and shock.</li>
+              <li><b>GRAY</b>: grayscale threshold, uses the model minimum intensity.</li>
+            </ul>
+            <h3>Tips</h3>
+            <ul>
+              <li>Drag on the frame with <b>Draw crop</b> on to set the region of interest; the crop is saved to the <code>.meta</code> file.</li>
+              <li>Use <kbd>&larr;</kbd> / <kbd>&rarr;</kbd> to step frames and <kbd>Shift</kbd> for steps of 10.</li>
+              <li>Positions are signed so downstream motion is positive for both flow directions.</li>
+              <li>Recession rate is a linear fit of the model center after the recession start (the frame of maximum swelling).</li>
+            </ul>
+          </div></div>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer">
+      <div class="footer-left">
+        <img class="footer-logo" src="static/img/nasa.svg" alt="NASA" onerror="this.remove()">
+        <span>arcjetCV &middot; NASA Ames Research Center &middot; <span id="footer-version"></span></span>
+      </div>
+      <div class="footer-right">
+        <span>Proudly developed in collaboration with</span>
+        <a class="footer-brand" href="https://flying-squirrel.space" target="_blank" rel="noopener" title="Visit Flying Squirrel">
+          <img class="footer-logo" src="static/img/flying-squirrel.png" alt="Flying Squirrel">
+        </a>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- File browser modal -->
+<div class="modal-backdrop" id="browser-modal">
+  <div class="modal">
+    <div class="modal-header"><svg class="icon" style="color:var(--primary)"><use href="#i-folder"/></svg><h3 id="browser-title">Open video</h3><button class="btn btn-ghost btn-icon x" data-close><svg class="icon"><use href="#i-x"/></svg></button></div>
+    <div class="modal-body">
+      <form class="input-group" id="browser-path-form">
+        <button type="button" class="btn btn-sm" id="browser-up" style="border-radius:0.65rem 0 0 0.65rem" title="Parent folder"><svg class="icon"><use href="#i-up"/></svg></button>
+        <input class="input" id="browser-path" spellcheck="false" style="border-radius:0">
+        <button class="btn btn-primary btn-sm" type="submit">Go</button>
+      </form>
+      <div class="flex gap-1 mt-1 wrap" id="browser-shortcuts"></div>
+      <ul class="browser-list" id="browser-list"></ul>
+      <div class="dropzone" id="dropzone">Or drag a file here to copy it into your arcjetCV workspace</div>
+    </div>
+    <div class="modal-footer"><span class="left" id="browser-sel">Nothing selected</span><button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="browser-open" disabled>Open</button></div>
+  </div>
+</div>
+
+<!-- Connect screen (hosted page only) -->
+<div class="modal-backdrop" id="connect-modal">
+  <div class="modal">
+    <div class="modal-header"><svg class="icon" style="color:var(--primary)"><use href="#i-cpu"/></svg><h3>Connect to arcjetCV on this computer</h3></div>
+    <div class="modal-body prose">
+      <p>This page is only the interface. Your videos are read and processed by the arcjetCV engine running on your own computer, so nothing is uploaded.</p>
+      <p class="mb-0"><b>1.</b> Install arcjetCV (once):</p>
+      <pre><code>pip install "arcjetcv[web]"</code></pre>
+      <p class="mb-0"><b>2.</b> Start the engine for this page:</p>
+      <pre><code id="connect-cmd">arcjetcv-web --site URL</code></pre>
+      <p>Your browser then reopens this page already connected. If it asks to let this site access apps on your device, click <b>Allow</b>.</p>
+      <div class="flex items-center gap-1 wrap"><span class="badge gray" id="connect-status">Looking for the engine...</span></div>
+      <details class="mt-2"><summary class="small muted">Advanced</summary>
+        <div class="form-row cols-2 mt-1">
+          <div><label class="lbl">Port</label><input type="number" class="input" id="connect-port" value="5050"></div>
+          <div><label class="lbl">Access token</label><input type="text" class="input" id="connect-token" spellcheck="false" placeholder="From the connect link"></div>
+        </div>
+      </details>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" id="connect-retry"><svg class="icon"><use href="#i-refresh"/></svg>Try again</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="static/js/charts.js"></script>
+<script src="static/js/app.js"></script>
+</body>
+</html>

@@ -133,6 +133,19 @@ Run it with:
 python test.py
 ```
 
+### Web Interface (in your browser)
+
+arcjetCV also ships a browser interface that runs entirely on your own computer. Videos are read from disk and outputs are written next to them, just like the desktop GUI.
+
+```bash
+pip install "arcjetcv[web]"   # or: pip install flask
+arcjetcv-web                  # or: python -m arcjetCV.webapp
+```
+
+Your browser opens at <http://localhost:5050>. Keep the terminal open while you work and press `Ctrl+C` to stop. Options: `--port 8080`, `--no-browser`, `--host 0.0.0.0` (share on a trusted network only).
+
+From a source checkout you can also double-click `launchers/arcjetCV Web.command` (macOS) or `launchers/arcjetCV Web.bat` (Windows).
+
 ## Documentation (django-wiki)
 
 The living documentation now runs on django-wiki inside `wiki_site/` (preferred path for edits). To start it locally:
