@@ -140,6 +140,7 @@ venv.bak/
 !arcjetCV_logo_white_.png
 !arcjetCV_logo_white.png
 !arcjetCV_logo.png
+!arcjetCV/webapp/static/img/*.png
 !arcjetCV_logo_.png
 *.meta
 train_frames/
