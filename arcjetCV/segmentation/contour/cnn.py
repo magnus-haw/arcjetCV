@@ -1,3 +1,4 @@
+import hashlib
 import torch
 from pathlib import Path
 import cv2
